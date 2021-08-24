@@ -1,5 +1,8 @@
 
-function Cℓintegrand(cosmo, t1, t2, logk, ℓ)
+function Cℓintegrand(cosmo::Cosmology,
+                     t1::NumberCountsTracer,
+                     t2::NumberCountsTracer,
+                     logk::Float64, ℓ::Int64)
     k = exp(logk)
     chi = (ℓ+0.5)/k
     if chi > cosmo.chi_max
@@ -15,5 +18,5 @@ end
 
 function angularCℓ(cosmo, t1, t2, ℓ)
     quadgk(lk -> Cℓintegrand(cosmo, t1, t2, lk, ℓ),
-           log(10^-3), log(10^1))[1]/(ℓ+0.5)
+           log(10^-4), log(10^2), rtol=1E-5)[1]/(ℓ+0.5)
 end

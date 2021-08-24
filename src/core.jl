@@ -44,7 +44,7 @@ struct Cosmology{T<:Real}
     chi_max::T
 end
 
-Cosmology(Ωc, Ωb, h, n_s, σ8, nk=256, nz=256) = begin
+Cosmology(Ωc, Ωb, h, n_s, σ8; nk=256, nz=256) = begin
     Ωm = Ωc + Ωb
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8)
 
@@ -61,7 +61,7 @@ Cosmology(Ωc, Ωb, h, n_s, σ8, nk=256, nz=256) = begin
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / h
-    chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz)[1] * norm
+    chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
             for zz in zs]
     chii = LinearInterpolation(zs, chis)
     zi = LinearInterpolation(chis, zs)
@@ -77,7 +77,7 @@ function σR2(cosmo::Cosmology, R)
 end
 
 function TkBBKS(cosmo::CosmoPar, k)
-    tfac = 2.75 / 2.7
+    tfac = 2.725 / 2.7
     q = @. (tfac^2 * k/(cosmo.Ωm * cosmo.h^2 * exp(-cosmo.Ωb*(1+sqrt(2*cosmo.h)/cosmo.Ωm))))
     return (@. (log(1+2.34q)/(2.34q))^2/sqrt(1+3.89q+(16.1q)^2+(5.46q)^3+(6.71q)^4))
 end
