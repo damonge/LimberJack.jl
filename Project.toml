@@ -1,0 +1,4 @@
+name = "LimberJack"
+uuid = "6b86205d-155a-4b14-b82d-b6a149ea78f2"
+authors = ["David Alonso <dam.phys@gmail.com>"]
+version = "0.1.0"
