@@ -119,7 +119,7 @@ end
 # Functions we will actually export
 Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
 Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
-radial_comoving_distance(cosmo::Cosmology, z) = cosmo.chi(z)
+comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 function power_spectrum(cosmo::Cosmology, k, z)
     Dz2 = growth_factor(cosmo, z)^2
