@@ -1,7 +1,7 @@
 # c/(100 km/s/Mpc) in Mpc
 const CLIGHT_HMPC = 2997.92458
 
-function w_tophat(x::Float64)
+function w_tophat(x::Real)
     x2 = x^2
 
     if x < 0.1
@@ -22,7 +22,7 @@ function _σR2(ks, pk, dlogk, R)
     return sum(integ)*dlogk/(2*pi^2)
 end
 
-struct CosmoPar{T<:Real}
+struct CosmoPar{T}
     Ωm::T
     Ωb::T
     h::T
@@ -30,41 +30,38 @@ struct CosmoPar{T<:Real}
     σ8::T
 end
 
-struct Cosmology{T<:Real}
-    cosmo::CosmoPar{T}
+struct Cosmology
+    cosmo::CosmoPar
     # Power spectrum
-    ks::Array{T, 1}
-    pk0::Array{T, 1}
-    dlogk::T
-    lplk::AbstractInterpolation{T, 1}
+    ks::Array
+    pk0::Array
+    dlogk
+    lplk::AbstractInterpolation
     # Redshift and background
-    zs::Array{T, 1}
-    chis::Array{T, 1}
-    chi::AbstractInterpolation{T, 1}
-    z_of_chi::AbstractInterpolation{T, 1}
-    chi_max::T
-    Dzs::Array{T, 1}
-    Dz::AbstractInterpolation{T, 1}
+    zs::Array
+    chis::Array
+    chi::AbstractInterpolation
+    z_of_chi::AbstractInterpolation
+    chi_max
+    Dzs::Array
+    Dz::AbstractInterpolation
 end
 
-Cosmology(Ωc, Ωb, h, n_s, σ8; nk=256, nz=256) = begin
-    Ωm = Ωc + Ωb
-    cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8)
-
+Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
     tk = TkBBKS(cpar, ks)
-    pk0 = @. ks^n_s * tk
-    σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/h)
-    norm = σ8^2 / σ8_2_here
+    pk0 = @. ks^cpar.n_s * tk
+    σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
+    norm = cpar.σ8^2 / σ8_2_here
     pk0[:] = pk0 .* norm
     # OPT: interpolation method
     pki = LinearInterpolation(log.(ks), log.(pk0))
 
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
-    norm = CLIGHT_HMPC / h
+    norm = CLIGHT_HMPC / cpar.h
     chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
             for zz in zs]
     # OPT: tolerances, interpolation method
@@ -92,6 +89,13 @@ Cosmology(Ωc, Ωb, h, n_s, σ8; nk=256, nz=256) = begin
     Cosmology(cpar, ks, pk0, dlogk, pki,
               collect(zs), chis, chii, zi, chis[end],
               Dzs, Dzi)
+end
+
+Cosmology(Ωc, Ωb, h, n_s, σ8; nk=256, nz=256) = begin
+    Ωm = Ωc + Ωb
+    cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8)
+
+    Cosmology(cpar, nk=nk, nz=nz)
 end
 
 Cosmology() = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81)
