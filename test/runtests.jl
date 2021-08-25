@@ -1,5 +1,7 @@
 using Test
 using LimberJack
+using ForwardDiff
+
 
 @testset "BMChi" begin
     cosmo = Cosmology()
@@ -63,4 +65,23 @@ end
 @testset "CreateCosmo" begin
     cosmo = Cosmology()
     @test cosmo.cosmo.Ωm == 0.3
+end
+
+@testset "IsDiff" begin
+    zs = 0.02:0.02:1.0
+
+    function f(p::T)::Array{T,1} where T<:Real
+        Ωm = p
+        cpar = LimberJack.CosmoPar{T}(Ωm, 0.05, 0.67, 0.96, 0.81)
+        cosmo = LimberJack.Cosmology(cpar)
+        chi = comoving_radial_distance(cosmo, zs)
+        return chi
+    end
+
+    Ωm0 = 0.3
+    g = ForwardDiff.derivative(f, Ωm0)
+
+    dΩm = 0.02
+    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
+    @test all(@. (abs(g/g1-1) < 1E-3))
 end
