@@ -110,6 +110,94 @@ function TkBBKS(cosmo::CosmoPar, k)
     return (@. (log(1+2.34q)/(2.34q))^2/sqrt(1+3.89q+(16.1q)^2+(5.46q)^3+(6.71q)^4))
 end
 
+#####
+function get_zeq(cosmo::CosmoPar)
+    wm=cosmo.Ωm*cosmo.h**2
+    tfac=2.725 / 2.7
+    return 2.5*10**4*wm*tfac**(-4)
+end
+
+function get_keq(cosmo::CosmoPar):
+    wm=cosmo.Ωm*cosmo.h**2
+    tfac=2.725/2.7
+    return = 7.46*10**(−2)*wm*tfac**(-2)
+
+function get_zdrag(cosmo::CosmoPar)
+    wb=cosmo.Ωb*cosmo.h**2
+    wm=cosmo.Ωm*cosmo.h**2
+    b1 = 0.313*wm**-0.419*(1+0.607*wm*0.674)
+    b2 = 0.238*wm**0.223
+    return 1291*((wm**0.251)/(1+0.659*wm**0.028))*(1+b1*wb**b2)
+end
+
+function R(cosmo::CosmoPar, z)
+    wb=cosmo.Ωb*cosmo.h**2
+    tfac=2.725 / 2.7
+    return 31.5*wb*tfac**-4*(z/10**3)**-1
+end
+
+
+function get_rs(cosmo::CosmoPar)
+    keq = get_keq()
+    zeq = get_zeq()
+    zd = get_zdrag()
+    rs_pre = 2/(3*keq)*sqrt(6/R(zeq))
+    return rs_pre*log((sqrt(1+R(zd))+sqrt(R(zd)+R(zeq)))/(1+sqrt(R(zeq))))
+    
+function G(y)
+    return y*(-6*sqrt(1+y)+(2+3y)*log((sqrt(1+y)+1)/(sqrt(1+y)-1)))
+end
+
+function f(k)
+    s = get_rs()    
+    return (1/(1+(k*s/5.4)**4))
+end
+    
+function T0(cosmo::CosmoPar, k, ac, bc)
+    tfac = 2.725 / 2.7
+    wm=cosmo.Ωm*cosmo.h**2
+    keq = get_keq()
+    q = k/(13.41*keq)
+    C = 14.2/ac + 386/(1+69.9*q**1.08)
+    return (log(e+1.8*bc*q))/(log(e+1.8*bc*q)+C*q**2)
+end 
+    
+function Tc(cosmo::CosmoPar, k)
+   s = get_rs()
+   tfac = 2.725 / 2.7
+   wm=cosmo.Ωm*cosmo.h**2
+   q = k/(13.41*keq)
+   a1 = (46.9*wm)**0.670*(1+(32.1*wm)**-0.532)
+   a2 = (12.0*wm)**0.424*(1+(45.0*wm)**-0.582)
+   ac = (a1**(-cosmo.Ωb/cosmo.Ωm))*(a2**(-(cosmo.Ωb/cosmo.Ωm)**3))
+   b1 = 0.944*(1+(458*wm)**(-0.708))**(-1)
+   b2 = (0.395*wm)**(-0.0266)
+   bc = 1/(1+b1*((cosmo.Ωc/cosmo.Ωm)**b2-1))
+   f = 1/(1+(k*s/5.4)**4)
+   return f*T0(k, 1, bc) + (1-f)*T0(k, ac, bc)
+end 
+
+function Tb(cosmo::CosmoPar, k)
+   wm=cosmo.Ωm*cosmo.h**2
+   wb=cosmo.Ωb*cosmo.h**2
+   s = get_rs()
+   zd = get_zdrag()
+   zeq = get_zeq()
+   keq = get_keq()
+   ksilk = 1.6*wb**0.52*wm**0.73*(1+(10.4*wm)**-0.95)
+   ab = 2.07*keq*s*(1+R(zd))**(-3/4)*G((1+zeq)/(1+zd))
+   bb =  0.5+(cosmo.Ωb/cosmo.Ωm)+(3-2*cosmo.Ωb/cosmo.Ωm)sqrt((17.2*wm)**2+1)
+   bnode = 8.41*(wm)**0.435
+   ss = s/(1+(bnode/(k*s))**3)**(1/3)
+   Tb = (T0(k, 1, 1)/(1+(k*s/5.2)**2))+(ab/(1+(bb/(k*s))**3))*exp(-1.4*(k/ksilk)**1.4)
+   return Tb*(sin(k*ss)/(k*ss))
+end 
+
+function Tk_Eis_Hu(cosmo::CosmoPar, k)
+    return (cosmo.Ωb/cosmo.Ωm)*Tb(k)+(cosmo.Ωc/cosmo.Ωm)*Tc(k)
+end
+######
+
 function _Ez(cosmo::CosmoPar, z)
     @. sqrt(cosmo.Ωm*(1+z)^3+1-cosmo.Ωm)
 end
