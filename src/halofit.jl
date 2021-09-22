@@ -60,7 +60,7 @@ PKnonlin(cosmo::Cosmology; nk=256, nz=256) = begin
 
     pk_NLs = zeros(length(a), length(k))
     for i in range(1, stop=length(a))
-        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, rsigs[i], sigma2s[i], neffs[i], Cs[i], k, a[i])
+        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
     end
     pk_NL = LinearInterpolation((a, k), pk_NLs)
 
@@ -112,14 +112,12 @@ function get_rsigma(pk, logk)
     return rsigma
 end
 
-function power_spectrum_nonlin(cosmo::Cosmology, rsig, sigma2, neff, C, k, a)
+function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, a, rsig, sigma2, neff, C)
 
     zs = @. 1.0/a - 1.0
     weffa = -1.0
     omegaMz = omega_x(cosmo, zs, "m")
     omegaDEwz = omega_x(cosmo, zs,"l")
-    println(omegaMz)
-    println(omegaDEwz)
 
     # not using these to match CLASS better - might be a bug in CLASS
     # weffa = gsl_spline_eval(hf->weff, a, NULL);
@@ -172,7 +170,6 @@ function power_spectrum_nonlin(cosmo::Cosmology, rsig, sigma2, neff, C, k, a)
     betan += (fnu * (1.081 + 0.395*neff2))
 
     # eqns A1 - A3
-    PkL = power_spectrum(cosmo, k, zs)
     y = k ./ ksigma
     y2 = @. y * y
     fy = @. y/4.0 + y2/8.0
