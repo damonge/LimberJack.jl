@@ -5,16 +5,19 @@ export Ez, Hmpc, comoving_radial_distance, power_spectrum, growth_factor, omega_
 export NumberCountsTracer
 export angularCℓ
 export PKnonlin
+export Rkmats
 
 using Interpolations
 using QuadGK
 using OrdinaryDiffEq
 using Trapz
 using Roots
+using ForwardDiff
 
 include("core.jl")
 include("tracers.jl")
 include("spectra.jl")
 include("halofit.jl")
+include("Rkmats.jl")
 
 end

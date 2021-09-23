@@ -37,7 +37,7 @@ PKnonlin(cosmo::Cosmology; nk=256, nz=256) = begin
     neffs = zeros(nz)
     Cs = zeros(nz)
 
-    for i in range(1, stop=length(a))
+    for i in range(1, stop=nz)
         # TODO: Get proper redshift columns
         pkl_curr = PkL[i, :]
         rsig_curr = get_rsigma(pkl_curr, logk)
@@ -58,8 +58,8 @@ PKnonlin(cosmo::Cosmology; nk=256, nz=256) = begin
     neff = LinearInterpolation(a, neffs)
     C = LinearInterpolation(a, Cs)
 
-    pk_NLs = zeros(length(a), length(k))
-    for i in range(1, stop=length(a))
+    pk_NLs = zeros(nz, nk)
+    for i in range(1, stop=nz)
         pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
     end
     pk_NL = LinearInterpolation((a, k), pk_NLs)
