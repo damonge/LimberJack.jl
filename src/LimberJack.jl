@@ -5,7 +5,7 @@ export Ez, Hmpc, comoving_radial_distance, power_spectrum, growth_factor, omega_
 export NumberCountsTracer
 export angularCℓ
 export PKnonlin
-export Rkmats
+export Rkmats, Rkkmats
 
 using Interpolations
 using QuadGK

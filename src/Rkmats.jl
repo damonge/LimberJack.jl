@@ -16,40 +16,60 @@ function Rkmats(cosmo::Cosmology; nk=256, nz=256)
     zs = range(zmin, stop=zmax, length=nz)
     a = reverse(@. 1.0 / (1.0 + zs))
     zs = reverse(zs)
+
     PkL = zeros(nz, nk)
+    Rkmat = zeros(nz, nk, nk)
     for i in range(1, stop=nz)
         PkL[i, :] .= power_spectrum(cosmo, k, zs[i])
+        Rkmat[i, :, :] .= ForwardDiff.jacobian(pklin -> _power_spectrum_nonlin_diff(cosmo, pklin, k,
+                        logk, a[i]), PkL[i, :])
     end
 
-    rsigs = zeros(nz)
-    sigma2s = zeros(nz)
-    neffs = zeros(nz)
-    Cs = zeros(nz)
+    return Rkmat
+end
 
+function _power_spectrum_nonlin_diff(cosmo::Cosmology, PkL, k, logk, a)
+
+    rsig = get_rsigma(PkL, logk)
+    sigma2 = rsigma_func(rsig, PkL, logk) + 1
+    onederiv_int = trapz(logk, onederiv_gauss_norm_int_func(logk, PkL, rsig))
+    neff = -rsig/sigma2*onederiv_int - 3.0
+    twoderiv_int = trapz(logk, twoderiv_gauss_norm_int_func(logk, PkL, rsig))
+    C = -(rsig^2/sigma2*twoderiv_int - rsig^2/sigma2^2*onederiv_int^2
+                    + rsig/sigma2*onederiv_int)
+
+    pkNL = power_spectrum_nonlin(cosmo, PkL, k, a, rsig, sigma2, neff, C)
+
+    return pkNL
+end
+
+function Rkkmats(cosmo::Cosmology; nk=256, nz=256)
+    lkmin = -4
+    lkmax = 2
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+    zmin = 0.
+    zmax = 3.
+    zs = range(zmin, stop=zmax, length=nz)
+    a = reverse(@. 1.0 / (1.0 + zs))
+    zs = reverse(zs)
+
+    PkL = zeros(nz, nk)
+    Rkkmat = zeros(nz, nk^2, nk)
     for i in range(1, stop=nz)
-        pkl_curr = PkL[i, :]
-        rsig_curr = get_rsigma(pkl_curr, logk)
-        sigma2_curr = rsigma_func(rsig_curr, pkl_curr, logk) + 1
-        onederiv_int = trapz(logk, onederiv_gauss_norm_int_func(logk, pkl_curr, rsig_curr))
-        neff_curr = -rsig_curr/sigma2_curr*onederiv_int - 3.0
-        twoderiv_int = trapz(logk, twoderiv_gauss_norm_int_func(logk, pkl_curr, rsig_curr))
-        C_curr = -(rsig_curr^2/sigma2_curr*twoderiv_int - rsig_curr^2/sigma2_curr^2*onederiv_int^2
-                        + rsig_curr/sigma2_curr*onederiv_int)
-        rsigs[i] = rsig_curr
-        sigma2s[i] = sigma2_curr
-        neffs[i] = neff_curr
-        Cs[i] = C_curr
+        PkL[i, :] .= power_spectrum(cosmo, k, zs[i])
+        Rkkmat[i, :, :] .= ForwardDiff.jacobian(pklin -> _Rkmat(cosmo, pklin, k,
+                        logk, a[i]), PkL[i, :])
     end
 
-    gradpk_NL = zeros(nz, nk, nk)
-    for i in range(1, stop=nz)
-        gradpk_NL[i, :, :] .= ForwardDiff.jacobian(pklin -> power_spectrum_nonlin(cosmo, pklin, k,
-                        a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i]), PkL[i, :])
-#         gradpk_NL[i, :, :] .= ForwardDiff.jacobian(pklin -> power_spectrum_nonlin_diff(cosmo, pklin, k,
-#                         a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i]), PkL[i, :])
-    end
+    return Rkkmat
+end
 
-    return gradpk_NL
+function _Rkmat(cosmo::Cosmology, PkL, k, logk, a)
+    Rkmat = ForwardDiff.jacobian(pklin -> _power_spectrum_nonlin_diff(cosmo, pklin, k,
+                        logk, a), PkL)
+    return vec(Rkmat)
 end
 
 # function power_spectrum_nonlin_diff(cosmo::Cosmology, PkL::AbstractArray{T, 1}, k, a,
