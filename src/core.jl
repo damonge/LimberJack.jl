@@ -47,11 +47,15 @@ struct Cosmology
     Dz::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
+Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
-    tk = TkBBKS(cpar, ks)
+    if tk_mode== "Eis_Hu"
+        tk = Tk_Eis_Hu(cpar, ks)
+    elseif tk_mode== "BBKS"
+        tk = TkBBKS(cpar, ks)
+    end
     pk0 = @. ks^cpar.n_s * tk
     σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
     norm = cpar.σ8^2 / σ8_2_here
