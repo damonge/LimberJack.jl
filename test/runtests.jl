@@ -1,6 +1,7 @@
 using Test
 using LimberJack
 using ForwardDiff
+using Trapz
 
 
 @testset "BMChi" begin
@@ -84,4 +85,27 @@ end
     dΩm = 0.02
     g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
     @test all(@. (abs(g/g1-1) < 1E-3))
+end
+
+@testset "Rkmats" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 256
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    Rkmat = Rkmats(cosmo, nk=nk, nz=1)
+
+    dPkL = zeros(nk)
+    dPkL[1] = 1e-4*PkL[1]
+    PkL_hi = LimberJack._power_spectrum_nonlin_diff(cosmo, PkL .+ dPkL, k, logk, a)
+    PkL_lo = LimberJack._power_spectrum_nonlin_diff(cosmo, PkL .- dPkL, k, logk, a)
+    Rkmat_test = @. (PkL_hi - PkL_lo)/2dPkL[1]
+
+    @test all(@. (abs(Rkmat[1, 1, 1]/Rkmat_test[1]-1) < 1E-3))
 end

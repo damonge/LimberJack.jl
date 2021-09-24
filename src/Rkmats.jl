@@ -11,9 +11,13 @@ function Rkmats(cosmo::Cosmology; nk=256, nz=256)
     logk = range(lkmin, stop=lkmax, length=nk)
     k = 10 .^ logk
     logk = log.(k)
-    zmin = 0.
-    zmax = 3.
-    zs = range(zmin, stop=zmax, length=nz)
+    zmin = 0.0
+    if nz != 1
+        zmax = 3.0
+        zs = range(zmin, stop=zmax, length=nz)
+    else
+        zs = [zmin]
+    end
     a = reverse(@. 1.0 / (1.0 + zs))
     zs = reverse(zs)
 
@@ -49,9 +53,12 @@ function Rkkmats(cosmo::Cosmology; nk=256, nz=256)
     logk = range(lkmin, stop=lkmax, length=nk)
     k = 10 .^ logk
     logk = log.(k)
-    zmin = 0.
-    zmax = 3.
-    zs = range(zmin, stop=zmax, length=nz)
+    if nz != 1
+        zmax = 3.
+        zs = range(zmin, stop=zmax, length=nz)
+    else
+        zs = [zmin]
+    end
     a = reverse(@. 1.0 / (1.0 + zs))
     zs = reverse(zs)
 
