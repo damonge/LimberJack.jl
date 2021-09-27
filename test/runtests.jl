@@ -109,3 +109,90 @@ end
 
     @test all(@. (abs(Rkmat[1, 1, 1]/Rkmat_test[1]-1) < 1E-3))
 end
+
+@testset "dsigma2/dPk" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 256
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    rsigma = LimberJack.get_rsigma(PkL, logk)
+
+    dsigma2 = ForwardDiff.gradient(pklin -> LimberJack.rsigma_func(rsigma, pklin, logk), PkL)
+
+    dPkL = zeros(nk)
+    dPkL[150] = 1e-4*PkL[150]
+    PkL_hi = LimberJack.rsigma_func(rsigma, PkL .+ dPkL, logk)
+    PkL_lo = LimberJack.rsigma_func(rsigma, PkL .- dPkL, logk)
+    dsigma2_test = @. (PkL_hi - PkL_lo)/2dPkL[150]
+    # deltalogk/(2pi^2)k^3 e^(-k^2 R^2)
+    test = (logk[151] .- logk[150]) ./ 2.0 ./ pi^2 .* k .^ 3 .* exp.(.- k .^ 2 .* rsigma .^ 2)
+    println("dsigma2/dPk")
+    println("analytic = ", test[150])
+    println("autodiff = ", dsigma2[150])
+    println("numerical diff = ", dsigma2_test)
+
+    @test all(@. (abs(dsigma2[150]/dsigma2_test-1) < 1E-3))
+end
+
+@testset "dsigma2/dR" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 256
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    rsigma = LimberJack.get_rsigma(PkL, logk)
+
+    dsigma2 = ForwardDiff.derivative(rsig -> LimberJack.rsigma_func(rsig, PkL, logk), rsigma)
+
+    drsigma = 1e-4*rsigma
+    PkL_hi = LimberJack.rsigma_func(rsigma .+ drsigma, PkL, logk)
+    PkL_lo = LimberJack.rsigma_func(rsigma .- drsigma, PkL, logk)
+    dsigma2_test = @. (PkL_hi - PkL_lo)/2drsigma
+    test = trapz(logk, LimberJack.onederiv_gauss_norm_int_func(logk, PkL, rsigma))
+    println("dsigma2/dR")
+    println("analytic = ", test)
+    println("autodiff = ", dsigma2)
+    println("numerical diff = ", dsigma2_test)
+
+#     @test all(@. (abs(dsigma2[150]/dsigma2_test-1) < 1E-3))
+end
+
+@testset "drsigma/dPk" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 256
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    drsigma = ForwardDiff.gradient(pklin -> LimberJack.get_rsigma(pklin, logk), PkL)
+
+    dPkL = zeros(nk)
+    dPkL[150] = 1e-2*PkL[150]
+    PkL_hi = LimberJack.get_rsigma(PkL .+ dPkL, logk)
+    PkL_lo = LimberJack.get_rsigma(PkL .- dPkL, logk)
+    drsigma_test = @. (PkL_hi - PkL_lo)/2dPkL[150]
+    test = (logk[2] .- logk[1]) ./ 2.0 ./ pi^2 .* k .^ 3 .* exp.(.- k .^ 2 .* LimberJack.get_rsigma(PkL, logk) .^ 2)
+    test1 = (-1) .* test ./ trapz(logk, LimberJack.onederiv_gauss_norm_int_func(logk, PkL, LimberJack.get_rsigma(PkL, logk)))
+    println("drsigma/dPk")
+    println("analytic = ", test1[150])
+    println("autodiff = ", drsigma[150])
+    println("numerical diff = ", drsigma_test)
+
+    @test all(@. (abs(drsigma[10]/drsigma_test-1) < 1E-3))
+end
