@@ -13,6 +13,8 @@ using OrdinaryDiffEq
 using Trapz
 using Roots
 using ForwardDiff
+using Zygote
+using LinearAlgebra
 
 include("core.jl")
 include("tracers.jl")

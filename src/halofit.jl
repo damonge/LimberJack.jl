@@ -91,8 +91,30 @@ end
 
 # function whose root is \sigma^2{rsigma, a} = 1
 function rsigma_func(rsigma, pk, logk)
-    result = trapz(logk, gauss_norm_int_func(logk, pk, rsigma))
-    return result - 1.0
+    result = trapz(logk, gauss_norm_int_func(logk, pk, rsigma)) - 1.0
+    return result
+end
+
+function solve_for_rsigma(pk, logk)
+    rlow = 1e-2
+    rhigh = 1e2
+#     f1 = rsig -> rsigma_func(rsig, pk, logk)
+#     f2 = rsig -> trapz(logk, onederiv_gauss_norm_int_func(logk, pk, rsig))
+#     rsigma = find_zero((f1, f2), 5.5, Roots.Newton())
+    rsigma = find_zero(rsig -> rsigma_func(rsig, pk, logk), (rlow, rhigh))
+    return rsigma
+end
+
+function solve_for_rsigma(pk::Vector{D}, logk) where D<:ForwardDiff.Dual
+    pk0 = ForwardDiff.value.(pk)
+    rsig0 = solve_for_rsigma(pk0, logk)
+    ∂pk = ForwardDiff.gradient(pkl -> rsigma_func(rsig0, pkl, logk), pk0)
+    ∂rsig = ForwardDiff.derivative(rsig -> rsigma_func(rsig, pk0, logk), rsig0)
+    parts_in = zip(collect.(ForwardDiff.partials.(pk))...)
+    parts_out = map(x->dot(-∂pk./∂rsig, x), parts_in)
+    # (parts_out...,) from vector to (*, *, *)
+    p = ForwardDiff.Partials((parts_out...,))
+    return D(rsig0, p)
 end
 
 function get_rsigma(pk, logk)
@@ -107,7 +129,7 @@ function get_rsigma(pk, logk)
         return -1
     end
 
-    rsigma = find_zero(rsig -> rsigma_func(rsig, pk, logk), (rlow, rhigh))
+    rsigma = solve_for_rsigma(pk, logk)
 
     return rsigma
 end
