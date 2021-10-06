@@ -43,11 +43,11 @@ end
     cosmo = Cosmology(tk_mode="Eis_Hu")
     ks = [0.001, 0.01, 0.1, 1.0, 10.0]
     pk = power_spectrum(cosmo, ks, 0.)
-    pk_bm = [2.01570296e+04,
-             7.77178497e+04,
-             1.04422728e+04,
-             7.50841197e+01,
-             2.02624683e-01]
+    pk_bm = [2.12222992e+04,
+             8.83444294e+04,
+             1.05452648e+04,
+             8.22064850e+01,
+             2.41173851e-01]
     # It'd be best if this was < 1E-4...
     @test all(@. (abs(pk/pk_bm-1.0) < 3E-4))
 end
