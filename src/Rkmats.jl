@@ -53,6 +53,7 @@ function Rkkmats(cosmo::Cosmology; nk=256, nz=256)
     logk = range(lkmin, stop=lkmax, length=nk)
     k = 10 .^ logk
     logk = log.(k)
+    zmin = 0.0
     if nz != 1
         zmax = 3.
         zs = range(zmin, stop=zmax, length=nz)
