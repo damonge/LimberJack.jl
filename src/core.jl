@@ -51,7 +51,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
-    if tk_mode== "Eis_Hu"
+    if tk_mode== "EisHu"
         tk = TkEisHu(cpar, ks)
     elseif tk_mode== "BBKS"
         tk = TkBBKS(cpar, ks)
@@ -119,27 +119,27 @@ end
 function get_zeq(cosmo::CosmoPar)
     wm=cosmo.Ωm*cosmo.h^2
     tfac=2.725 / 2.7
-    return 2.5*10^4*wm*tfac^(-4)
+    return (2.5*10^4)*wm*(tfac^-4)
 end
 
 function get_keq(cosmo::CosmoPar)
     wm=cosmo.Ωm*cosmo.h^2
     tfac=2.725/2.7
-    return 7.46*10^(-2)*wm*tfac^(-2)
+    return (7.46*10^-2)*wm*(tfac^-2)
 end
 
 function get_zdrag(cosmo::CosmoPar)
     wb=cosmo.Ωb*cosmo.h^2
     wm=cosmo.Ωm*cosmo.h^2
-    b1 = 0.313*wm^-0.419*(1+0.607*wm*0.674)
+    b1 = 0.313*(wm^-0.419)*(1+0.607*wm*0.674)
     b2 = 0.238*wm^0.223
-    return 1291*((wm^0.251)/(1+0.659*wm^0.028))*(1+b1*wb^b2)
+    return 1291*((wm^0.251)/(1+0.659*wm^0.828))*(1+b1*wb^b2)
 end
 
 function R(cosmo::CosmoPar, z)
     wb=cosmo.Ωb*cosmo.h^2
     tfac=2.725 / 2.7
-    R = @. (31.5*wb*tfac^-4*(z/10^3)^-1)
+    R = 31.5*wb*(tfac^-4)*(z/10^3)^-1
     return R
 end
 
@@ -150,40 +150,20 @@ function get_rs(cosmo::CosmoPar)
     rs = (sqrt(1+R(cosmo, zd))+sqrt(R(cosmo, zd)+R(cosmo, zeq)))
     rs /= (1+sqrt(R(cosmo, zeq)))
     rs =  (log(rs))
-    rs *= (2/(3*keq)*sqrt(6/R(cosmo, zeq)))
+    rs *= (2/(3*keq))*sqrt(6/R(cosmo, zeq))
     return rs
 end
     
 function G(y)
     return @. (y*(-6*sqrt(1+y)+(2+3y)*log((sqrt(1+y)+1)/(sqrt(1+y)-1))))
 end
-    
+
 function T0(cosmo::CosmoPar, k, ac, bc)
-    tfac = 2.725 / 2.7
-    wm=cosmo.Ωm*cosmo.h^2
     keq = get_keq(cosmo)
     q = @. (k/(13.41*keq))
-    C = @. (14.2/ac + 386/(1+69.9*q^1.08))
-    T0 = @.((log(ℯ+1.8*bc*q))/(log(ℯ+1.8*bc*q)+C*q^2))
+    C = @. ((14.2/ac) + (386/(1+69.9*q^1.08)))
+    T0 = @.(log(ℯ+1.8*bc*q)/(log(ℯ+1.8*bc*q)+C*q^2))
     return T0
-end 
-    
-function Tc(cosmo::CosmoPar, k)
-   Wc = cosmo.Ωm-cosmo.Ωb
-   s = get_rs(cosmo)
-   keq = get_keq(cosmo)
-   tfac = 2.725 / 2.7
-   wm=cosmo.Ωm*cosmo.h^2
-   q = @.(k/(13.41*keq))
-   a1 = (46.9*wm)^0.670*(1+(32.1*wm)^-0.532)
-   a2 = (12.0*wm)^0.424*(1+(45.0*wm)^-0.582)
-   ac = (a1^(-cosmo.Ωb/cosmo.Ωm))*(a2^(-(cosmo.Ωb/cosmo.Ωm)^3))
-   b1 = 0.944*(1+(458*wm)^(-0.708))^(-1)
-   b2 = (0.395*wm)^(-0.0266)
-   bc = 1/(1+b1*((Wc/cosmo.Ωm)^b2-1))
-   f = @.(1/(1+(k*s/5.4)^4))
-   #Tc = 
-   return f*T0(cosmo, k, 1, bc) + (1.-f)*T0(cosmo, k, ac, bc)
 end 
 
 function Tb(cosmo::CosmoPar, k)
@@ -195,17 +175,38 @@ function Tb(cosmo::CosmoPar, k)
    keq = get_keq(cosmo)
    ksilk = 1.6*wb^0.52*wm^0.73*(1+(10.4*wm)^-0.95)
    ab = 2.07*keq*s*(1+R(cosmo, zd))^(-3/4)*G((1+zeq)/(1+zd))
-   bb =  0.5+(cosmo.Ωb/cosmo.Ωm)+(3-2*cosmo.Ωb/cosmo.Ωm)sqrt((17.2*wm)^2+1)
+   bb =  0.5+(cosmo.Ωb/cosmo.Ωm)+(3-2*cosmo.Ωb/cosmo.Ωm)*sqrt((17.2*wm)^2+1)
    bnode = 8.41*(wm)^0.435
-   ss = @.(s/(1+(bnode/(k*s))^3)^(1/3))
-   Tb = @.((T0(cosmo, k, 1, 1)/(1+(k*s/5.2)^2))+(ab/(1+(bb/(k*s))^3))*exp(-1.4*(k/ksilk)^1.4))
-   Tb *= @.(Tb*(sin(k*ss)/(k*ss)))
+   ss = s./(1 .+(bnode./(k.*s)).^3).^(1/3)
+   Tb1 = T0(cosmo, k, 1, 1)./(1 .+(k.*s/5.2).^2)
+   Tb2 = (ab./(1 .+(bb./(k.*s)).^3)).*exp.(-(k/ksilk).^ 1.4)
+   Tb = (Tb1.+Tb2).*sin.(k.*ss)./(k.*ss)
    return Tb
+end 
+
+function Tc(cosmo::CosmoPar, k)
+   Wc = cosmo.Ωm-cosmo.Ωb
+   s = get_rs(cosmo)
+   keq = get_keq(cosmo)
+   tfac = 2.725 / 2.7
+   wm=cosmo.Ωm*cosmo.h^2
+   q = @.(k/(13.41*keq))
+   a1 = (46.9*wm)^0.670*(1+(32.1*wm)^-0.532)
+   a2 = (12.0*wm)^0.424*(1+(45.0*wm)^-0.582)
+   ac = (a1^(-cosmo.Ωb/cosmo.Ωm))*(a2^(-(cosmo.Ωb/cosmo.Ωm)^3))
+   b1 = 0.944*(1+(458*wm)^-0.708)^-1
+   b2 = (0.395*wm)^(-0.0266)
+   bc = (1+b1*((Wc/cosmo.Ωm)^b2-1))^-1
+   f = @.(1/(1+(k*s/5.4)^4))
+   Tc1 = f.*T0(cosmo, k, 1, bc)
+   Tc2 = (1 .-f).*T0(cosmo, k, ac, bc)
+   Tc = Tc1 .+ Tc2
+   return Tc
 end 
 
 function TkEisHu(cosmo::CosmoPar, k)
     Wc = cosmo.Ωm-cosmo.Ωb
-    Tk = @.((cosmo.Ωb/cosmo.Ωm)*Tb(cosmo, k)+(Wc/cosmo.Ωm)*Tc(cosmo, k))
+    Tk = (cosmo.Ωb/cosmo.Ωm).*Tb(cosmo, k).+(Wc/cosmo.Ωm).*Tc(cosmo, k)
     return Tk
 end
 
