@@ -151,25 +151,25 @@ function lensing_kernel(cosmo::Cosmology, z, dpdz)
     return QL
 end
 
-function shear_kernel(cosmo::Cosmology, z, dpdz)
-    Gl(l) = sqrt(factorial(l+2)/factorial(l-2))/(l+1/2)^2
+function shear_kernel(cosmo::Cosmology, dpdz)
+    Gl(l) = sqrt.(factorial.(l.+2)./factorial.(l.-2))./(l.+1/2).^2
     qL(z) = lensing_kernel(cosmo, z, dpdz)
-    qgamma(z, l) = Gl(l)*qL(z)
+    qgamma(z, l) = Gl(l).*qL(z)
     return qgamma
 end 
 
-function convergence_kernel(cosmology::Cosmology, z, dpdz)
-    Kl(l) = l*(l+1)/(l+1/2)^2
+function convergence_kernel(cosmology::Cosmology, dpdz)
+    Kl(l) = l.*(l.+1)./(l.+1/2).^2
     qL(z) = lensing_kernel(cosmo, z, dpdz)
-    qk(z, l) = Kl(l)*qL(z)
+    qk(z, l) = Kl(l).*qL(z)
     return qk
 end 
 
-function clustering_kernel(cosmology::Cosmology, z, bg, dpdz)
+function clustering_kernel(cosmology::Cosmology, bg, dpdz)
     H = 100*cosmo.cosmo.h
     dzdX(z) = H*Ez(cosmo, z) 
     pz = get_pz(dpdz)
-    qg(z, l) = bg*pz(z)*dzdX(z)
+    qg(z, l) = ones(length(l)).*bg.*pz(z).*dzdX(z)
     return qg
 end
     
@@ -177,7 +177,7 @@ function Cl(cosmology::Cosmology, l, tracer_u, tracer_v)
     P_uv(k, z) = power_spectrum(cosmo, k, z)
     H(z) = 100*cosmo.cosmo.h*Ez(cosmo, z) 
     XX(z) = cosmo.chi(z)
-    cl(z) = (1/H(z))*(tracer_u(z, l)*tracer_v(z, l))*P_uv((l+1/2)/XX(z), z)/XX(z)^2
+    cl(z) = (1/H(z)).*(tracer_u(z, l).*tracer_v(z, l)).*P_uv((l.+1/2)./XX(z), z)./XX(z)^2
     Cl = quadgk(cl, 0, Inf)[1]
     return Cl
 end
