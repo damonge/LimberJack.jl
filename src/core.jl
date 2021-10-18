@@ -57,7 +57,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
     norm = cpar.σ8^2 / σ8_2_here
     pk0[:] = pk0 .* norm
     # OPT: interpolation method
-    pki = LinearInterpolation(log.(ks), log.(pk0))
+    pki = LinearInterpolation(log.(ks), log.(pk0), extrapolation_bc=Linear())
 
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
@@ -65,8 +65,8 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
     chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
             for zz in zs]
     # OPT: tolerances, interpolation method
-    chii = LinearInterpolation(zs, chis)
-    zi = LinearInterpolation(chis, zs)
+    chii = LinearInterpolation(zs, chis, extrapolation_bc=Linear())
+    zi = LinearInterpolation(chis, zs, extrapolation_bc=Linear())
 
     # ODE solution for growth factor
     z_ini = 1000.0
@@ -84,7 +84,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
     s = vcat(sol.u'...)
     Dzs = reverse(s[:, 2] / s[end, 2])
     # OPT: interpolation method
-    Dzi = LinearInterpolation(zs, Dzs)
+    Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Linear())
 
     Cosmology(cpar, ks, pk0, dlogk, pki,
               collect(zs), chis, chii, zi, chis[end],
@@ -131,56 +131,55 @@ function power_spectrum(cosmo::Cosmology, k, z)
     @. exp(cosmo.lplk(log(k)))*Dz2
 end
 
-function get_pz(cosmo::Cosmology, dpdz)
-    p = dpdz[1]
-    z = dpdz[2]
-    pz = LinearInterpolation(z, p)
+function get_pz(dpdz)
+    z = dpdz[1]
+    p = dpdz[2]
+    pz = LinearInterpolation(BOSS_z, BOSS_dndz, extrapolation_bc=Flat())
     return pz 
 end
 
 function lensing_kernel(cosmo::Cosmology, z, dpdz)
     X = cosmo.chi(z)
-    a = cosmo.expansion_factor(z)
+    a = 1/(1+z)
     XX(zz) = cosmo.chi(zz)
-    H = 100*cosmo.h
-    Wm = cosmo.Ωm
+    H = 100*cosmo.cosmo.h
+    Wm = cosmo.cosmo.Ωm
     pz = get_pz(dpdz)
     qL(zz) = pz(zz)*(XX(zz)-X)/(XX(zz)) 
-    QL = quadgk(qL, z, Inf)
+    QL = quadgk(qL, z, Inf)[1]
     QL *= (3/2)*H^2*Wm*(X/a)
     return QL
 end
 
-function shear_kernel(cosmo::Cosmology, z, l, dpdz)
-    Gl = sqrt(factorial(l+2)/factorial(l-2))/(l+1/2)^2
-    qL = lensing_kernel(cosmo, z, dpdz)
-    return Gl*qL
+function shear_kernel(cosmo::Cosmology, z, dpdz)
+    Gl(l) = sqrt(factorial(l+2)/factorial(l-2))/(l+1/2)^2
+    qL(z) = lensing_kernel(cosmo, z, dpdz)
+    qgamma(z, l) = Gl(l)*qL(z)
+    return qgamma
 end 
 
-function convergence_kernel(cosmology::Cosmology, z, l, zs)
-    X = cosmo.chi(z)
-    Xs = cosmo.chi(zs)
-    a = cosmo.expansion_factor(z)
-    H = 100*cosmo.h
-    Wm = cosmo.Ωm
-    Kl = l*(l+1)/(l+1/2)^2
-    qk = Kl*(3/2)*H^2*Wm*(X/a)*(Xs-X)/Xs
+function convergence_kernel(cosmology::Cosmology, z, dpdz)
+    Kl(l) = l*(l+1)/(l+1/2)^2
+    qL(z) = lensing_kernel(cosmo, z, dpdz)
+    qk(z, l) = Kl(l)*qL(z)
     return qk
 end 
 
 function clustering_kernel(cosmology::Cosmology, z, bg, dpdz)
-    H = 100*cosmo.h
+    H = 100*cosmo.cosmo.h
     dzdX(z) = H*Ez(cosmo, z) 
     pz = get_pz(dpdz)
-    return bg*pz(z)*dzdX(z)
+    qg(z, l) = bg*pz(z)*dzdX(z)
+    return qg
 end
     
-function Cl(cosmology::Cosmology, l, tracer_u, tracer_v, P_uv)
-        H(z) = 100*cosmo.h*Ez(cosmo, z) 
-        XX(z) = cosmo.chi(z)
-        cl(z) = (1/H(z))*(tracer_u(z, l)*tracer_v(z, l)*P_uv((l+1/2)/XX(z), z))/XX(z)^2
-        Cl = quadgk(cl(z), za, zb)
-        return Cl
+function Cl(cosmology::Cosmology, l, tracer_u, tracer_v)
+    P_uv(k, z) = power_spectrum(cosmo, k, z)
+    H(z) = 100*cosmo.cosmo.h*Ez(cosmo, z) 
+    XX(z) = cosmo.chi(z)
+    cl(z) = (1/H(z))*(tracer_u(z, l)*tracer_v(z, l))*P_uv((l+1/2)/XX(z), z)/XX(z)^2
+    Cl = quadgk(cl, 0, Inf)[1]
+    return Cl
 end
             
         
