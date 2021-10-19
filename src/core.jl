@@ -28,6 +28,7 @@ struct CosmoPar{T}
     h::T
     n_s::T
     σ8::T
+    θCMB::T
 end
 
 struct Cosmology
@@ -97,9 +98,9 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
               Dzs, Dzi)
 end
 
-Cosmology(Ωc, Ωb, h, n_s, σ8; nk=256, nz=256) = begin
+Cosmology(Ωc, Ωb, h, n_s, σ8; θCMB=2.728/2.7, nk=256, nz=256) = begin
     Ωm = Ωc + Ωb
-    cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8)
+    cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
 
     Cosmology(cpar, nk=nk, nz=nz)
 end
@@ -111,21 +112,18 @@ function σR2(cosmo::Cosmology, R)
 end
 
 function TkBBKS(cosmo::CosmoPar, k)
-    tfac = 2.725 / 2.7
-    q = @. (tfac^2 * k/(cosmo.Ωm * cosmo.h^2 * exp(-cosmo.Ωb*(1+sqrt(2*cosmo.h)/cosmo.Ωm))))
+    q = @. (cosmo.θCMB^2 * k/(cosmo.Ωm * cosmo.h^2 * exp(-cosmo.Ωb*(1+sqrt(2*cosmo.h)/cosmo.Ωm))))
     return (@. (log(1+2.34q)/(2.34q))^2/sqrt(1+3.89q+(16.1q)^2+(5.46q)^3+(6.71q)^4))
 end
 
 function get_zeq(cosmo::CosmoPar)
     wm=cosmo.Ωm*cosmo.h^2
-    tfac=2.725 / 2.7
-    return (2.5*10^4)*wm*(tfac^-4)
+    return (2.5*10^4)*wm*(cosmo.θCMB^-4)
 end
 
 function get_keq(cosmo::CosmoPar)
     wm=cosmo.Ωm*cosmo.h^2
-    tfac=2.725/2.7
-    return (7.46*10^-2)*wm*(tfac^-2)
+    return (7.46*10^-2)*wm/(cosmo.h*cosmo.θCMB^2) #
 end
 
 function get_zdrag(cosmo::CosmoPar)
@@ -138,8 +136,7 @@ end
 
 function R(cosmo::CosmoPar, z)
     wb=cosmo.Ωb*cosmo.h^2
-    tfac=2.725 / 2.7
-    R = 31.5*wb*(tfac^-4)*(z/10^3)^-1
+    R = 31.5*wb*(cosmo.θCMB^-4)*(z/10^3)^-1
     return R
 end
 
@@ -147,7 +144,7 @@ function get_rs(cosmo::CosmoPar)
     keq = get_keq(cosmo)
     zeq = get_zeq(cosmo)
     zd = get_zdrag(cosmo)
-    rs = (sqrt(1+R(cosmo, zd))+sqrt(R(cosmo, zd)+R(cosmo, zeq)))
+    rs = (sqrt(1+R(cosmo, zd+1))+sqrt(R(cosmo, zd+1)+R(cosmo, zeq)))
     rs /= (1+sqrt(R(cosmo, zeq)))
     rs =  (log(rs))
     rs *= (2/(3*keq))*sqrt(6/R(cosmo, zeq))
@@ -188,7 +185,6 @@ function Tc(cosmo::CosmoPar, k)
    Wc = cosmo.Ωm-cosmo.Ωb
    s = get_rs(cosmo)
    keq = get_keq(cosmo)
-   tfac = 2.725 / 2.7
    wm=cosmo.Ωm*cosmo.h^2
    q = @.(k/(13.41*keq))
    a1 = (46.9*wm)^0.670*(1+(32.1*wm)^-0.532)
@@ -207,7 +203,7 @@ end
 function TkEisHu(cosmo::CosmoPar, k)
     Wc = cosmo.Ωm-cosmo.Ωb
     Tk = (cosmo.Ωb/cosmo.Ωm).*Tb(cosmo, k).+(Wc/cosmo.Ωm).*Tc(cosmo, k)
-    return Tk
+    return Tk.^2 #apparently we have to put here a square
 end
 
 function _Ez(cosmo::CosmoPar, z)
