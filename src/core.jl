@@ -1,5 +1,7 @@
 # c/(100 km/s/Mpc) in Mpc
 const CLIGHT_HMPC = 2997.92458
+# c/(km/s/Mpc) in Mpc
+const CLIGHT_MPC = 299792.458
 
 function w_tophat(x::Real)
     x2 = x^2
@@ -134,7 +136,7 @@ end
 function get_pz(dpdz)
     z = dpdz[1]
     p = dpdz[2]
-    pz = LinearInterpolation(BOSS_z, BOSS_dndz, extrapolation_bc=Flat())
+    pz = LinearInterpolation(z, p, extrapolation_bc=Flat())
     return pz 
 end
 
@@ -142,7 +144,7 @@ function lensing_kernel(cosmo::Cosmology, z, dpdz)
     X = cosmo.chi(z)
     a = 1/(1+z)
     XX(zz) = cosmo.chi(zz)
-    H = 100*cosmo.cosmo.h
+    H = 100*cosmo.cosmo.h/CLIGHT_MPC
     Wm = cosmo.cosmo.Ωm
     pz = get_pz(dpdz)
     qL(zz) = pz(zz)*(XX(zz)-X)/(XX(zz)) 
@@ -165,8 +167,19 @@ function convergence_kernel(cosmology::Cosmology, dpdz)
     return qk
 end 
 
+function CMBlensing_kernel(cosmology::Cosmology, zs=1100)
+    a(z) = 1/(1+z)
+    X(z) = cosmo.chi(z)
+    H = 100*cosmo.cosmo.h/CLIGHT_MPC
+    Wm = cosmo.cosmo.Ωm
+    qCMBL(z) = (X(zs)-X(z))/(X(zs))*(3/2)*H^2*Wm*(X(z)/a(z))
+    Kl(l) = 1 #l.*(l.+1)./(l.+1/2).^2
+    qCMBL(z, l) = Kl(l).*qCMBL(z)
+    return qCMBL
+end 
+
 function clustering_kernel(cosmology::Cosmology, bg, dpdz)
-    H = 100*cosmo.cosmo.h
+    H = 100*cosmo.cosmo.h/CLIGHT_MPC
     dzdX(z) = H*Ez(cosmo, z) 
     pz = get_pz(dpdz)
     qg(z, l) = ones(length(l)).*bg.*pz(z).*dzdX(z)
