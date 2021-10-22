@@ -53,7 +53,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
     if tk_mode== "EisHu"
-        tk = TkEisHu(cpar, ks)
+        tk = TkEisHu(cpar, ks./ cpar.h)
     elseif tk_mode== "BBKS"
         tk = TkBBKS(cpar, ks)
     else
@@ -123,13 +123,13 @@ end
 
 function get_keq(cosmo::CosmoPar)
     wm=cosmo.Ωm*cosmo.h^2
-    return (7.46*10^-2)*wm/(cosmo.h*cosmo.θCMB^2) #
+    return (7.46*10^-2)*wm/(cosmo.h * cosmo.θCMB^2) 
 end
 
 function get_zdrag(cosmo::CosmoPar)
     wb=cosmo.Ωb*cosmo.h^2
     wm=cosmo.Ωm*cosmo.h^2
-    b1 = 0.313*(wm^-0.419)*(1+0.607*wm*0.674)
+    b1 = 0.313*(wm^-0.419)*(1+0.607*wm^0.674)
     b2 = 0.238*wm^0.223
     return 1291*((wm^0.251)/(1+0.659*wm^0.828))*(1+b1*wb^b2)
 end
@@ -170,7 +170,7 @@ function Tb(cosmo::CosmoPar, k)
    zd = get_zdrag(cosmo)
    zeq = get_zeq(cosmo)
    keq = get_keq(cosmo)
-   ksilk = 1.6*wb^0.52*wm^0.73*(1+(10.4*wm)^-0.95)
+   ksilk = 1.6*wb^0.52*wm^0.73*(1+(10.4*wm)^-0.95)/cosmo.h
    ab = 2.07*keq*s*(1+R(cosmo, zd))^(-3/4)*G((1+zeq)/(1+zd))
    bb =  0.5+(cosmo.Ωb/cosmo.Ωm)+(3-2*cosmo.Ωb/cosmo.Ωm)*sqrt((17.2*wm)^2+1)
    bnode = 8.41*(wm)^0.435
