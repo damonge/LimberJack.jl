@@ -133,6 +133,15 @@ function power_spectrum(cosmo::Cosmology, k, z)
     @. exp(cosmo.lplk(log(k)))*Dz2
 end
 
+function delta(x, x0 = 0)
+    if x == x0
+        delta = 1
+    else
+        delta = 0
+    end
+    return delta
+end
+
 function get_pz(dpdz)
     z = dpdz[1]
     p = dpdz[2]
@@ -156,7 +165,7 @@ function lensing_kernel(cosmo::Cosmology, z, dpdz)
 end
 
 function shear_kernel(cosmo::Cosmology, dpdz)
-    Gl(l) = sqrt.(factorial.(l.+2)./factorial.(l.-2))./(l.+1/2).^2
+    Gl(l) = @.(sqrt((l+2.)*(l+1.)*l*(l-1.))/(l+0.5)^2)
     qL(z) = lensing_kernel(cosmo, z, dpdz)
     qgamma(z, l) = Gl(l).*qL(z)
     return qgamma
@@ -169,15 +178,26 @@ function convergence_kernel(cosmology::Cosmology, dpdz)
     return qk
 end 
 
-function CMBlensing_kernel(cosmology::Cosmology, zs=1100)
-    a(z) = 1/(1+z)
-    X(z) = cosmo.chi(z)
+function CMBlensing_kernel(cosmo::Cosmology, z, zs)
+    X = cosmo.chi(z)
+    Xs = cosmo.chi(zs)
+    a = 1/(1+z)
+    XX(zz) = cosmo.chi(zz)
     H = 100*cosmo.cosmo.h/CLIGHT_MPC
     Wm = cosmo.cosmo.Ωm
-    qCMBL(z) = (X(zs)-X(z))/(X(zs))*(3/2)*H^2*Wm*(X(z)/a(z))
-    Kl(l) = 1 #l.*(l.+1)./(l.+1/2).^2
-    qCMBL(z, l) = Kl(l).*qCMBL(z)
+    if z < zs
+        qCMBL = (3/2)*H^2*Wm*(X/a)*(Xs-X)/(Xs) 
+    else
+        qCMBL = 0 
+    end
     return qCMBL
+end
+
+function CMBk_kernel(cosmology::Cosmology, zs)
+    Kl(l) = l.*(l.+1)./(l.+1/2).^2
+    qCMBL(z) = CMBlensing_kernel(cosmo, z, zs)
+    qCMBk(z, l) = Kl(l).*qCMBL(z)
+    return qCMBk
 end 
 
 function clustering_kernel(cosmology::Cosmology, bg, dpdz)
@@ -192,7 +212,7 @@ function Cl(cosmology::Cosmology, l, tracer_u, tracer_v)
     P_uv(k, z) = power_spectrum(cosmo, k, z)
     H(z) = 100*cosmo.cosmo.h*Ez(cosmo, z) 
     XX(z) = cosmo.chi(z)
-    cl(z) = (1/H(z)).*(tracer_u(z, l).*tracer_v(z, l)).*P_uv((l.+1/2)./XX(z), z)./XX(z)^2
+    cl(z) = (CLIGHT_MPC/H(z)).*(tracer_u(z, l).*tracer_v(z, l)).*P_uv((l.+1/2)./XX(z), z)./XX(z)^2
     Cl = quadgk(cl, 0, Inf)[1]
     return Cl
 end
