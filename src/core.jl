@@ -137,8 +137,9 @@ function get_pz(dpdz)
     z = dpdz[1]
     p = dpdz[2]
     pz = LinearInterpolation(z, p, extrapolation_bc=Flat())
-    QL = quadgk(z->pz(z), minimum(z), maximum(z), Inf)[1]
-    return pz 
+    norm = quadgk(pz, minimum(z), maximum(z), Inf)[1]
+    ppz(zz) = pz(zz)./norm
+    return ppz
 end
 
 function lensing_kernel(cosmo::Cosmology, z, dpdz)
