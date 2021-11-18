@@ -145,8 +145,8 @@ end
 function get_pz(dpdz)
     z = dpdz[1]
     p = dpdz[2]
-    pz = LinearInterpolation(z, p, extrapolation_bc=Flat())
-    norm = quadgk(pz, minimum(z), maximum(z), Inf)[1]
+    pz = LinearInterpolation(z, p, extrapolation_bc=0)
+    norm = quadgk(pz, minimum(z), maximum(z), rtol=1E-5)[1] 
     ppz(zz) = pz(zz)./norm
     return ppz
 end
@@ -200,21 +200,55 @@ function CMBk_kernel(cosmology::Cosmology, zs)
     return qCMBk
 end 
 
-function clustering_kernel(cosmology::Cosmology, bg, dpdz)
-    H = 100*cosmo.cosmo.h/CLIGHT_MPC
-    dzdX(z) = H*Ez(cosmo, z) 
+function clustering_kernel(cosmology::Cosmology, bg, dpdz) 
     pz = get_pz(dpdz)
-    qg(z, l) = ones(length(l)).*bg.*pz(z).*dzdX(z)
+    qg(z, l) = ones(length(l)).*bg.*pz(z).*Hmpc(cosmology, z)
     return qg
 end
     
 function Cl(cosmology::Cosmology, l, tracer_u, tracer_v)
     P_uv(k, z) = power_spectrum(cosmo, k, z)
-    H(z) = 100*cosmo.cosmo.h*Ez(cosmo, z) 
     XX(z) = cosmo.chi(z)
-    cl(z) = (CLIGHT_MPC/H(z)).*(tracer_u(z, l).*tracer_v(z, l)).*P_uv((l.+1/2)./XX(z), z)./XX(z)^2
+    cl(z) = (1/Hmpc(cosmology, z)).*(tracer_u(z, l).*tracer_v(z, l)).*P_uv((l.+1/2)./XX(z), z)./XX(z)^2
     Cl = quadgk(cl, 0, Inf)[1]
     return Cl
 end
-            
+
+# Make the Cl integral in K
+# Compare to David's tracers.jl Number_counts
+
+struct NumberCountsTracer{T<:Real}
+    wint::AbstractInterpolation{T, 1}
+    bias::T
+    wnorm::T
+end
+
+NumberCountsTracer(z, wz, bias) = begin
+    wint = LinearInterpolation(z, wz, extrapolation_bc=0)
+    area = quadgk(wint, z[1], z[end], rtol=1E-5)[1]
+    NumberCountsTracer(wint, bias, 1.0/area)
+end
+
+function Cℓintegrand(cosmo::Cosmology,
+                     t1::NumberCountsTracer,
+                     t2::NumberCountsTracer,
+                     logk::Float64, ℓ::Int64)
+    k = exp(logk)
+    chi = (ℓ+0.5)/k
+    if chi > cosmo.chi_max
+        return 0
+    end
+    z = cosmo.z_of_chi(chi)
+    hz = Hmpc(cosmo, z)
+    w1 = t1.wint(z)*t1.wnorm*hz*t1.bias
+    w2 = t2.wint(z)*t2.wnorm*hz*t1.bias
+    pk = power_spectrum(cosmo, k, z)
+    k*w1*w2*pk
+end
+
+function angularCℓ(cosmo, t1, t2, ℓ)
+    quadgk(lk -> Cℓintegrand(cosmo, t1, t2, lk, ℓ),
+           log(10^-4), log(10^2), rtol=1E-5)[1]/(ℓ+0.5)
+end
+
         
