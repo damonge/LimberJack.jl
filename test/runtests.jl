@@ -39,6 +39,20 @@ end
     @test all(@. (abs(pk/pk_bm-1.0) < 3E-4))
 end
 
+@testset "BMPkEisHu" begin
+    cosmo = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81,
+                      nk=1024, tk_mode="EisHu")
+    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
+    pk = power_spectrum(cosmo, ks, 0.)
+    pk_bm = [2.12222992e+04,
+             8.83444294e+04,
+             1.05452648e+04,
+             8.22064850e+01,
+             2.41173851e-01]
+    # It'd be best if this was < 1E-4...
+    @test all(@. (abs(pk/pk_bm-1.0) < 3E-4))
+end
+
 @testset "BMCℓs" begin
     cosmo = Cosmology()
     z = range(0., stop=2., length=1024)
@@ -72,7 +86,8 @@ end
 
     function f(p::T)::Array{T,1} where T<:Real
         Ωm = p
-        cpar = LimberJack.CosmoPar{T}(Ωm, 0.05, 0.67, 0.96, 0.81)
+        θCMB = 2.725/2.7
+        cpar = LimberJack.CosmoPar{T}(Ωm, 0.05, 0.67, 0.96, 0.81, θCMB)
         cosmo = LimberJack.Cosmology(cpar)
         chi = comoving_radial_distance(cosmo, zs)
         return chi
