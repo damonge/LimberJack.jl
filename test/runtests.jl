@@ -57,7 +57,7 @@ end
     cosmo = Cosmology()
     z = range(0., stop=2., length=1024)
     wz = @. exp(-0.5*((z-0.5)/0.05)^2)
-    t = NumberCountsTracer(z, wz, 2.)
+    t = NumberCountsTracer(cosmo, z, wz, 2.)
     ℓs = [10, 30, 100, 300]
     Cℓs = [angularCℓ(cosmo, t, t, ℓ) for ℓ in ℓs]
     Cℓs_bm = [7.02850428e-05,
@@ -69,11 +69,18 @@ end
 end
 
 @testset "CreateTracer" begin
-    z = range(0., stop=2., length=1024)
-    wz = @. exp(-0.5*((z-0.5)/0.05)^2)
-    t = NumberCountsTracer(z, wz, 2.)
-    integ = 1.0/(sqrt(2π)*0.05)
-    @test abs(t.wnorm/integ - 1) < 1E-4
+    p_of_z(x) = @. exp(-0.5*((x-0.5)/0.05)^2)
+
+    z = range(0., stop=2., length=2048)
+    pz = p_of_z(z)
+    cosmo = Cosmology()
+    t = NumberCountsTracer(cosmo, z, pz, 2.)
+
+    wz1 = t.wint(cosmo.chi(0.5))
+    hz = Hmpc(cosmo, 0.5)
+    wz2 = p_of_z(0.5)*hz/(sqrt(2π)*0.05)
+
+    @test abs(wz2/wz1 - 1) < 1E-4
 end
 
 @testset "CreateCosmo" begin

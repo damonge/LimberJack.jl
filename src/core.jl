@@ -50,7 +50,7 @@ struct Cosmology
     Dz::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
+Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
@@ -66,7 +66,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
     norm = cpar.σ8^2 / σ8_2_here
     pk0[:] = pk0 .* norm
     # OPT: interpolation method
-    pki = LinearInterpolation(log.(ks), log.(pk0), extrapolation_bc=Linear())
+    pki = LinearInterpolation(log.(ks), log.(pk0), extrapolation_bc=Line())
 
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
@@ -74,8 +74,8 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
     chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
             for zz in zs]
     # OPT: tolerances, interpolation method
-    chii = LinearInterpolation(zs, chis, extrapolation_bc=Linear())
-    zi = LinearInterpolation(chis, zs, extrapolation_bc=Linear())
+    chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
+    zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
 
     # ODE solution for growth factor
     z_ini = 1000.0
@@ -93,7 +93,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
     s = vcat(sol.u'...)
     Dzs = reverse(s[:, 2] / s[end, 2])
     # OPT: interpolation method
-    Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Linear())
+    Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
 
     Cosmology(cpar, ks, pk0, dlogk, pki,
               collect(zs), chis, chii, zi, chis[end],

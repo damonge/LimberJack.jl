@@ -9,9 +9,8 @@ function Cℓintegrand(cosmo::Cosmology,
         return 0
     end
     z = cosmo.z_of_chi(chi)
-    hz = Hmpc(cosmo, z)
-    w1 = t1.wint(z)*t1.wnorm*hz*t1.bias
-    w2 = t2.wint(z)*t2.wnorm*hz*t1.bias
+    w1 = t1.wint(chi)*t1.bias
+    w2 = t2.wint(chi)*t2.bias
     pk = power_spectrum(cosmo, k, z)
     k*w1*w2*pk
 end
