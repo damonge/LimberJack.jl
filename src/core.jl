@@ -30,6 +30,7 @@ struct CosmoPar{T}
     h::T
     n_s::T
     σ8::T
+    θCMB::T
 end
 
 struct Cosmology
@@ -53,7 +54,13 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
-    tk = TkBBKS(cpar, ks)
+    if tk_mode== "EisHu"
+        tk = TkEisHu(cpar, ks./ cpar.h)
+    elseif tk_mode== "BBKS"
+        tk = TkBBKS(cpar, ks)
+    else
+        print("Transfer function not implemented")
+    end
     pk0 = @. ks^cpar.n_s * tk
     σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
     norm = cpar.σ8^2 / σ8_2_here
@@ -93,11 +100,11 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256) = begin
               Dzs, Dzi)
 end
 
-Cosmology(Ωc, Ωb, h, n_s, σ8; nk=256, nz=256) = begin
+Cosmology(Ωc, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
     Ωm = Ωc + Ωb
-    cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8)
+    cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
 
-    Cosmology(cpar, nk=nk, nz=nz)
+    Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode)
 end
 
 Cosmology() = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81)
@@ -107,9 +114,69 @@ function σR2(cosmo::Cosmology, R)
 end
 
 function TkBBKS(cosmo::CosmoPar, k)
-    tfac = 2.725 / 2.7
-    q = @. (tfac^2 * k/(cosmo.Ωm * cosmo.h^2 * exp(-cosmo.Ωb*(1+sqrt(2*cosmo.h)/cosmo.Ωm))))
+    q = @. (cosmo.θCMB^2 * k/(cosmo.Ωm * cosmo.h^2 * exp(-cosmo.Ωb*(1+sqrt(2*cosmo.h)/cosmo.Ωm))))
     return (@. (log(1+2.34q)/(2.34q))^2/sqrt(1+3.89q+(16.1q)^2+(5.46q)^3+(6.71q)^4))
+end
+
+function _T0(keq, k, ac, bc)
+    q = @. (k/(13.41*keq))
+    C = @. ((14.2/ac) + (386/(1+69.9*q^1.08)))
+    T0 = @.(log(ℯ+1.8*bc*q)/(log(ℯ+1.8*bc*q)+C*q^2))
+    return T0
+end 
+
+function TkEisHu(cosmo::CosmoPar, k)
+    Ωc = cosmo.Ωm-cosmo.Ωb
+    wm=cosmo.Ωm*cosmo.h^2
+    wb=cosmo.Ωb*cosmo.h^2
+
+    # Scales
+    # k_eq
+    keq = (7.46*10^-2)*wm/(cosmo.h * cosmo.θCMB^2)
+    # z_eq
+    zeq = (2.5*10^4)*wm*(cosmo.θCMB^-4)
+    # z_drag
+    b1 = 0.313*(wm^-0.419)*(1+0.607*wm^0.674)
+    b2 = 0.238*wm^0.223
+    zd = 1291*((wm^0.251)/(1+0.659*wm^0.828))*(1+b1*wb^b2)
+    # k_Silk
+    ksilk = 1.6*wb^0.52*wm^0.73*(1+(10.4*wm)^-0.95)/cosmo.h
+    # r_s
+    R_prefac = 31.5*wb*(cosmo.θCMB^-4)
+    Rd = R_prefac*((zd+1)/10^3)^-1
+    Rdm1 = R_prefac*(zd/10^3)^-1
+    Req = R_prefac*(zeq/10^3)^-1
+    rs = sqrt(1+Rd)+sqrt(Rd+Req)
+    rs /= (1+sqrt(Req))
+    rs =  (log(rs))
+    rs *= (2/(3*keq))*sqrt(6/Req)
+
+    # Tc
+    q = @.(k/(13.41*keq))
+    a1 = (46.9*wm)^0.670*(1+(32.1*wm)^-0.532)
+    a2 = (12.0*wm)^0.424*(1+(45.0*wm)^-0.582)
+    ac = (a1^(-cosmo.Ωb/cosmo.Ωm))*(a2^(-(cosmo.Ωb/cosmo.Ωm)^3))
+    b1 = 0.944*(1+(458*wm)^-0.708)^-1
+    b2 = (0.395*wm)^(-0.0266)
+    bc = (1+b1*((Ωc/cosmo.Ωm)^b2-1))^-1
+    f = @.(1/(1+(k*rs/5.4)^4))
+    Tc1 = f.*_T0(keq, k, 1, bc)
+    Tc2 = (1 .-f).*_T0(keq, k, ac, bc)
+    Tc = Tc1 .+ Tc2
+
+    # Tb
+    y = (1+zeq)/(1+zd)
+    Gy = y*(-6*sqrt(1+y)+(2+3y)*log((sqrt(1+y)+1)/(sqrt(1+y)-1)))
+    ab = 2.07*keq*rs*(1+Rdm1)^(-3/4)*Gy
+    bb =  0.5+(cosmo.Ωb/cosmo.Ωm)+(3-2*cosmo.Ωb/cosmo.Ωm)*sqrt((17.2*wm)^2+1)
+    bnode = 8.41*(wm)^0.435
+    ss = rs./(1 .+(bnode./(k.*rs)).^3).^(1/3)
+    Tb1 = _T0(keq, k, 1, 1)./(1 .+(k.*rs/5.2).^2)
+    Tb2 = (ab./(1 .+(bb./(k.*rs)).^3)).*exp.(-(k/ksilk).^ 1.4)
+    Tb = (Tb1.+Tb2).*sin.(k.*ss)./(k.*ss)
+
+    Tk = (cosmo.Ωb/cosmo.Ωm).*Tb.+(Ωc/cosmo.Ωm).*Tc
+    return Tk.^2
 end
 
 function _Ez(cosmo::CosmoPar, z)
