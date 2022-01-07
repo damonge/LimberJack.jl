@@ -86,7 +86,8 @@ end
 
     function f(p::T)::Array{T,1} where T<:Real
         Ωm = p
-        cpar = LimberJack.CosmoPar{T}(Ωm, 0.05, 0.67, 0.96, 0.81)
+        θCMB = 2.725/2.7
+        cpar = LimberJack.CosmoPar{T}(Ωm, 0.05, 0.67, 0.96, 0.81, θCMB)
         cosmo = LimberJack.Cosmology(cpar)
         chi = comoving_radial_distance(cosmo, zs)
         return chi
