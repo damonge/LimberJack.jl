@@ -7,10 +7,10 @@ using ForwardDiff
     cosmo = Cosmology()
     ztest = [0.1, 0.5, 1.0, 3.0]
     chi = comoving_radial_distance(cosmo, ztest)
-    chi_bm = [437.18951971,
-              1973.14978475,
-              3451.62027484,
-              6639.61804355]
+    chi_bm = [437.1870424,
+              1973.09067532,
+              3451.41630697,
+              6638.67844433]
     @test all(@. (abs(chi/chi_bm-1.0) < 1E-4))
 end
 
@@ -18,10 +18,10 @@ end
     cosmo = Cosmology()
     ztest = [0.1, 0.5, 1.0, 3.0]
     Dz = growth_factor(cosmo, ztest)
-    Dz_bm = [0.9496636,
-             0.77319003,
-             0.61182745,
-             0.31889837]
+    Dz_bm = [0.94966513,
+             0.77320274,
+             0.61185874,
+             0.31898209]
     # It'd be best if this was < 1E-4...
     @test all(@. (abs(Dz/Dz_bm-1.0) < 2E-4))
 end

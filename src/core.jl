@@ -31,6 +31,18 @@ struct CosmoPar{T}
     n_s::T
     σ8::T
     θCMB::T
+    Ωr::T
+    ΩΛ::T
+end
+
+CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
+    # This is 4*sigma_SB*(2.7 K)^4/rho_crit(h=1)
+    prefac = 2.38163816E-5
+    Neff = 3.046
+    f_rel = 1.0 + Neff * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
+    Ωr = prefac*f_rel*θCMB^4/h^2
+    ΩΛ = 1-Ωm-Ωr
+    CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
 end
 
 struct Cosmology
@@ -180,7 +192,7 @@ function TkEisHu(cosmo::CosmoPar, k)
 end
 
 function _Ez(cosmo::CosmoPar, z)
-    @. sqrt(cosmo.Ωm*(1+z)^3+1-cosmo.Ωm)
+    @. sqrt(cosmo.Ωm*(1+z)^3+cosmo.Ωr*(1+z)^4+cosmo.ΩΛ)
 end
 
 function _dgrowth!(dd, d, cosmo::CosmoPar, a)
@@ -194,49 +206,10 @@ Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
 Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
-
 function power_spectrum(cosmo::Cosmology, k, z)
     Dz2 = growth_factor(cosmo, z)^2
     @. exp(cosmo.lplk(log(k)))*Dz2
 end
-
-function delta(x, x0 = 0)
-    if x == x0
-        delta = 1
-    else
-        delta = 0
-    end
-    return delta
-end
-
-function get_pz(dpdz)
-    z = dpdz[1]
-    p = dpdz[2]
-    pz = LinearInterpolation(z, p, extrapolation_bc=0)
-    norm = quadgk(pz, minimum(z), maximum(z), rtol=1E-5)[1] 
-    ppz(zz) = pz(zz)./norm
-    return ppz
-end
-
-function lensing_kernel(cosmo::Cosmology, z, dpdz)
-    X = cosmo.chi(z)
-    a = 1/(1+z)
-    XX(zz) = cosmo.chi(zz)
-    H = 100*cosmo.cosmo.h/CLIGHT_MPC
-    Wm = cosmo.cosmo.Ωm
-    pz = get_pz(dpdz)
-    qL(zz) = pz(zz)*(XX(zz)-X)/(XX(zz)) 
-    QL = quadgk(qL, z, Inf)[1]
-    QL *= (3/2)*H^2*Wm*(X/a)
-    return QL
-end
-
-function shear_kernel(cosmo::Cosmology, dpdz)
-    Gl(l) = @.(sqrt((l+2.)*(l+1.)*l*(l-1.))/(l+0.5)^2)
-    qL(z) = lensing_kernel(cosmo, z, dpdz)
-    qgamma(z, l) = Gl(l).*qL(z)
-    return qgamma
-end 
 
 function convergence_kernel(cosmology::Cosmology, dpdz)
     Kl(l) = l.*(l.+1)./(l.+1/2).^2
@@ -266,20 +239,3 @@ function CMBk_kernel(cosmology::Cosmology, zs)
     qCMBk(z, l) = Kl(l).*qCMBL(z)
     return qCMBk
 end 
-
-function clustering_kernel(cosmology::Cosmology, bg, dpdz) 
-    pz = get_pz(dpdz)
-    qg(z, l) = ones(length(l)).*bg.*pz(z).*Hmpc(cosmology, z)
-    return qg
-end
-    
-function Cl(cosmology::Cosmology, l, tracer_u, tracer_v)
-    P_uv(k, z) = power_spectrum(cosmo, k, z)
-    XX(z) = cosmo.chi(z)
-    cl(z) = (1/Hmpc(cosmology, z)).*(tracer_u(z, l).*tracer_v(z, l)).*P_uv((l.+1/2)./XX(z), z)./XX(z)^2
-    Cl = quadgk(cl, 0, Inf)[1]
-    return Cl
-end
-
-# Make the Cl integral in K
-# Compare to David's tracers.jl Number_counts
