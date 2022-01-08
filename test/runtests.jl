@@ -56,16 +56,23 @@ end
 @testset "BMCℓs" begin
     cosmo = Cosmology()
     z = range(0., stop=2., length=1024)
-    wz = @. exp(-0.5*((z-0.5)/0.05)^2)
-    t = NumberCountsTracer(cosmo, z, wz, 2.)
+    nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+    tg = NumberCountsTracer(cosmo, z, nz, 2.)
+    ts = WeakLensingTracer(cosmo, z, nz)
     ℓs = [10, 30, 100, 300]
-    Cℓs = [angularCℓ(cosmo, t, t, ℓ) for ℓ in ℓs]
-    Cℓs_bm = [7.02850428e-05,
-              7.43987364e-05,
-              2.92323380e-05,
-              4.91394610e-06]
+    Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
+    Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
+    Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
+    Cℓ_gg_bm = [7.02850428e-05, 7.43987364e-05,
+                2.92323380e-05, 4.91394610e-06]
+    Cℓ_gs_bm = [7.26323570e-08, 7.29532942e-08,
+                2.65115994e-08, 4.23362515e-09]
+    Cℓ_ss_bm = [1.75502191e-08, 8.22186845e-09,
+                1.52560567e-09, 1.75501782e-10]
     # It'd be best if this was < 1E-4...
-    @test all(@. (abs(Cℓs/Cℓs_bm-1.0) < 5E-4))
+    @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-4))
+    @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-4))
+    @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-4))
 end
 
 @testset "CreateTracer" begin
