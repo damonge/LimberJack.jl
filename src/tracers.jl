@@ -53,6 +53,27 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz) = begin
     WeakLensingTracer(wint, 1.0, 2)
 end
 
+struct CMBLensingTracer{T<:Real} <: Tracer{T}
+    wint::AbstractInterpolation{T, 1}
+    bias::T
+    lpre::Int
+end
+
+CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
+    # chi array
+    chis = range(0.0, stop=cosmo.chi_max, length=nchi)
+    zs = cosmo.z_of_chi(chis)
+    # Prefactor
+    H0 = cosmo.cosmo.h/CLIGHT_HMPC
+    lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
+    # Kernel
+    w_arr = @. lens_prefac*chis*(1-chis/cosmo.chi_LSS)*(1+zs)
+
+    # Interpolate
+    wint = LinearInterpolation(chis, w_arr, extrapolation_bc=0)
+    CMBLensingTracer(wint, 1.0, 1)
+end
+
 function get_Fℓ(t::Tracer, ℓ)
     if t.lpre == 2
         return @. sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2

@@ -58,6 +58,7 @@ struct Cosmology
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
     chi_max
+    chi_LSS
     Dzs::Array
     Dz::AbstractInterpolation
 end
@@ -88,6 +89,8 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     # OPT: tolerances, interpolation method
     chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
     zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
+    # Distance to LSS
+    chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
     # ODE solution for growth factor
     z_ini = 1000.0
@@ -109,7 +112,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
 
     Cosmology(cpar, ks, pk0, dlogk, pki,
               collect(zs), chis, chii, zi, chis[end],
-              Dzs, Dzi)
+              chi_LSS, Dzs, Dzi)
 end
 
 Cosmology(Ωc, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
@@ -210,32 +213,3 @@ function power_spectrum(cosmo::Cosmology, k, z)
     Dz2 = growth_factor(cosmo, z)^2
     @. exp(cosmo.lplk(log(k)))*Dz2
 end
-
-function convergence_kernel(cosmology::Cosmology, dpdz)
-    Kl(l) = l.*(l.+1)./(l.+1/2).^2
-    qL(z) = lensing_kernel(cosmo, z, dpdz)
-    qk(z, l) = Kl(l).*qL(z)
-    return qk
-end 
-
-function CMBlensing_kernel(cosmo::Cosmology, z, zs)
-    X = cosmo.chi(z)
-    Xs = cosmo.chi(zs)
-    a = 1/(1+z)
-    XX(zz) = cosmo.chi(zz)
-    H = 100*cosmo.cosmo.h/CLIGHT_MPC
-    Wm = cosmo.cosmo.Ωm
-    if z < zs
-        qCMBL = (3/2)*H^2*Wm*(X/a)*(Xs-X)/(Xs) 
-    else
-        qCMBL = 0 
-    end
-    return qCMBL
-end
-
-function CMBk_kernel(cosmology::Cosmology, zs)
-    Kl(l) = l.*(l.+1)./(l.+1/2).^2
-    qCMBL(z) = CMBlensing_kernel(cosmo, z, zs)
-    qCMBk(z, l) = Kl(l).*qCMBL(z)
-    return qCMBk
-end 

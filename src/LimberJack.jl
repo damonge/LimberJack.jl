@@ -1,8 +1,8 @@
 module LimberJack
 
-export Cosmology
+export CosmoPar, Cosmology
 export Ez, Hmpc, comoving_radial_distance, power_spectrum, growth_factor
-export NumberCountsTracer, WeakLensingTracer, get_Fℓ
+export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer, get_Fℓ
 export angularCℓ
 
 using Interpolations
