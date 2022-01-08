@@ -2,7 +2,7 @@ module LimberJack
 
 export Cosmology
 export Ez, Hmpc, comoving_radial_distance, power_spectrum, growth_factor
-export NumberCountsTracer
+export NumberCountsTracer, WeakLensingTracer, get_Fℓ
 export angularCℓ
 
 using Interpolations

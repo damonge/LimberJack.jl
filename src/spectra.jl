@@ -1,7 +1,7 @@
 
 function Cℓintegrand(cosmo::Cosmology,
-                     t1::NumberCountsTracer,
-                     t2::NumberCountsTracer,
+                     t1::Tracer,
+                     t2::Tracer,
                      logk::Float64, ℓ::Int64)
     k = exp(logk)
     chi = (ℓ+0.5)/k
@@ -15,7 +15,11 @@ function Cℓintegrand(cosmo::Cosmology,
     k*w1*w2*pk
 end
 
-function angularCℓ(cosmo, t1, t2, ℓ)
-    quadgk(lk -> Cℓintegrand(cosmo, t1, t2, lk, ℓ),
-           log(10^-4), log(10^2), rtol=1E-5)[1]/(ℓ+0.5)
+function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ)
+    # OPT: we are not optimizing the limits of integration
+    Cℓ = quadgk(lk -> Cℓintegrand(cosmo, t1, t2, lk, ℓ),
+                log(10^-4), log(10^2), rtol=1E-5)[1]/(ℓ+0.5)
+    fℓ1 = get_Fℓ(t1, ℓ)
+    fℓ2 = get_Fℓ(t2, ℓ)
+    return Cℓ * fℓ1 * fℓ2
 end
