@@ -1,6 +1,8 @@
 using Test
 using LimberJack
 using ForwardDiff
+using Trapz
+using Zygote
 
 
 @testset "BMChi" begin
@@ -99,4 +101,162 @@ end
     dΩm = 0.02
     g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
     @test all(@. (abs(g/g1-1) < 1E-3))
+end
+
+@testset "dsigma2/dPk" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 256
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+
+    ind = 150
+
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    rsigma = LimberJack.get_rsigma(PkL, logk)
+
+    dsigma2 = ForwardDiff.gradient(pklin -> LimberJack.rsigma_func(rsigma, pklin, logk), PkL)
+
+    dPkL = zeros(nk)
+    dPkL[ind] = 1e-4*PkL[ind]
+    PkL_hi = LimberJack.rsigma_func(rsigma, PkL .+ dPkL, logk)
+    PkL_lo = LimberJack.rsigma_func(rsigma, PkL .- dPkL, logk)
+    dsigma2_test = @. (PkL_hi - PkL_lo)/2dPkL[ind]
+    # deltalogk/(2pi^2)k^3 e^(-k^2 R^2)
+    test = (logk[151] .- logk[150]) ./ 2.0 ./ pi^2 .* k .^ 3 .* exp.(.- k .^ 2 .* rsigma .^ 2)
+    println("dsigma2/dPk")
+    println("analytic = ", test[ind])
+    println("autodiff = ", dsigma2[ind])
+    println("numerical diff = ", dsigma2_test)
+
+    @test all(@. (abs(dsigma2[ind]/dsigma2_test-1) < 1E-3))
+end
+
+@testset "dsigma2/dR" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 256
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    rsigma = LimberJack.get_rsigma(PkL, logk)
+
+    dsigma2 = ForwardDiff.derivative(rsig -> LimberJack.rsigma_func(rsig, PkL, logk), rsigma)
+
+    drsigma = 1e-4*rsigma
+    PkL_hi = LimberJack.rsigma_func(rsigma .+ drsigma, PkL, logk)
+    PkL_lo = LimberJack.rsigma_func(rsigma .- drsigma, PkL, logk)
+    dsigma2_test = @. (PkL_hi - PkL_lo)/2drsigma
+    test = trapz(logk, LimberJack.onederiv_gauss_norm_int_func(logk, PkL, rsigma))
+    println("dsigma2/dR")
+    println("analytic = ", test)
+    println("autodiff = ", dsigma2)
+    println("numerical diff = ", dsigma2_test)
+
+    @test all(@. (abs(dsigma2/dsigma2_test-1) < 1E-3))
+end
+
+@testset "drsigma/dPk" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 256
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+
+    ind = 150
+
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    drsigma = ForwardDiff.gradient(pklin -> LimberJack.get_rsigma(pklin, logk), PkL)
+
+    dPkL = zeros(nk)
+    dPkL[ind] = 1e-2*PkL[ind]
+    PkL_hi = LimberJack.get_rsigma(PkL .+ dPkL, logk)
+    PkL_lo = LimberJack.get_rsigma(PkL .- dPkL, logk)
+    drsigma_test = @. (PkL_hi - PkL_lo)/2dPkL[ind]
+    # Analytic result:
+    # sigma2(Pk, R) = 1
+    # dsigma2 = dsigma2/dPk dPk + dsigma2/dR dR = 0
+    # dR/dPk = (-dsigma2/dPk)/(dsigma2/dR)
+    # dsigma2/dPk = Deltalogk k^3/(2pi&2)exp(-k^2R(sigma2=1)^2)
+    # dsigma2/dR = -2R int dlogk k^5Pk/(2pi&2)exp(-k^2R(sigma2=1)^2)
+    test = (logk[2] .- logk[1]) ./ 2.0 ./ pi^2 .* k .^ 3 .* exp.(.- k .^ 2 .* LimberJack.get_rsigma(PkL, logk) .^ 2)
+    test1 = (-1) .* test ./ trapz(logk, LimberJack.onederiv_gauss_norm_int_func(logk, PkL, LimberJack.get_rsigma(PkL, logk)))
+    println("drsigma/dPk")
+    println("analytic = ", test1[ind])
+    println("autodiff = ", drsigma[ind])
+    println("numerical diff = ", drsigma_test)
+
+    @test all(@. (abs(drsigma[ind]/drsigma_test-1) < 1E-3))
+end
+
+@testset "Rkmats" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 256
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+
+    ind = 150
+
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    Rkmat = Rkmats(cosmo, nk=nk, nz=1)
+
+    dPkL = zeros(nk)
+    dPkL[ind] = 1e-4*PkL[ind]
+    PkL_hi = LimberJack._power_spectrum_nonlin_diff(cosmo, PkL .+ dPkL, k, logk, a)
+    PkL_lo = LimberJack._power_spectrum_nonlin_diff(cosmo, PkL .- dPkL, k, logk, a)
+    Rkmat_test = @. (PkL_hi - PkL_lo)/2dPkL[ind]
+
+    println("Rk")
+    println("analytic = ", Rkmat_test[ind])
+    println("autodiff = ", Rkmat[1, ind, ind])
+
+    @test all(@. (abs(Rkmat[1, ind, ind]/Rkmat_test[ind]-1) < 1E-3))
+end
+
+@testset "Rkkmats" begin
+    zs = 0.0
+    a = 1.0
+    lkmin = -4
+    lkmax = 2
+    nk = 20
+    logk = range(lkmin, stop=lkmax, length=nk)
+    k = 10 .^ logk
+    logk = log.(k)
+
+    ind = 1
+
+    cosmo = Cosmology()
+    PkL = power_spectrum(cosmo, k, zs)
+    Rkkmat = Rkkmats(cosmo, nk=nk, nz=1)
+
+    dPkL = zeros(nk)
+    dPkL[ind] = 1e-1*PkL[ind]
+    Rkmat_hi = LimberJack._Rkmat(cosmo, PkL .+ dPkL, k, logk, a)
+    Rkmat_lo = LimberJack._Rkmat(cosmo, PkL .- dPkL, k, logk, a)
+    Rkkmat_test = @. (Rkmat_hi - Rkmat_lo)/2dPkL[ind]
+
+    println("Rkk")
+    println("analytic = ", Rkkmat_test[ind])
+    println("autodiff = ", Rkkmat[ind, ind, ind])
+
+    zeromask = Rkkmat_test .> 0.0
+
+    @test all(@. (abs(Rkkmat[ind, zeromask, ind]/Rkkmat_test[zeromask]-1) < 5E-3))
 end
