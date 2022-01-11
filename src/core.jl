@@ -1,5 +1,7 @@
 # c/(100 km/s/Mpc) in Mpc
 const CLIGHT_HMPC = 2997.92458
+# c/(km/s/Mpc) in Mpc
+const CLIGHT_MPC = 299792.458
 
 function w_tophat(x::Real)
     x2 = x^2
@@ -29,6 +31,18 @@ struct CosmoPar{T}
     n_s::T
     σ8::T
     θCMB::T
+    Ωr::T
+    ΩΛ::T
+end
+
+CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
+    # This is 4*sigma_SB*(2.7 K)^4/rho_crit(h=1)
+    prefac = 2.38163816E-5
+    Neff = 3.046
+    f_rel = 1.0 + Neff * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
+    Ωr = prefac*f_rel*θCMB^4/h^2
+    ΩΛ = 1-Ωm-Ωr
+    CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
 end
 
 struct Cosmology
@@ -44,6 +58,7 @@ struct Cosmology
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
     chi_max
+    chi_LSS
     Dzs::Array
     Dz::AbstractInterpolation
 end
@@ -64,7 +79,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     norm = cpar.σ8^2 / σ8_2_here
     pk0[:] = pk0 .* norm
     # OPT: interpolation method
-    pki = LinearInterpolation(log.(ks), log.(pk0))
+    pki = LinearInterpolation(log.(ks), log.(pk0), extrapolation_bc=Line())
 
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
@@ -72,8 +87,10 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
             for zz in zs]
     # OPT: tolerances, interpolation method
-    chii = LinearInterpolation(zs, chis)
-    zi = LinearInterpolation(chis, zs)
+    chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
+    zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
+    # Distance to LSS
+    chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
     # ODE solution for growth factor
     z_ini = 1000.0
@@ -91,11 +108,11 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     s = vcat(sol.u'...)
     Dzs = reverse(s[:, 2] / s[end, 2])
     # OPT: interpolation method
-    Dzi = LinearInterpolation(zs, Dzs)
+    Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
 
     Cosmology(cpar, ks, pk0, dlogk, pki,
               collect(zs), chis, chii, zi, chis[end],
-              Dzs, Dzi)
+              chi_LSS, Dzs, Dzi)
 end
 
 Cosmology(Ωc, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
@@ -178,7 +195,7 @@ function TkEisHu(cosmo::CosmoPar, k)
 end
 
 function _Ez(cosmo::CosmoPar, z)
-    @. sqrt(cosmo.Ωm*(1+z)^3+1-cosmo.Ωm)
+    @. sqrt(cosmo.Ωm*(1+z)^3+cosmo.Ωr*(1+z)^4+cosmo.ΩΛ)
 end
 
 function _dgrowth!(dd, d, cosmo::CosmoPar, a)
