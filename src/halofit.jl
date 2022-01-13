@@ -15,17 +15,13 @@ struct PKnonlin
     pk_NL::AbstractInterpolation
 end
 
-PKnonlin(cosmo::Cosmology, k, z; nk=256, nz=256) = begin
-    
+PKnonlin(cosmo::Cosmology, PkL, k, z) = begin
+    nk = length(k)
+    nz = length(z)
     logk = log.(k)
     a = reverse(@. 1.0 / (1.0 + z))
     zs = reverse(z)
-    PkL = linear_power_spectrum(cosmo, k, zs)
-    #PkL = zeros(length(a), length(k))
-    #for i in range(1, stop=length(a))
-    #    PkL[i, :] .= linear_power_spectrum(cosmo, k, zs[i])
-    #end
-
+    PkL = transpose(reverse(transpose(PkL)))
     rsigs = zeros(nz)
     sigma2s = zeros(nz)
     neffs = zeros(nz)
@@ -55,11 +51,12 @@ PKnonlin(cosmo::Cosmology, k, z; nk=256, nz=256) = begin
 
     pk_NLs = zeros(nz, nk)
     for i in range(1, stop=nz)
-        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
+        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i], k, z[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
     end
+    #pk_NLs = transpose(reverse(transpose(pk_NLs)))
     pk_NL = LinearInterpolation((z, k), pk_NLs)
 
-    PKnonlin(z, k, rsig, sigma2, neff, C, pk_NL)
+    PKnonlin(a, k, rsig, sigma2, neff, C, pk_NL)
 end
 
 function gauss_norm_int_func(logk, pk, R)
@@ -129,9 +126,13 @@ function get_rsigma(pk, logk)
     return rsigma
 end
 
-function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, a, rsig, sigma2, neff, C)
-
-    zs = @. 1.0/a - 1.0
+function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, z, rsig, sigma2, neff, C)
+    if typeof(z) == Vector{Int64}
+        zs = reverse(z)
+    else
+        zs = z
+    end
+    a = @. 1/(1+zs)
     weffa = -1.0
     omegaMz = omega_x(cosmo, zs, "m")
     omegaDEwz = omega_x(cosmo, zs,"l")

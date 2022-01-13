@@ -226,10 +226,23 @@ comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 omega_x(cosmo::Cosmology, z, species_x_label) = _omega_x(cosmo.cosmo, z, species_x_label)
 
-function linear_power_spectrum(cosmo::Cosmology, k, z)
+function power_spectrum(cosmo::Cosmology, k, z; non_linear=true)
     # output: 2D array z1 = [k1, k2, ...]
     #                  z2 = [k1, k2, ...]
     #                  ...
     Dz2 = growth_factor(cosmo, z).^2
-    @. [exp(cosmo.lplk(log(k)))]*Dz2
+    PkL = @. [exp(cosmo.lplk(log(k)))]*Dz2
+    
+    if non_linear == true
+        halofit = PKnonlin(cosmo, PkL, k, z)
+        if typeof(z) == Vector{Int64}
+            zs = reverse(z)
+        else
+            zs = z
+        end
+        Pk = halofit.pk_NL(zs, k)
+    else
+        Pk = PkL
+    end
+    return Pk
 end
