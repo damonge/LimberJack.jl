@@ -15,31 +15,26 @@ struct PKnonlin
     pk_NL::AbstractInterpolation
 end
 
-PKnonlin(cosmo::Cosmology; nk=256, nz=256) = begin
-
-    lkmin = -4
-    lkmax = 2
-    logk = range(lkmin, stop=lkmax, length=nk)
-    k = 10 .^ logk
+PKnonlin(cosmo::Cosmology, k, z; nk=256, nz=256) = begin
+    
     logk = log.(k)
-    zmin = 0.
-    zmax = 3.
-    zs = range(zmin, stop=zmax, length=nz)
-    a = reverse(@. 1.0 / (1.0 + zs))
-    zs = reverse(zs)
-    PkL = zeros(length(a), length(k))
-    for i in range(1, stop=length(a))
-        PkL[i, :] .= power_spectrum(cosmo, k, zs[i])
-    end
+    a = reverse(@. 1.0 / (1.0 + z))
+    zs = reverse(z)
+    PkL = linear_power_spectrum(cosmo, k, zs)
+    #PkL = zeros(length(a), length(k))
+    #for i in range(1, stop=length(a))
+    #    PkL[i, :] .= linear_power_spectrum(cosmo, k, zs[i])
+    #end
 
     rsigs = zeros(nz)
     sigma2s = zeros(nz)
     neffs = zeros(nz)
     Cs = zeros(nz)
+    #print(PkL)
 
     for i in range(1, stop=nz)
         # TODO: Get proper redshift columns
-        pkl_curr = PkL[i, :]
+        pkl_curr = PkL[i] #[i, :]
         rsig_curr = get_rsigma(pkl_curr, logk)
         sigma2_curr = rsigma_func(rsig_curr, pkl_curr, logk) + 1
         onederiv_int = trapz(logk, onederiv_gauss_norm_int_func(logk, pkl_curr, rsig_curr))
@@ -60,11 +55,11 @@ PKnonlin(cosmo::Cosmology; nk=256, nz=256) = begin
 
     pk_NLs = zeros(nz, nk)
     for i in range(1, stop=nz)
-        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
+        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
     end
-    pk_NL = LinearInterpolation((a, k), pk_NLs)
+    pk_NL = LinearInterpolation((z, k), pk_NLs)
 
-    PKnonlin(a, k, rsig, sigma2, neff, C, pk_NL)
+    PKnonlin(z, k, rsig, sigma2, neff, C, pk_NL)
 end
 
 function gauss_norm_int_func(logk, pk, R)
@@ -203,7 +198,6 @@ function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, a, rsig, sigma2, neff, 
     DeltakL_tilde_fac = @. fnu * (47.48 * kh2) / (1.0 + 1.5 * kh2)
     DeltakL_tilde = @. DeltakL * (1.0 + DeltakL_tilde_fac)
     DeltakQ = @. DeltakL * (1.0 + DeltakL_tilde)^betan / (1.0 + DeltakL_tilde*alphan) * exp(-fy)
-
     DeltakHprime = @. an * y^(3.0*f1) / (1.0 + bn*y^f2 + (cn*f3*y)^(3.0 - gamman))
     DeltakH = @. DeltakHprime / (1.0 + mun/y + nun/y2)
 

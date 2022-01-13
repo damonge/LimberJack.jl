@@ -194,6 +194,21 @@ function TkEisHu(cosmo::CosmoPar, k)
     return Tk.^2
 end
 
+function _omega_x(cosmo::CosmoPar, z, species_x_label)
+    Ez = _Ez(cosmo, z)
+    a = @. 1.0/(1.0 + z)
+
+    if species_x_label == "crit"
+        return 1.0
+    elseif species_x_label == "m"
+        return @. cosmo.Ωm / (a^3) / Ez^2
+    elseif species_x_label == "l"
+        return 1.0 - cosmo.Ωm
+    else
+       println("Only species_x_label = crit, m, l supported so far.")
+    end
+end
+
 function _Ez(cosmo::CosmoPar, z)
     @. sqrt(cosmo.Ωm*(1+z)^3+cosmo.Ωr*(1+z)^4+cosmo.ΩΛ)
 end
@@ -209,7 +224,12 @@ Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
 Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
-function power_spectrum(cosmo::Cosmology, k, z)
-    Dz2 = growth_factor(cosmo, z)^2
-    @. exp(cosmo.lplk(log(k)))*Dz2
+omega_x(cosmo::Cosmology, z, species_x_label) = _omega_x(cosmo.cosmo, z, species_x_label)
+
+function linear_power_spectrum(cosmo::Cosmology, k, z)
+    # output: 2D array z1 = [k1, k2, ...]
+    #                  z2 = [k1, k2, ...]
+    #                  ...
+    Dz2 = growth_factor(cosmo, z).^2
+    @. [exp(cosmo.lplk(log(k)))]*Dz2
 end
