@@ -6,37 +6,37 @@ halofit:
 =#
 
 struct PKnonlin
-    z::Array
+    a::Array
     k::Array
-    #rsig::AbstractInterpolation
-    #sigma2::AbstractInterpolation
-    #neff::AbstractInterpolation
-    #C::AbstractInterpolation
+    rsig::AbstractInterpolation
+    sigma2::AbstractInterpolation
+    neff::AbstractInterpolation
+    C::AbstractInterpolation
     pk_NL::AbstractInterpolation
 end
 
-PKnonlin(cosmo::Cosmology, PkL, k, z) = begin
+PKnonlin(cosmo::Cosmology, PkL_int) = begin
+    k = cosmo.ks
+    logk = log.(k)
+    z = cosmo.zs
     nk = length(k)
     nz = length(z)
-    logk = log.(k)
-    
-    if length(z) > 1
-        zs = reverse(z)
-    else
-        zs = z
-    end
-    
+    zs = reverse(z)
     a = @. 1.0 / (1.0 + zs)
-    PkL = transpose(reverse(transpose(PkL)))
+    
+    PkL = zeros(nz, nk)
+    for i in range(1, stop=nz)
+        PkL[i, :] .= PkL_int(zs[i], k)
+    end
+
     rsigs = zeros(nz)
     sigma2s = zeros(nz)
     neffs = zeros(nz)
     Cs = zeros(nz)
-    #print(PkL)
 
     for i in range(1, stop=nz)
         # TODO: Get proper redshift columns
-        pkl_curr = PkL[i] #[i, :]
+        pkl_curr = PkL[i, :]
         rsig_curr = get_rsigma(pkl_curr, logk)
         sigma2_curr = rsigma_func(rsig_curr, pkl_curr, logk) + 1
         onederiv_int = trapz(logk, onederiv_gauss_norm_int_func(logk, pkl_curr, rsig_curr))
@@ -49,40 +49,20 @@ PKnonlin(cosmo::Cosmology, PkL, k, z) = begin
         neffs[i] = neff_curr
         Cs[i] = C_curr
     end
-    
     # Interpolate linearily over a
-    #if nz > 1
-    #    rsig = LinearInterpolation(a, rsigs)
-    #    sigma2 = LinearInterpolation(a, sigma2s)
-    #    neff = LinearInterpolation(a, neffs)
-    #    C = LinearInterpolation(a, Cs)
-    #else
-    #    rsig = rsigs[1]
-    #    sigma2 = sigma2s[1]
-    #    neff = neffs[1]
-    #    C = Cs[1]
-    #end
+    rsig = LinearInterpolation(a, rsigs)
+    sigma2 = LinearInterpolation(a, sigma2s)
+    neff = LinearInterpolation(a, neffs)
+    C = LinearInterpolation(a, Cs)
 
     pk_NLs = zeros(nz, nk)
     for i in range(1, stop=nz)
-        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i], k, z[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
+        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
     end
-    
-    if nz > 1
-        # Make mat into vec of vecs
-        pk_NLs = [pk_NLs[i,:] for i in 1:size(pk_NLs,1)]
-        # order properly
-        pk_NLs = transpose(reverse(transpose(pk_NLs)))
-        # back to mat
-        pk_NLs = permutedims(hcat(pk_NLs...))
-        pk_NL = LinearInterpolation((z, k), pk_NLs)
-    else
-        pk_NLs = [pk_NLs[i,:] for i in 1:size(pk_NLs,1)][1]
-        pk_NL = LinearInterpolation(k, pk_NLs)
-    end
+    pk_NLs = reverse(pk_NLs, dims=1)
+    pk_NL = LinearInterpolation((z, k), pk_NLs)
 
-    #PKnonlin(a, k, rsig, sigma2, neff, C, pk_NL)
-    PKnonlin(z, k, pk_NL)
+    PKnonlin(a, k, rsig, sigma2, neff, C, pk_NL)
 end
 
 function gauss_norm_int_func(logk, pk, R)
@@ -152,13 +132,9 @@ function get_rsigma(pk, logk)
     return rsigma
 end
 
-function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, z, rsig, sigma2, neff, C)
-    if length(z) > 1
-        zs = reverse(z)
-    else
-        zs = z
-    end
-    a = @. 1/(1+zs)
+function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, a, rsig, sigma2, neff, C)
+
+    zs = @. 1.0/a - 1.0
     weffa = -1.0
     omegaMz = omega_x(cosmo, zs, "m")
     omegaDEwz = omega_x(cosmo, zs,"l")
@@ -225,6 +201,7 @@ function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, z, rsig, sigma2, neff, 
     DeltakL_tilde_fac = @. fnu * (47.48 * kh2) / (1.0 + 1.5 * kh2)
     DeltakL_tilde = @. DeltakL * (1.0 + DeltakL_tilde_fac)
     DeltakQ = @. DeltakL * (1.0 + DeltakL_tilde)^betan / (1.0 + DeltakL_tilde*alphan) * exp(-fy)
+
     DeltakHprime = @. an * y^(3.0*f1) / (1.0 + bn*y^f2 + (cn*f3*y)^(3.0 - gamman))
     DeltakH = @. DeltakHprime / (1.0 + mun/y + nun/y2)
 

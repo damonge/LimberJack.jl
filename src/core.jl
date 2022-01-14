@@ -63,7 +63,7 @@ struct Cosmology
     Dz::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
+Cosmology(cpar::CosmoPar; nk=256, nz=256, kmin=-4, kmax=2, zmax=3, tk_mode="BBKS") = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
@@ -82,7 +82,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     pki = LinearInterpolation(log.(ks), log.(pk0), extrapolation_bc=Line())
 
     # Compute redshift-distance relation
-    zs = range(0., stop=3., length=nz)
+    zs = range(0., stop=zmax, length=nz)
     norm = CLIGHT_HMPC / cpar.h
     chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
             for zz in zs]
@@ -226,24 +226,25 @@ comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 omega_x(cosmo::Cosmology, z, species_x_label) = _omega_x(cosmo.cosmo, z, species_x_label)
 
-function power_spectrum(cosmo::Cosmology, k::Vector{Float64}, z::Vector{Float64}; non_linear=true)
+function power_spectrum(cosmo::Cosmology, z, k; non_linear=true)
     # output: 2D array [z1 = [k1, k2, ...]
     #                  z2 = [k1, k2, ...]
     #                  ...]
-    Dz2 = growth_factor(cosmo, z).^2
-    PkL = @. [exp(cosmo.lplk(log(k)))]*Dz2
+    nz = length(cosmo.zs)
+    nk = length(cosmo.ks)
+    PkLs = zeros(nz, nk)
+    for i in range(1, stop=nz)
+        z_i = cosmo.zs[i]
+        Dz2 = LimberJack.growth_factor(cosmo, z_i).^2
+        PkLs[i, :] .= @. exp(cosmo.lplk(log(cosmo.ks)))*Dz2
+    end
+    PkL = LinearInterpolation((cosmo.zs, cosmo.ks), PkLs)
     
     if non_linear == true
-        halofit = PKnonlin(cosmo, PkL, k, z)
-        if length(z) > 1
-            Pk = halofit.pk_NL(z, k)
-            Pk = [Pk[i,:] for i in 1:size(Pk,1)]
-        else 
-            Pk = [halofit.pk_NL(k)]
-        end
-            
+        halofit = PKnonlin(cosmo, PkL)
+        Pk = halofit.pk_NL
     else
         Pk = PkL
     end
-    return Pk
+    return Pk(z, k)
 end
