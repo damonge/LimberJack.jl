@@ -51,7 +51,6 @@ struct Cosmology
     ks::Array
     pk0::Array
     dlogk
-    lplk::AbstractInterpolation
     # Redshift and background
     zs::Array
     chis::Array
@@ -61,26 +60,15 @@ struct Cosmology
     chi_LSS
     Dzs::Array
     Dz::AbstractInterpolation
+    primordial_lPk::AbstractInterpolation
+    lin_Pk::AbstractInterpolation
+    Pk::AbstractInterpolation
 end
 
 Cosmology(cpar::CosmoPar; nk=256, nz=256, kmin=-4, kmax=2, zmax=3, tk_mode="BBKS") = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
-    if tk_mode== "EisHu"
-        tk = TkEisHu(cpar, ks./ cpar.h)
-    elseif tk_mode== "BBKS"
-        tk = TkBBKS(cpar, ks)
-    else
-        print("Transfer function not implemented")
-    end
-    pk0 = @. ks^cpar.n_s * tk
-    σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
-    norm = cpar.σ8^2 / σ8_2_here
-    pk0[:] = pk0 .* norm
-    # OPT: interpolation method
-    pki = LinearInterpolation(log.(ks), log.(pk0), extrapolation_bc=Line())
-
     # Compute redshift-distance relation
     zs = range(0., stop=zmax, length=nz)
     norm = CLIGHT_HMPC / cpar.h
@@ -110,9 +98,14 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, kmin=-4, kmax=2, zmax=3, tk_mode="BBKS
     # OPT: interpolation method
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
 
-    Cosmology(cpar, ks, pk0, dlogk, pki,
+    pk0, primordial_lPk = _primordial_lPk(cpar, ks, dlogk)
+    lin_Pk = _lin_Pk(zs, ks, primordial_lPk, Dzi)
+    Pk = _Pk(cpar, zs, ks, lin_Pk)
+    
+    Cosmology(cpar, ks, pk0, dlogk,
               collect(zs), chis, chii, zi, chis[end],
-              chi_LSS, Dzs, Dzi)
+              chi_LSS, Dzs, Dzi, primordial_lPk,
+              lin_Pk, Pk)
 end
 
 Cosmology(Ωc, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
@@ -123,6 +116,48 @@ Cosmology(Ωc, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS"
 end
 
 Cosmology() = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81)
+
+function _primordial_lPk(cpar::CosmoPar, ks, dlogk; tk_mode="EisHu")
+    if tk_mode== "EisHu"
+        tk = TkEisHu(cpar, ks./ cpar.h)
+    elseif tk_mode== "BBKS"
+        tk = TkBBKS(cpar, ks)
+    else
+        print("Transfer function not implemented")
+    end
+    pk0 = @. ks^cpar.n_s * tk
+    σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
+    norm = cpar.σ8^2 / σ8_2_here
+    pk0[:] = pk0 .* norm
+    # OPT: interpolation method
+    pki = LinearInterpolation(log.(ks), log.(pk0), extrapolation_bc=Line())
+    return pk0, pki
+end
+
+function _lin_Pk(zs, ks, primordial_lPk::AbstractInterpolation, Dz::AbstractInterpolation)
+    # output: 2D matrix [z1 = [k1, k2, ...]
+    #                   z2 = [k1, k2, ...]
+    #                   ...]
+    nz = length(zs)
+    nk = length(ks)
+    PkLs = zeros(nz, nk)
+    for i in range(1, stop=nz)
+        z_i = zs[i]
+        Dz2 = Dz(z_i).^2
+        PkLs[i, :] .= @. exp(primordial_lPk(log(ks)))*Dz2
+    end
+    PkL = LinearInterpolation((zs, ks), PkLs)
+    return PkL
+end
+
+function _Pk(cpar::CosmoPar, zs, ks, PkL::AbstractInterpolation)
+    # output: 2D matrix [z1 = [k1, k2, ...]
+    #                   z2 = [k1, k2, ...]
+    #                   ...]
+    halofit = PKnonlin(cpar, zs, ks, PkL)
+    Pk = halofit.pk_NL
+    return Pk
+end
 
 function σR2(cosmo::Cosmology, R)
     return _σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)
@@ -225,26 +260,6 @@ Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 omega_x(cosmo::Cosmology, z, species_x_label) = _omega_x(cosmo.cosmo, z, species_x_label)
-
-function power_spectrum(cosmo::Cosmology, z, k; non_linear=true)
-    # output: 2D array [z1 = [k1, k2, ...]
-    #                  z2 = [k1, k2, ...]
-    #                  ...]
-    nz = length(cosmo.zs)
-    nk = length(cosmo.ks)
-    PkLs = zeros(nz, nk)
-    for i in range(1, stop=nz)
-        z_i = cosmo.zs[i]
-        Dz2 = LimberJack.growth_factor(cosmo, z_i).^2
-        PkLs[i, :] .= @. exp(cosmo.lplk(log(cosmo.ks)))*Dz2
-    end
-    PkL = LinearInterpolation((cosmo.zs, cosmo.ks), PkLs)
-    
-    if non_linear == true
-        halofit = PKnonlin(cosmo, PkL)
-        Pk = halofit.pk_NL
-    else
-        Pk = PkL
-    end
-    return Pk(z, k)
-end
+primordial_Pk(cosmo::Cosmology, z, k) = exp.(cosmo.primordial_lPk(log.(k)))
+lin_Pk(cosmo::Cosmology, z, k) = cosmo.lin_Pk(z, k)
+Pk(cosmo::Cosmology, z, k) = cosmo.Pk(z, k)

@@ -15,13 +15,13 @@ struct PKnonlin
     pk_NL::AbstractInterpolation
 end
 
-PKnonlin(cosmo::Cosmology, PkL_int) = begin
-    k = cosmo.ks
+PKnonlin(cpar::CosmoPar, zs, ks, PkL_int::AbstractInterpolation) = begin
+    k = ks
     logk = log.(k)
-    z = cosmo.zs
+    z = zs
     nk = length(k)
     nz = length(z)
-    zs = reverse(z)
+    zs = reverse(zs)
     a = @. 1.0 / (1.0 + zs)
     
     PkL = zeros(nz, nk)
@@ -57,7 +57,7 @@ PKnonlin(cosmo::Cosmology, PkL_int) = begin
 
     pk_NLs = zeros(nz, nk)
     for i in range(1, stop=nz)
-        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
+        pk_NLs[i, :] .= power_spectrum_nonlin(cpar, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
     end
     pk_NLs = reverse(pk_NLs, dims=1)
     pk_NL = LinearInterpolation((z, k), pk_NLs)
@@ -132,12 +132,13 @@ function get_rsigma(pk, logk)
     return rsigma
 end
 
-function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, a, rsig, sigma2, neff, C)
+function power_spectrum_nonlin(cpar::CosmoPar, PkL, k, a, rsig, sigma2, neff, C)
 
     zs = @. 1.0/a - 1.0
     weffa = -1.0
-    omegaMz = omega_x(cosmo, zs, "m")
-    omegaDEwz = omega_x(cosmo, zs,"l")
+    Ez = @. sqrt(cpar.Ωm*(1+zs)^3+cpar.Ωr*(1+zs)^4+cpar.ΩΛ)
+    omegaMz = @. cpar.Ωm / (a^3) / Ez^2 #omega_x(cosmo, zs, "m")
+    omegaDEwz = 1 - cpar.Ωm #omega_x(cosmo, zs,"l")
 
     # not using these to match CLASS better - might be a bug in CLASS
     # weffa = gsl_spline_eval(hf->weff, a, NULL);
@@ -196,7 +197,7 @@ function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, a, rsig, sigma2, neff, 
     DeltakL =  PkL .* delta2_norm
 
     # correction to DeltakL from Bird et al., eqn A9
-    kh = @. k / cosmo.cosmo.h
+    kh = @. k / cpar.h
     kh2 = @. kh * kh
     DeltakL_tilde_fac = @. fnu * (47.48 * kh2) / (1.0 + 1.5 * kh2)
     DeltakL_tilde = @. DeltakL * (1.0 + DeltakL_tilde_fac)
@@ -206,7 +207,7 @@ function power_spectrum_nonlin(cosmo::Cosmology, PkL, k, a, rsig, sigma2, neff, 
     DeltakH = @. DeltakHprime / (1.0 + mun/y + nun/y2)
 
     # correction to DeltakH from Bird et al., eqn A6-A7
-    Qnu = @. fnu * (0.977 - 18.015 * (cosmo.cosmo.Ωm - 0.3))
+    Qnu = @. fnu * (0.977 - 18.015 * (cpar.Ωm - 0.3))
     DeltakH *= @. (1.0 + Qnu)
 
     DeltakNL = @. DeltakQ + DeltakH
