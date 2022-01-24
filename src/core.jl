@@ -98,7 +98,7 @@ Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BB
     # OPT: interpolation method
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
 
-    pk0, primordial_lPk = _primordial_lPk(cpar, ks, dlogk)
+    pk0, primordial_lPk = _primordial_lPk(cpar, ks, dlogk, tk_mode)
     lin_Pk = _lin_Pk(zs, ks, primordial_lPk, Dzi)
     Pk = _Pk(cpar, zs, ks, lin_Pk)
     
@@ -108,15 +108,15 @@ Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BB
               lin_Pk, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8, θCMB; nk=256, nz=256, tk_mode="BBKS") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
 
     Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode)
 end
 
-Cosmology() = Cosmology(0.3, 0.05, 0.67, 0.96, 0.81, 2.725/2.7)
+Cosmology() = Cosmology(0.3, 0.05, 0.67, 0.96, 0.81)
 
-function _primordial_lPk(cpar::CosmoPar, ks, dlogk; tk_mode="BBKS")
+function _primordial_lPk(cpar::CosmoPar, ks, dlogk, tk_mode="BBKS")
     if tk_mode== "EisHu"
         tk = TkEisHu(cpar, ks./ cpar.h)
     elseif tk_mode== "BBKS"

@@ -28,10 +28,10 @@ using ForwardDiff
     end
 
     @testset "BMPkBBKS" begin
-        cosmo = Cosmology()
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 
+                          0.81, nk=1024)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = lin_Pk(cosmo, 0., ks)
-        print(pk)
         pk_bm = [2.01570296e+04,
                  7.77178497e+04,
                  1.04422728e+04,
@@ -42,10 +42,11 @@ using ForwardDiff
     end
 
     @testset "BMPkEisHu" begin
-        cosmo = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81, 2.725/2.7,
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nk=1024, tk_mode="EisHu")
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = lin_Pk(cosmo, 0., ks)
+        print(pk)
         pk_bm = [2.12222992e+04,
                  8.83444294e+04,
                  1.05452648e+04,
@@ -56,7 +57,8 @@ using ForwardDiff
     end
 
     @testset "BMCℓs" begin
-        cosmo = Cosmology()
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 
+                          0.81, nk=1024)
         z = range(0., stop=2., length=1024)
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg = NumberCountsTracer(cosmo, z, nz, 2.)
