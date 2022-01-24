@@ -65,7 +65,7 @@ struct Cosmology
     Pk::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=256, nz=256, kmin=-4, kmax=2, zmax=3, tk_mode="BBKS") = begin
+Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BBKS") = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
@@ -108,16 +108,15 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, kmin=-4, kmax=2, zmax=3, tk_mode="BBKS
               lin_Pk, Pk)
 end
 
-Cosmology(Ωc, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
-    Ωm = Ωc + Ωb
+Cosmology(Ωm, Ωb, h, n_s, σ8, θCMB; nk=256, nz=256, tk_mode="BBKS") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
 
     Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode)
 end
 
-Cosmology() = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81)
+Cosmology() = Cosmology(0.3, 0.05, 0.67, 0.96, 0.81, 2.725/2.7)
 
-function _primordial_lPk(cpar::CosmoPar, ks, dlogk; tk_mode="EisHu")
+function _primordial_lPk(cpar::CosmoPar, ks, dlogk; tk_mode="BBKS")
     if tk_mode== "EisHu"
         tk = TkEisHu(cpar, ks./ cpar.h)
     elseif tk_mode== "BBKS"
