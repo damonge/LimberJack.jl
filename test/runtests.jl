@@ -46,7 +46,6 @@ using ForwardDiff
                           nk=1024, tk_mode="EisHu")
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = lin_Pk(cosmo, 0., ks)
-        print(pk)
         pk_bm = [2.12222992e+04,
                  8.83444294e+04,
                  1.05452648e+04,
@@ -113,10 +112,7 @@ using ForwardDiff
 
         function f(p::T)::Array{T,1} where T<:Real
             Ωm = p
-            θCMB = 2.725/2.7
-            #cpar = LimberJack.CosmoPar{T}(Ωm, 0.05, 0.67, 0.96, 0.81, θCMB)
-            cpar = LimberJack.CosmoPar(Ωm, 0.05, 0.67, 0.96, 0.81, θCMB)
-            cosmo = LimberJack.Cosmology(cpar)
+            cpar = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81)
             chi = comoving_radial_distance(cosmo, zs)
             return chi
         end

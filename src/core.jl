@@ -24,7 +24,7 @@ function _σR2(ks, pk, dlogk, R)
     return sum(integ)*dlogk/(2*pi^2)
 end
 
-struct CosmoPar{T}
+struct CosmoPar{T<:Real}
     Ωm::T
     Ωb::T
     h::T
@@ -42,7 +42,7 @@ CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
     f_rel = 1.0 + Neff * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
     Ωr = prefac*f_rel*θCMB^4/h^2
     ΩΛ = 1-Ωm-Ωr
-    CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
+    CosmoPar{Real}(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
 end
 
 struct Cosmology
@@ -97,11 +97,9 @@ Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BB
     Dzs = reverse(s[:, 2] / s[end, 2])
     # OPT: interpolation method
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
-
     pk0, primordial_lPk = _primordial_lPk(cpar, ks, dlogk, tk_mode)
     lin_Pk = _lin_Pk(zs, ks, primordial_lPk, Dzi)
-    Pk = _Pk(cpar, zs, ks, lin_Pk)
-    
+    Pk = _Pk(cpar, zs, ks, lin_Pk)    
     Cosmology(cpar, ks, pk0, dlogk,
               collect(zs), chis, chii, zi, chis[end],
               chi_LSS, Dzs, Dzi, primordial_lPk,
@@ -110,7 +108,6 @@ end
 
 Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-
     Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode)
 end
 
