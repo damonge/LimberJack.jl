@@ -24,15 +24,22 @@ PKnonlin(cpar::CosmoPar, zs, ks, PkL_int::AbstractInterpolation) = begin
     zs = reverse(zs)
     a = @. 1.0 / (1.0 + zs)
     
-    PkL = zeros(nz, nk)
+    #PkL = zeros(nz, nk)
+    PkL = []
     for i in range(1, stop=nz)
-        PkL[i, :] .= PkL_int(zs[i], k)
+        #PkL[i, :] .= PkL_int(zs[i], k)
+        append!(PkL, PkL_int(zs[i], k))
     end
+    PkL = transpose(reshape(PkL, nk, nz))
 
-    rsigs = zeros(nz)
-    sigma2s = zeros(nz)
-    neffs = zeros(nz)
-    Cs = zeros(nz)
+    #rsigs = zeros(nz)
+    #sigma2s = zeros(nz)
+    #neffs = zeros(nz)
+    #Cs = zeros(nz)
+    rsigs = []
+    sigma2s = []
+    neffs = []
+    Cs = []
 
     for i in range(1, stop=nz)
         # TODO: Get proper redshift columns
@@ -44,10 +51,14 @@ PKnonlin(cpar::CosmoPar, zs, ks, PkL_int::AbstractInterpolation) = begin
         twoderiv_int = trapz(logk, twoderiv_gauss_norm_int_func(logk, pkl_curr, rsig_curr))
         C_curr = -(rsig_curr^2/sigma2_curr*twoderiv_int - rsig_curr^2/sigma2_curr^2*onederiv_int^2
                         + rsig_curr/sigma2_curr*onederiv_int)
-        rsigs[i] = rsig_curr
-        sigma2s[i] = sigma2_curr
-        neffs[i] = neff_curr
-        Cs[i] = C_curr
+        #rsigs[i] = rsig_curr
+        #sigma2s[i] = sigma2_curr
+        #neffs[i] = neff_curr
+        #Cs[i] = C_curr
+        append!(rsigs, rsig_curr)
+        append!(sigma2s, sigma2_curr)
+        append!(neffs, neff_curr)
+        append!(Cs, C_curr)
     end
     # Interpolate linearily over a
     rsig = LinearInterpolation(a, rsigs)
@@ -55,10 +66,13 @@ PKnonlin(cpar::CosmoPar, zs, ks, PkL_int::AbstractInterpolation) = begin
     neff = LinearInterpolation(a, neffs)
     C = LinearInterpolation(a, Cs)
 
-    pk_NLs = zeros(nz, nk)
+    #pk_NLs = zeros(nz, nk)
+    pk_NLs = []
     for i in range(1, stop=nz)
-        pk_NLs[i, :] .= power_spectrum_nonlin(cpar, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
+        #pk_NLs[i, :] .= power_spectrum_nonlin(cpar, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
+        append!(pk_NLs, power_spectrum_nonlin(cpar, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i]))
     end
+    pk_NLs = transpose(reshape(pk_NLs, nk, nz))
     pk_NLs = reverse(pk_NLs, dims=1)
     pk_NL = LinearInterpolation((z, k), pk_NLs)
 

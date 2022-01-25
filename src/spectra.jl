@@ -11,7 +11,7 @@ function Cℓintegrand(cosmo::Cosmology,
     z = cosmo.z_of_chi(chi)
     w1 = t1.wint(chi)*t1.bias
     w2 = t2.wint(chi)*t2.bias
-    pk = lin_Pk(cosmo, z, k)
+    pk = Pk(cosmo, z, k)
     k*w1*w2*pk
 end
 

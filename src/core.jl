@@ -65,7 +65,7 @@ struct Cosmology
     Pk::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BBKS") = begin
+Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BBKS", Pk_mode="linear") = begin
     # Compute linear power spectrum at z=0.
     ks = 10 .^ range(-4., stop=2., length=nk)
     dlogk = log(ks[2]/ks[1])
@@ -99,16 +99,23 @@ Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BB
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
     pk0, primordial_lPk = _primordial_lPk(cpar, ks, dlogk, tk_mode)
     lin_Pk = _lin_Pk(zs, ks, primordial_lPk, Dzi)
-    Pk = _Pk(cpar, zs, ks, lin_Pk)    
+    if Pk_mode == "linear"
+        Pk = lin_Pk
+    elseif Pk_mode == "Halofit"
+        Pk = _Pk(cpar, zs, ks, lin_Pk) 
+    else 
+        Pk = lin_Pk
+        print("Pk mode not implemented. Using linear Pk.")
+    end
     Cosmology(cpar, ks, pk0, dlogk,
               collect(zs), chis, chii, zi, chis[end],
               chi_LSS, Dzs, Dzi, primordial_lPk,
               lin_Pk, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=2000, nz=2000, tk_mode="BBKS", Pk_mode="linear") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode)
+    Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode, Pk_mode=Pk_mode)
 end
 
 Cosmology() = Cosmology(0.3, 0.05, 0.67, 0.96, 0.81)
@@ -136,12 +143,15 @@ function _lin_Pk(zs, ks, primordial_lPk::AbstractInterpolation, Dz::AbstractInte
     #                   ...]
     nz = length(zs)
     nk = length(ks)
-    PkLs = zeros(nz, nk)
+    #PkLs = zeros(nz, nk)
+    PkLs = [] # Should be given a type
     for i in range(1, stop=nz)
         z_i = zs[i]
         Dz2 = Dz(z_i).^2
-        PkLs[i, :] .= @. exp(primordial_lPk(log(ks)))*Dz2
+        append!(PkLs, @. exp(primordial_lPk(log(ks)))*Dz2)
+        #PkLs[i, :] .= @. exp(primordial_lPk(log(ks)))*Dz2
     end
+    PkLs = transpose(reshape(PkLs, nk, nz))
     PkL = LinearInterpolation((zs, ks), PkLs)
     return PkL
 end
