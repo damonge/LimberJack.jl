@@ -115,10 +115,8 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
               chi_LSS, Dzs, Dzi)
 end
 
-Cosmology(Ωc, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
-    Ωm = Ωc + Ωb
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-
     Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode)
 end
 
@@ -210,6 +208,5 @@ Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 function power_spectrum(cosmo::Cosmology, k, z)
-    Dz2 = growth_factor(cosmo, z)^2
-    @. exp(cosmo.lplk(log(k)))*Dz2
+    @. exp(cosmo.lplk(log(k)))*cosmo.Dz(z)*cosmo.Dz(z)
 end

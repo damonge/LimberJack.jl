@@ -40,7 +40,7 @@ using ForwardDiff
     end
 
     @testset "BMPkEisHu" begin
-        cosmo = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81,
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nk=1024, tk_mode="EisHu")
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = power_spectrum(cosmo, ks, 0.)
@@ -85,7 +85,7 @@ using ForwardDiff
     end
 
     @testset "EisHu_Cℓs" begin
-        cosmo = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81,
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nk=1024, tk_mode="EisHu")
         z = range(0., stop=2., length=1024)
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -158,17 +158,18 @@ using ForwardDiff
     @testset "IsLinPkDiff" begin
         zs = 0.02:0.02:1.0
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
+        
         function BBKS(p::T)::Array{T,1} where T<:Real
             Ωm = p
             cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81)
-            pk = LimberJack.power_spectrum(cosmo, 0., ks)
+            pk = LimberJack.power_spectrum(cosmo, ks, 0.)
             return pk
         end
 
         function EisHu(p::T)::Array{T,1} where T<:Real
             Ωm = p
             cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81, tk_mode="EisHu")
-            pk = LimberJack.power_spectrum(cosmo, 0., ks)
+            pk = LimberJack.power_spectrum(cosmo, ks, 0.)
             return pk
         end
 
