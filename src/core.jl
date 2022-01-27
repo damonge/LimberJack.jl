@@ -42,7 +42,7 @@ CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
     f_rel = 1.0 + Neff * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
     Ωr = prefac*f_rel*θCMB^4/h^2
     ΩΛ = 1-Ωm-Ωr
-    CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
+    CosmoPar{Real}(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
 end
 
 struct Cosmology
