@@ -26,7 +26,7 @@ using ForwardDiff
         @test all(@. (abs(Dz/Dz_bm-1.0) < 2E-4))
     end
 
-    @testset "BMPkBBKS" begin
+    @testset "PkBBKS" begin
         cosmo = Cosmology()
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = power_spectrum(cosmo, ks, 0.)
@@ -39,7 +39,7 @@ using ForwardDiff
         @test all(@. (abs(pk/pk_bm-1.0) < 3E-4))
     end
 
-    @testset "BMPkEisHu" begin
+    @testset "PkEisHu" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nk=1024, tk_mode="EisHu")
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
@@ -53,6 +53,21 @@ using ForwardDiff
         @test all(@. (abs(pk/pk_bm-1.0) < 3E-4))
     end
 
+    @testset "PkHalofit" begin
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                          nk=1024, tk_mode="EisHu")
+        ks = [0.001, 0.01, 0.1, 1.0, 10.0]
+        pk_itp = PKnonlin(cosmo).pk_NL
+        pk = pk_itp(ks, 0.)
+        pk_bm = [2.12015208e+04,
+                 8.75109090e+04,
+                 1.15273287e+04,
+                 8.52170268e+02,
+                 1.31682588e+01]
+        # It'd be best if this was < 1E-4...
+        @test all(@. (abs(pk/pk_bm-1.0) < 3E-4))
+    end
+    
     @testset "BBKS_Cℓs" begin
         cosmo = Cosmology()
         z = range(0., stop=2., length=1024)
@@ -183,5 +198,26 @@ using ForwardDiff
 
         @test all(@. (abs(BBKS_autodiff/BBKS_anal-1) < 1E-3))
         @test all(@. (abs(EisHu_autodiff/EisHu_anal-1) < 1E-3))
+    end
+    
+    @testset "IsHalofitDiff" begin
+        zs = 0.02:0.02:1.0
+        ks = [0.001, 0.01, 0.1, 1.0, 10.0]
+        
+        function Halofit(p::T)::Array{T,1} where T<:Real
+            Ωm = p
+            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81, tk_mode="EisHu")
+            pk_itp = PKnonlin(cosmo).pk_NL
+            pk = pk_itp(ks, 0.)
+            return pk
+        end
+
+        Ωm0 = 0.3
+        dΩm = 0.001
+
+        Halofit_autodiff = ForwardDiff.derivative(Halofit, Ωm0)
+        Halofit_anal = (Halofit(Ωm0+dΩm)-Halofit(Ωm0-dΩm))/2dΩm
+
+        @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 1E-3))
     end
 end
