@@ -3,11 +3,15 @@ using LimberJack
 using ForwardDiff
 
 @testset "All tests" begin
-
+    cosmo_BBKS = Cosmology()
+    cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                            tk_mode="EisHu")
+    cosmo_Halo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                           tk_mode="EisHu",
+                           Pk_mode="Halofit")
     @testset "BMChi" begin
-        cosmo = Cosmology()
         ztest = [0.1, 0.5, 1.0, 3.0]
-        chi = comoving_radial_distance(cosmo, ztest)
+        chi = comoving_radial_distance(cosmo_BBKS, ztest)
         chi_bm = [437.1870424,
                   1973.09067532,
                   3451.41630697,
@@ -16,9 +20,8 @@ using ForwardDiff
     end
 
     @testset "BMGrowth" begin
-        cosmo = Cosmology()
         ztest = [0.1, 0.5, 1.0, 3.0]
-        Dz = growth_factor(cosmo, ztest)
+        Dz = growth_factor(cosmo_BBKS, ztest)
         Dz_bm = [0.94966513,
                  0.77320274,
                  0.61185874,
@@ -28,9 +31,8 @@ using ForwardDiff
     end
 
     @testset "BMPkBBKS" begin
-        cosmo = Cosmology()
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
-        pk = lin_Pk(cosmo, 0., ks)
+        pk = lin_Pk(cosmo_BBKS, 0., ks)
         pk_bm = [2.01570296e+04,
                  7.77178497e+04,
                  1.04422728e+04,
@@ -41,10 +43,8 @@ using ForwardDiff
     end
 
     @testset "BMPkEisHu" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          tk_mode="EisHu")
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
-        pk = lin_Pk(cosmo, 0., ks)
+        pk = lin_Pk(cosmo_EisHu, 0., ks)
         pk_bm = [2.12222992e+04,
                  8.83444294e+04,
                  1.05452648e+04,
@@ -55,11 +55,8 @@ using ForwardDiff
     end
 
     @testset "Halofit" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          tk_mode="EisHu",
-                          Pk_mode="Halofit")
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
-        pk = Pk(cosmo, 0., ks)
+        pk = Pk(cosmo_Halo, 0., ks)
         pk_bm = [2.12015208e+04,
                  8.75109090e+04,
                  1.15273287e+04,
@@ -70,20 +67,17 @@ using ForwardDiff
     end
     
     @testset "Cℓs" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          tk_mode="EisHu", 
-                          Pk_mode="Halofit")
         z = range(0., stop=2., length=1024)
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz, 2.)
-        ts = WeakLensingTracer(cosmo, z, nz)
-        tk = CMBLensingTracer(cosmo)
+        tg = NumberCountsTracer(cosmo_Halo, z, nz, 2.)
+        ts = WeakLensingTracer(cosmo_Halo, z, nz)
+        tk = CMBLensingTracer(cosmo_Halo)
         ℓs = [10, 30, 100, 300]
-        Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
-        Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
-        Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
-        Cℓ_gk = [angularCℓ(cosmo, tg, tk, ℓ) for ℓ in ℓs]
-        Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
+        Cℓ_gg = [angularCℓ(cosmo_Halo, tg, tg, ℓ) for ℓ in ℓs]
+        Cℓ_gs = [angularCℓ(cosmo_Halo, tg, ts, ℓ) for ℓ in ℓs]
+        Cℓ_ss = [angularCℓ(cosmo_Halo, ts, ts, ℓ) for ℓ in ℓs]
+        Cℓ_gk = [angularCℓ(cosmo_Halo, tg, tk, ℓ) for ℓ in ℓs]
+        Cℓ_sk = [angularCℓ(cosmo_Halo, ts, tk, ℓ) for ℓ in ℓs]
         Cℓ_gg_bm = [7.57574464e-05, 8.26454937e-05,
                     3.02799792e-05, 5.86798462e-06]
         Cℓ_gs_bm = [7.87438501e-08, 7.96031903e-08,
@@ -103,20 +97,17 @@ using ForwardDiff
     end
     
     @testset "Linear_Cℓs" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
-        cosmo2= Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          tk_mode="EisHu")
         z = range(0., stop=2., length=1024)
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz, 2.)
-        ts = WeakLensingTracer(cosmo, z, nz)
-        tk = CMBLensingTracer(cosmo)
+        tg = NumberCountsTracer(cosmo_BBKS, z, nz, 2.)
+        ts = WeakLensingTracer(cosmo_BBKS, z, nz)
+        tk = CMBLensingTracer(cosmo_BBKS)
         ℓs = [10, 30, 100, 300]
-        Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
-        Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
-        Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
-        Cℓ_gk = [angularCℓ(cosmo, tg, tk, ℓ) for ℓ in ℓs]
-        Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
+        Cℓ_gg = [angularCℓ(cosmo_BBKS, tg, tg, ℓ) for ℓ in ℓs]
+        Cℓ_gs = [angularCℓ(cosmo_BBKS, tg, ts, ℓ) for ℓ in ℓs]
+        Cℓ_ss = [angularCℓ(cosmo_BBKS, ts, ts, ℓ) for ℓ in ℓs]
+        Cℓ_gk = [angularCℓ(cosmo_BBKS, tg, tk, ℓ) for ℓ in ℓs]
+        Cℓ_sk = [angularCℓ(cosmo_BBKS, ts, tk, ℓ) for ℓ in ℓs]
         Cℓ_gg_bm = [7.02850428e-05, 7.43987364e-05,
                     2.92323380e-05, 4.91394610e-06]
         Cℓ_gs_bm = [7.26323570e-08, 7.29532942e-08,
@@ -134,11 +125,11 @@ using ForwardDiff
         @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 5E-4))
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 5E-4))
             
-        Cℓ2_gg = [angularCℓ(cosmo2, tg, tg, ℓ) for ℓ in ℓs]
-        Cℓ2_gs = [angularCℓ(cosmo2, tg, ts, ℓ) for ℓ in ℓs]
-        Cℓ2_ss = [angularCℓ(cosmo2, ts, ts, ℓ) for ℓ in ℓs]
-        Cℓ2_gk = [angularCℓ(cosmo2, tg, tk, ℓ) for ℓ in ℓs]
-        Cℓ2_sk = [angularCℓ(cosmo2, ts, tk, ℓ) for ℓ in ℓs]
+        Cℓ2_gg = [angularCℓ(cosmo_EisHu, tg, tg, ℓ) for ℓ in ℓs]
+        Cℓ2_gs = [angularCℓ(cosmo_EisHu, tg, ts, ℓ) for ℓ in ℓs]
+        Cℓ2_ss = [angularCℓ(cosmo_EisHu, ts, ts, ℓ) for ℓ in ℓs]
+        Cℓ2_gk = [angularCℓ(cosmo_EisHu, tg, tk, ℓ) for ℓ in ℓs]
+        Cℓ2_sk = [angularCℓ(cosmo_EisHu, ts, tk, ℓ) for ℓ in ℓs]
         Cℓ2_gg_bm = [7.60013901e-05, 8.33928286e-05,
                     3.05959806e-05, 4.89394772e-06]
         Cℓ2_gs_bm = [7.90343478e-08, 8.04101857e-08,
@@ -162,11 +153,10 @@ using ForwardDiff
 
         z = range(0., stop=2., length=2048)
         pz = p_of_z(z)
-        cosmo = Cosmology()
-        t = NumberCountsTracer(cosmo, z, pz, 2.)
+        t = NumberCountsTracer(cosmo_BBKS, z, pz, 2.)
 
-        wz1 = t.wint(cosmo.chi(0.5))
-        hz = Hmpc(cosmo, 0.5)
+        wz1 = t.wint(cosmo_BBKS.chi(0.5))
+        hz = Hmpc(cosmo_BBKS, 0.5)
         wz2 = p_of_z(0.5)*hz/(sqrt(2π)*0.05)
 
         @test abs(wz2/wz1 - 1) < 1E-4
@@ -196,14 +186,14 @@ using ForwardDiff
     end
     
     @testset "IsHalofitDiff" begin
-        zs = 0.02:0.02:1.0
+        ks = [0.001, 0.01, 0.1, 1.0, 10.0]
 
         function f(p::T)::Array{T,1} where T<:Real
             Ωm = p
             cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
                                          Pk_mode="Halofit")
-            chi = comoving_radial_distance(cosmo, zs)
-            return chi
+            Pk = cosmo.Pk(0, ks)
+            return Pk
         end
 
         Ωm0 = 0.3

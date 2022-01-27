@@ -6,6 +6,12 @@ struct NumberCountsTracer{T<:Real} <: Tracer{T}
     lpre::Int
 end
 
+#struct NumberCountsTracer
+#    wint::AbstractInterpolation
+#    bias::Float64
+#    lpre::Int
+#end
+
 NumberCountsTracer(cosmo::Cosmology, z_n, nz, bias) = begin
     # OPT: here we only integrate to calculate the area.
     #      perhaps it'd be best to just use Simpsons.
@@ -15,7 +21,7 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz, bias) = begin
     hz = Hmpc(cosmo, z_n)
     w_arr = @. (nz*hz/nz_norm)
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
-    NumberCountsTracer(wint, bias, 0)
+    NumberCountsTracer{Real}(wint, bias, 0)
 end
 
 struct WeakLensingTracer{T<:Real} <: Tracer{T}
@@ -74,7 +80,7 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     CMBLensingTracer(wint, 1.0, 1)
 end
 
-function get_Fℓ(t::Tracer, ℓ)
+function get_Fℓ(t, ℓ)
     if t.lpre == 2
         return @. sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2
     elseif t.lpre == 1

@@ -98,11 +98,11 @@ Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BB
     # OPT: interpolation method
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
     pk0, primordial_lPk = _primordial_lPk(cpar, ks, dlogk, tk_mode)
-    lin_Pk = _lin_Pk(zs, ks, primordial_lPk, Dzi)
+    PkLs, lin_Pk = _lin_Pk(zs, ks, primordial_lPk, Dzi)
     if Pk_mode == "linear"
         Pk = lin_Pk
     elseif Pk_mode == "Halofit"
-        Pk = _Pk(cpar, zs, ks, lin_Pk) 
+        Pk = _Pk(cpar, zs, ks, PkLs) 
     else 
         Pk = lin_Pk
         print("Pk mode not implemented. Using linear Pk.")
@@ -143,24 +143,24 @@ function _lin_Pk(zs, ks, primordial_lPk::AbstractInterpolation, Dz::AbstractInte
     #                   ...]
     nz = length(zs)
     nk = length(ks)
-    #PkLs = zeros(nz, nk)
-    PkLs = [] # Should be given a type
+    PkLs = Matrix{Union{Nothing, <:Real}}(nothing, nz, nk)
+    #PkLs = [] # Should be given a type
     for i in range(1, stop=nz)
         z_i = zs[i]
         Dz2 = Dz(z_i).^2
-        append!(PkLs, @. exp(primordial_lPk(log(ks)))*Dz2)
-        #PkLs[i, :] .= @. exp(primordial_lPk(log(ks)))*Dz2
+        #append!(PkLs, @. exp(primordial_lPk(log(ks)))*Dz2)
+        PkLs[i, :] .= @. exp(primordial_lPk(log(ks)))*Dz2
     end
-    PkLs = transpose(reshape(PkLs, nk, nz))
+    #PkLs = transpose(reshape(PkLs, nk, nz))
     PkL = LinearInterpolation((zs, ks), PkLs)
-    return PkL
+    return PkLs, PkL
 end
 
-function _Pk(cpar::CosmoPar, zs, ks, PkL::AbstractInterpolation)
+function _Pk(cpar::CosmoPar, zs, ks, PkLs)
     # output: 2D matrix [z1 = [k1, k2, ...]
     #                   z2 = [k1, k2, ...]
     #                   ...]
-    halofit = PKnonlin(cpar, zs, ks, PkL)
+    halofit = PKnonlin(cpar, zs, ks, PkLs)
     Pk = halofit.pk_NL
     return Pk
 end

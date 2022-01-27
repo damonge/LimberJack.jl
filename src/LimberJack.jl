@@ -5,7 +5,7 @@ export Ez, Hmpc, comoving_radial_distance, lin_Pk, Pk, growth_factor
 export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer, get_Fℓ
 export angularCℓ
 
-using Interpolations, QuadGK, OrdinaryDiffEq, Trapz, Roots, Zygote, ForwardDiff
+using Interpolations, QuadGK, OrdinaryDiffEq, Trapz, Roots, Zygote, ForwardDiff, LinearAlgebra
 
 include("core.jl")
 include("tracers.jl")
