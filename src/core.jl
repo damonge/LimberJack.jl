@@ -120,7 +120,7 @@ Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS"
     Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode)
 end
 
-Cosmology() = Cosmology(0.25, 0.05, 0.67, 0.96, 0.81)
+Cosmology() = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
 
 function σR2(cosmo::Cosmology, R)
     return _σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)
