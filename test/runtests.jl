@@ -128,7 +128,7 @@ using ForwardDiff
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-4))
         @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-4))
         @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 5E-4))
-        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 5E-4))
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 1E-3))
     end
 
     @testset "CreateTracer" begin
@@ -200,6 +200,57 @@ using ForwardDiff
         @test all(@. (abs(EisHu_autodiff/EisHu_anal-1) < 1E-3))
     end
     
+    @testset "AreClsDiff" begin
+        
+        function Cl_gg(p::T)::Array{T,1} where T<:Real
+            Ωm = p
+            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81)
+            z = range(0., stop=2., length=1024)
+            nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+            tg = NumberCountsTracer(cosmo, z, nz, 2.)
+            ℓs = [10, 30, 100, 300]
+            Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
+            return Cℓ_gg
+        end
+        
+        function Cl_ss(p::T)::Array{T,1} where T<:Real
+            Ωm = p
+            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81)
+            z = range(0., stop=2., length=1024)
+            nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+            ts = WeakLensingTracer(cosmo, z, nz)
+            ℓs = [10, 30, 100, 300]
+            Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
+            return Cℓ_ss
+        end
+        
+        function Cl_sk(p::T)::Array{T,1} where T<:Real
+            Ωm = p
+            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81)
+            z = range(0., stop=2., length=1024)
+            nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+            ts = WeakLensingTracer(cosmo, z, nz)
+            tk = CMBLensingTracer(cosmo)
+            ℓs = [10, 30, 100, 300]
+            Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
+            return Cℓ_sk
+        end
+
+        Ωm0 = 0.3
+        dΩm = 0.001
+
+        Cl_gg_autodiff = ForwardDiff.derivative(Cl_gg, Ωm0)
+        Cl_gg_anal = (Cl_gg(Ωm0+dΩm)-Cl_gg(Ωm0-dΩm))/2dΩm
+        Cl_ss_autodiff = ForwardDiff.derivative(Cl_ss, Ωm0)
+        Cl_ss_anal = (Cl_ss(Ωm0+dΩm)-Cl_ss(Ωm0-dΩm))/2dΩm
+        Cl_sk_autodiff = ForwardDiff.derivative(Cl_sk, Ωm0)
+        Cl_sk_anal = (Cl_sk(Ωm0+dΩm)-Cl_sk(Ωm0-dΩm))/2dΩm
+
+        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_anal-1) < 1E-3))
+        @test all(@. (abs(Cl_ss_autodiff/Cl_ss_anal-1) < 1E-3))
+        @test all(@. (abs(Cl_sk_autodiff/Cl_sk_anal-1) < 2E-2))
+    end
+    
     @testset "IsHalofitDiff" begin
         zs = 0.02:0.02:1.0
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
@@ -218,6 +269,6 @@ using ForwardDiff
         Halofit_autodiff = ForwardDiff.derivative(Halofit, Ωm0)
         Halofit_anal = (Halofit(Ωm0+dΩm)-Halofit(Ωm0-dΩm))/2dΩm
 
-        @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 1E-3))
+        @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
 end

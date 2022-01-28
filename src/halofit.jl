@@ -27,46 +27,38 @@ PKnonlin(cosmo::Cosmology; nk=500, nz=500) = begin
     z = range(zmin, stop=zmax, length=nz)
     a = reverse(@. 1.0 / (1.0 + z))
     zs = reverse(z)
+    
+    #=
     PkL = zeros(length(a), length(k))
     for i in range(1, stop=length(a))
         PkL[i, :] .= power_spectrum(cosmo, k, zs[i])
     end
+    =#
 
-    rsigs = zeros(nz)
-    sigma2s = zeros(nz)
-    neffs = zeros(nz)
-    Cs = zeros(nz)
-
-    for i in range(1, stop=nz)
-        # TODO: Get proper redshift columns
-        pkl_curr = PkL[i, :]
-        rsig_curr = get_rsigma(pkl_curr, logk)
-        sigma2_curr = rsigma_func(rsig_curr, pkl_curr, logk) + 1
-        onederiv_int = trapz(logk, onederiv_gauss_norm_int_func(logk, pkl_curr, rsig_curr))
-        neff_curr = -rsig_curr/sigma2_curr*onederiv_int - 3.0
-        twoderiv_int = trapz(logk, twoderiv_gauss_norm_int_func(logk, pkl_curr, rsig_curr))
-        C_curr = -(rsig_curr^2/sigma2_curr*twoderiv_int - rsig_curr^2/sigma2_curr^2*onederiv_int^2
-                        + rsig_curr/sigma2_curr*onederiv_int)
-        rsigs[i] = rsig_curr
-        sigma2s[i] = sigma2_curr
-        neffs[i] = neff_curr
-        Cs[i] = C_curr
-    end
+    PkL = [power_spectrum(cosmo, k, z) for z in zs]
+    PkL = reduce(vcat,transpose.(PkL))
+    
+    rsigs =[get_rsigma(PkL[i, :], logk) for i in range(1, stop=nz)]
+    sigma2s = [rsigma_func(rsigs[i], PkL[i, :], logk) + 1 for i in range(1, stop=nz)]
+    onederiv_ints = [trapz(logk, onederiv_gauss_norm_int_func(logk, PkL[i, :], rsigs[i])) for i in range(1, stop=nz)]
+    neffs = @. -rsigs/sigma2s*onederiv_ints - 3.0
+    twoderiv_ints = [trapz(logk, twoderiv_gauss_norm_int_func(logk, PkL[i, :], rsigs[i])) for i in range(1, stop=nz)]
+    Cs = [-(rsigs[i]^2/sigma2s[i]*twoderiv_ints[i] - rsigs[i]^2/sigma2s[i]^2*onederiv_ints[i]^2
+          + rsigs[i]/sigma2s[i]*onederiv_ints[i]) for i in range(1, stop=nz)]
+    
     # Interpolate linearily over a
     rsig = LinearInterpolation(a, rsigs)
     sigma2 = LinearInterpolation(a, sigma2s)
     neff = LinearInterpolation(a, neffs)
     C = LinearInterpolation(a, Cs)
 
-    pk_NLs = zeros(nz, nk)
-    for i in range(1, stop=nz)
-        pk_NLs[i, :] .= power_spectrum_nonlin(cosmo, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i])
-    end
+    pk_NLs = [power_spectrum_nonlin(cosmo, PkL[i, :], k, a[i], rsigs[i], sigma2s[i], neffs[i], Cs[i]) for i in range(1, stop=nz)]
+    pk_NLs = reduce(vcat,transpose.(pk_NLs))
     pk_NLs = transpose(reverse(pk_NLs, dims=1))
     pk_NL = LinearInterpolation((k, z), pk_NLs)
 
     PKnonlin(a, k, rsig, sigma2, neff, C, pk_NL)
-end
+end 
 
 function gauss_norm_int_func(logk, pk, R)
     k = exp.(logk)
