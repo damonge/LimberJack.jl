@@ -1,8 +1,8 @@
-abstract type Tracer{T<:Real} end
+abstract type Tracer end
 
-struct NumberCountsTracer{T<:Real} <: Tracer{T}
-    wint::AbstractInterpolation{T, 1}
-    bias::T
+struct NumberCountsTracer <: Tracer
+    wint::AbstractInterpolation
+    bias
     lpre::Int
 end
 
@@ -18,9 +18,9 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz, bias) = begin
     NumberCountsTracer(wint, bias, 0)
 end
 
-struct WeakLensingTracer{T<:Real} <: Tracer{T}
-    wint::AbstractInterpolation{T, 1}
-    bias::T
+struct WeakLensingTracer <: Tracer
+    wint::AbstractInterpolation
+    bias
     lpre::Int
 end
 
@@ -53,9 +53,9 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz) = begin
     WeakLensingTracer(wint, 1.0, 2)
 end
 
-struct CMBLensingTracer{T<:Real} <: Tracer{T}
-    wint::AbstractInterpolation{T, 1}
-    bias::T
+struct CMBLensingTracer <: Tracer
+    wint::AbstractInterpolation
+    bias
     lpre::Int
 end
 

@@ -2,7 +2,7 @@ using Test
 using LimberJack
 using ForwardDiff
 
-
+#=
 @testset "BMChi" begin
     cosmo = Cosmology()
     ztest = [0.1, 0.5, 1.0, 3.0]
@@ -109,9 +109,7 @@ end
 
     function f(p::T)::Array{T,1} where T<:Real
         Ωm = p
-        θCMB = 2.725/2.7
-        cpar = LimberJack.CosmoPar{T}(Ωm, 0.05, 0.67, 0.96, 0.81, θCMB)
-        cosmo = LimberJack.Cosmology(cpar)
+        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
         chi = comoving_radial_distance(cosmo, zs)
         return chi
     end
@@ -122,4 +120,102 @@ end
     dΩm = 0.02
     g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
     @test all(@. (abs(g/g1-1) < 1E-3))
+end
+
+@testset "IsDiffPkEH" begin
+    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
+
+    function f(p::T)::Array{T,1} where T<:Real
+        Ωm = p
+        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
+        pk = power_spectrum(cosmo, ks, 0.)
+        return pk
+    end
+
+    Ωm0 = 0.3
+    g = ForwardDiff.derivative(f, Ωm0)
+
+    dΩm = 0.005
+    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
+    println(g)
+    println(g1)
+    println(@. (g/g1-1))
+    @test all(@. (abs(g/g1-1) < 1E-2))
+end
+
+@testset "IsDiffCℓgg" begin
+    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
+    z = range(0., stop=2., length=1024)
+    nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+    ℓs = [10, 30, 100, 300]
+
+    function f(p::T)::Array{T,1} where T<:Real
+        Ωm = p
+        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
+        tg = NumberCountsTracer(cosmo, z, nz, 2.)
+        Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
+        return Cℓ_gg
+    end
+
+    Ωm0 = 0.3
+    g = ForwardDiff.derivative(f, Ωm0)
+
+    dΩm = 0.005
+    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
+    println(g)
+    println(g1)
+    println(@. (g/g1-1))
+    @test all(@. (abs(g/g1-1) < 2E-2))
+end
+
+@testset "IsDiffCℓss" begin
+    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
+    z = range(0., stop=2., length=1024)
+    nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+    ℓs = [10, 30, 100, 300]
+
+    function f(p::T)::Array{T,1} where T<:Real
+        Ωm = p
+        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
+        ts = WeakLensingTracer(cosmo, z, nz)
+        Cℓ_gg = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
+        return Cℓ_gg
+    end
+
+    Ωm0 = 0.3
+    g = ForwardDiff.derivative(f, Ωm0)
+
+    dΩm = 0.005
+    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
+    println(g)
+    println(g1)
+    println(@. (g/g1-1))
+    @test all(@. (abs(g/g1-1) < 2E-2))
+end
+=#
+
+@testset "IsDiffCℓkk" begin
+    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
+    z = range(0., stop=2., length=1024)
+    nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+    ℓs = [10, 30, 100, 300]
+
+    function f(p::T)::Array{T,1} where T<:Real
+        Ωm = p
+        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
+        tk = CMBLensingTracer(cosmo)
+        ts = WeakLensingTracer(cosmo, z, nz)
+        Cℓ_gg = [angularCℓ(cosmo, tk, ts, ℓ) for ℓ in ℓs]
+        return Cℓ_gg
+    end
+
+    Ωm0 = 0.3
+    g = ForwardDiff.derivative(f, Ωm0)
+
+    dΩm = 0.01
+    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
+    println(g)
+    println(g1)
+    println(@. (g/g1-1))
+    @test all(@. (abs(g/g1-1) < 2E-2))
 end
