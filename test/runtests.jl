@@ -128,7 +128,7 @@ using ForwardDiff
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-4))
         @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-4))
         @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 5E-4))
-        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 1E-3))
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 1E-2))
     end
 
     @testset "CreateTracer" begin
@@ -246,8 +246,8 @@ using ForwardDiff
         Cl_sk_autodiff = ForwardDiff.derivative(Cl_sk, Ωm0)
         Cl_sk_anal = (Cl_sk(Ωm0+dΩm)-Cl_sk(Ωm0-dΩm))/2dΩm
 
-        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_anal-1) < 1E-3))
-        @test all(@. (abs(Cl_ss_autodiff/Cl_ss_anal-1) < 1E-3))
+        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_anal-1) < 2E-2))
+        @test all(@. (abs(Cl_ss_autodiff/Cl_ss_anal-1) < 2E-3))
         @test all(@. (abs(Cl_sk_autodiff/Cl_sk_anal-1) < 2E-2))
     end
     
