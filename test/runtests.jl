@@ -2,7 +2,7 @@ using Test
 using LimberJack
 using ForwardDiff
 
-#=
+
 @testset "BMChi" begin
     cosmo = Cosmology()
     ztest = [0.1, 0.5, 1.0, 3.0]
@@ -137,85 +137,43 @@ end
 
     dΩm = 0.005
     g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
-    println(g)
-    println(g1)
-    println(@. (g/g1-1))
     @test all(@. (abs(g/g1-1) < 1E-2))
 end
 
-@testset "IsDiffCℓgg" begin
+@testset "IsDiffCℓs" begin
     ks = [0.001, 0.01, 0.1, 1.0, 10.0]
     z = range(0., stop=2., length=1024)
     nz = @. exp(-0.5*((z-0.5)/0.05)^2)
     ℓs = [10, 30, 100, 300]
 
-    function f(p::T)::Array{T,1} where T<:Real
+    function f(p::T, kind="gg")::Array{T,1} where T<:Real
         Ωm = p
         cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
-        tg = NumberCountsTracer(cosmo, z, nz, 2.)
-        Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
-        return Cℓ_gg
+        t1 = NumberCountsTracer(cosmo, z, nz, 2.)
+        if kind=="gg"
+            t2 = t1
+        elseif kind == "gs"
+            t2 = WeakLensingTracer(cosmo, z, nz)
+        elseif kind == "gk"
+            t2 = CMBLensingTracer(cosmo)
+        else
+            print("Unknown type")
+        end
+        Cℓ = [angularCℓ(cosmo, t1, t2, ℓ) for ℓ in ℓs]
+        return Cℓ
     end
 
-    Ωm0 = 0.3
-    g = ForwardDiff.derivative(f, Ωm0)
+    function testdiff(kind)
+        Ωm0 = 0.3
+        g = ForwardDiff.derivative(x -> f(x, kind), Ωm0)
 
-    dΩm = 0.005
-    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
-    println(g)
-    println(g1)
-    println(@. (g/g1-1))
-    @test all(@. (abs(g/g1-1) < 2E-2))
-end
-
-@testset "IsDiffCℓss" begin
-    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
-    z = range(0., stop=2., length=1024)
-    nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-    ℓs = [10, 30, 100, 300]
-
-    function f(p::T)::Array{T,1} where T<:Real
-        Ωm = p
-        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
-        ts = WeakLensingTracer(cosmo, z, nz)
-        Cℓ_gg = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
-        return Cℓ_gg
+        dΩm = 0.005
+        g1 = (f(Ωm0+dΩm, kind)-f(Ωm0-dΩm, kind))/2dΩm
+        # TODO: gs gets only 0.01 precision...
+        @test all(@. (abs(g/g1-1) < 2E-2))
     end
 
-    Ωm0 = 0.3
-    g = ForwardDiff.derivative(f, Ωm0)
-
-    dΩm = 0.005
-    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
-    println(g)
-    println(g1)
-    println(@. (g/g1-1))
-    @test all(@. (abs(g/g1-1) < 2E-2))
-end
-=#
-
-@testset "IsDiffCℓkk" begin
-    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
-    z = range(0., stop=2., length=1024)
-    nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-    ℓs = [10, 30, 100, 300]
-
-    function f(p::T)::Array{T,1} where T<:Real
-        Ωm = p
-        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
-        tk = CMBLensingTracer(cosmo)
-        ts = WeakLensingTracer(cosmo, z, nz)
-        Cℓ_gg = [angularCℓ(cosmo, tk, ts, ℓ) for ℓ in ℓs]
-        return Cℓ_gg
-    end
-
-    Ωm0 = 0.3
-    g = ForwardDiff.derivative(f, Ωm0)
-
-    dΩm = 0.01
-    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
-    println(g)
-    println(g1)
-    println(@. (g/g1-1))
-    @test all(@. (abs(g/g1-1) < 2E-2))
+    testdiff("gg")
+    testdiff("gs")
+    testdiff("gk")
 end
