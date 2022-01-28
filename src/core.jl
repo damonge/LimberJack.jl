@@ -113,7 +113,7 @@ Cosmology(cpar::CosmoPar; nk=1000, nz=1000, kmin=-4, kmax=2, zmax=3, tk_mode="BB
               lin_Pk, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=2000, nz=2000, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
     Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode, Pk_mode=Pk_mode)
 end
@@ -138,20 +138,8 @@ function _primordial_lPk(cpar::CosmoPar, ks, dlogk, tk_mode="BBKS")
 end
 
 function _lin_Pk(zs, ks, primordial_lPk::AbstractInterpolation, Dz::AbstractInterpolation)
-    # output: 2D matrix [z1 = [k1, k2, ...]
-    #                   z2 = [k1, k2, ...]
-    #                   ...]
-    nz = length(zs)
-    nk = length(ks)
-    PkLs = Matrix{Union{Nothing, <:Real}}(nothing, nz, nk)
-    #PkLs = [] # Should be given a type
-    for i in range(1, stop=nz)
-        z_i = zs[i]
-        Dz2 = Dz(z_i).^2
-        #append!(PkLs, @. exp(primordial_lPk(log(ks)))*Dz2)
-        PkLs[i, :] .= @. exp(primordial_lPk(log(ks)))*Dz2
-    end
-    #PkLs = transpose(reshape(PkLs, nk, nz))
+    PkLs = [@. exp(primordial_lPk(log(k)))*Dz(zs)^2 for k in ks]
+    PkLs = reduce(vcat, transpose.(PkLs))
     PkL = LinearInterpolation((zs, ks), PkLs)
     return PkLs, PkL
 end
