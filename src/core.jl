@@ -51,7 +51,7 @@ struct Cosmology
     ks::Array
     pk0::Array
     dlogk
-    lplk::AbstractInterpolation
+    primordial_lPk::AbstractInterpolation
     # Redshift and background
     zs::Array
     chis::Array
@@ -61,11 +61,16 @@ struct Cosmology
     chi_LSS
     Dzs::Array
     Dz::AbstractInterpolation
+    PkL::AbstractInterpolation
+    Pk::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
+Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = begin
     # Compute linear power spectrum at z=0.
-    ks = 10 .^ range(-4., stop=2., length=nk)
+    lkmin = -4
+    lkmax = 2
+    logk = range(lkmin, stop=lkmax, length=nk)
+    ks = 10 .^ logk
     dlogk = log(ks[2]/ks[1])
     if tk_mode== "EisHu"
         tk = TkEisHu(cpar, ks./ cpar.h)
@@ -109,15 +114,24 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS") = begin
     Dzs = reverse(s[:, 2] / s[end, 2])
     # OPT: interpolation method
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
-
+    PkLs, PkL = _lin_Pk(pki, Dzi, zs, ks)
+    
+    if Pk_mode == "linear"
+        Pk = PkL
+    elseif Pk_mode == "Halofit"
+        Pk = _nonlin_Pk(cpar, zs, ks, PkLs)
+    else 
+        Pk = PkL
+        print("Pk mode not implemented. Using linear Pk.")
+    end
     Cosmology(cpar, ks, pk0, dlogk, pki,
               collect(zs), chis, chii, zi, chis[end],
-              chi_LSS, Dzs, Dzi)
+              chi_LSS, Dzs, Dzi, PkL, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode)
+    Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode, Pk_mode=Pk_mode)
 end
 
 Cosmology() = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
@@ -192,20 +206,6 @@ function TkEisHu(cosmo::CosmoPar, k)
     return Tk.^2
 end
 
-function _omega_x(cosmo::CosmoPar, z, species_x_label)
-    Ez = _Ez(cosmo, z)
-    a = @. 1.0/(1.0 + z)
-    if species_x_label == "crit"
-        return 1.0
-    elseif species_x_label == "m"
-        return @. cosmo.Ωm / (a^3) / Ez^2
-    elseif species_x_label == "l"
-        return 1.0 - cosmo.Ωm
-    else
-        print("Only species_x_label = crit, m, l supported so far.")
-    end
-end
-
 function _Ez(cosmo::CosmoPar, z)
     @. sqrt(cosmo.Ωm*(1+z)^3+cosmo.Ωr*(1+z)^4+cosmo.ΩΛ)
 end
@@ -222,6 +222,25 @@ Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 omega_x(cosmo::Cosmology, z, species_x_label) = _omega_x(cosmo.cosmo, z, species_x_label)
-function power_spectrum(cosmo::Cosmology, k, z)
-    @. exp(cosmo.lplk(log(k)))*cosmo.Dz(z)*cosmo.Dz(z)
+
+#function power_spectrum(cosmo::Cosmology, k, z)
+    # @. exp(cosmo.primordial_lPk(log(k)))*cosmo.Dz(z)*cosmo.Dz(z)
+    #PKls, Pk_itp = cosmo.Pk(k, z)
+#    return cosmo.PkL(k, z)
+#end
+
+function nonlin_Pk(cosmo::Cosmology, k, z)
+    return cosmo.Pk(k, z)
+end
+
+function _nonlin_Pk(cpar::CosmoPar, zs, ks, PkLs)
+    Pk = PKnonlin(cpar, zs, ks, PkLs).pk_NL
+    return Pk
+end
+
+function _lin_Pk(primordial_lPk, Dz, zs, ks)
+    PkLs = [@. exp(primordial_lPk(log(k)))*Dz(zs)^2 for k in ks]
+    PkLs = reduce(vcat, transpose.(PkLs))
+    PkL = LinearInterpolation((ks, zs), PkLs)
+    return PkLs, PkL
 end
