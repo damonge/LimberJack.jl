@@ -221,7 +221,6 @@ Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
 Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
-omega_x(cosmo::Cosmology, z, species_x_label) = _omega_x(cosmo.cosmo, z, species_x_label)
 
 function nonlin_Pk(cosmo::Cosmology, k, z)
     return cosmo.Pk(k, z)
@@ -230,6 +229,10 @@ end
 function _nonlin_Pk(cpar::CosmoPar, zs, ks, PkLs)
     Pk = PKnonlin(cpar, zs, ks, PkLs).pk_NL
     return Pk
+end
+
+function lin_Pk(cosmo::Cosmology, k, z)
+    return cosmo.PkL(k, z)
 end
 
 function _lin_Pk(primordial_lPk, Dz, zs, ks)

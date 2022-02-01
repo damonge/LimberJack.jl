@@ -3,7 +3,7 @@ module LimberJack
 export CosmoPar, Cosmology
 export Ez, Hmpc, comoving_radial_distance, power_spectrum, growth_factor
 export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer, get_Fℓ
-export angularCℓ, PKnonlin, omega_x
+export angularCℓ, lin_Pk, nonlin_Pk
 
 using Interpolations, QuadGK, OrdinaryDiffEq, Trapz, Roots, Zygote, ForwardDiff, LinearAlgebra
 

@@ -120,7 +120,7 @@ function power_spectrum_nonlin(cpar::CosmoPar, PkL, k, a, rsig, sigma2, neff, C)
     weffa = -1.0
     Ez = @. sqrt(cpar.Ωm*(1+zs)^3+cpar.Ωr*(1+zs)^4+cpar.ΩΛ)
     omegaMz = @. cpar.Ωm / (a^3) / Ez^2 
-    omegaDEwz = 1 - cpar.Ωm 
+    omegaDEwz = (1 - cpar.Ωm)/Ez^2
 
     # not using these to match CLASS better - might be a bug in CLASS
     # weffa = gsl_spline_eval(hf->weff, a, NULL);
