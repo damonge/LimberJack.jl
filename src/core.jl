@@ -223,12 +223,6 @@ comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 omega_x(cosmo::Cosmology, z, species_x_label) = _omega_x(cosmo.cosmo, z, species_x_label)
 
-#function power_spectrum(cosmo::Cosmology, k, z)
-    # @. exp(cosmo.primordial_lPk(log(k)))*cosmo.Dz(z)*cosmo.Dz(z)
-    #PKls, Pk_itp = cosmo.Pk(k, z)
-#    return cosmo.PkL(k, z)
-#end
-
 function nonlin_Pk(cosmo::Cosmology, k, z)
     return cosmo.Pk(k, z)
 end
