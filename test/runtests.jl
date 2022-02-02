@@ -170,7 +170,7 @@ using ForwardDiff
         dΩm = 0.02
         g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
         @test all(@. (abs(g/g1-1) < 1E-3))
-
+    end
 
     @testset "IsLinPkDiff" begin
         zs = 0.02:0.02:1.0
