@@ -153,7 +153,7 @@ using ForwardDiff
         @test cosmo.cosmo.Ωm == 0.3
     end
 
-    @testset "IsDiff" begin
+    @testset "IsBaseDiff" begin
         zs = 0.02:0.02:1.0
 
         function f(p::T)::Array{T,1} where T<:Real
@@ -259,7 +259,7 @@ using ForwardDiff
         
         function Halofit(p::T)::Array{T,1} where T<:Real
             Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81, tk_mode="EisHu")
+            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81, tk_mode="EisHu", Pk_mode="Halofit")
             pk = LimberJack.nonlin_Pk(cosmo, ks, 0)
             return pk
         end
@@ -272,60 +272,4 @@ using ForwardDiff
 
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
-end
-
-@testset "IsDiffPkEH" begin
-    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
-
-    function f(p::T)::Array{T,1} where T<:Real
-        Ωm = p
-        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
-        pk = power_spectrum(cosmo, ks, 0.)
-        return pk
-    end
-
-    Ωm0 = 0.3
-    g = ForwardDiff.derivative(f, Ωm0)
-
-    dΩm = 0.005
-    g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
-    @test all(@. (abs(g/g1-1) < 1E-2))
-end
-
-@testset "IsDiffCℓs" begin
-    ks = [0.001, 0.01, 0.1, 1.0, 10.0]
-    z = range(0., stop=2., length=1024)
-    nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-    ℓs = [10, 30, 100, 300]
-
-    function f(p::T, kind="gg")::Array{T,1} where T<:Real
-        Ωm = p
-        cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8)
-        t1 = NumberCountsTracer(cosmo, z, nz, 2.)
-        if kind=="gg"
-            t2 = t1
-        elseif kind == "gs"
-            t2 = WeakLensingTracer(cosmo, z, nz)
-        elseif kind == "gk"
-            t2 = CMBLensingTracer(cosmo)
-        else
-            print("Unknown type")
-        end
-        Cℓ = [angularCℓ(cosmo, t1, t2, ℓ) for ℓ in ℓs]
-        return Cℓ
-    end
-
-    function testdiff(kind)
-        Ωm0 = 0.3
-        g = ForwardDiff.derivative(x -> f(x, kind), Ωm0)
-
-        dΩm = 0.005
-        g1 = (f(Ωm0+dΩm, kind)-f(Ωm0-dΩm, kind))/2dΩm
-        # TODO: gs gets only 0.01 precision...
-        @test all(@. (abs(g/g1-1) < 2E-2))
-    end
-
-    testdiff("gg")
-    testdiff("gs")
-    testdiff("gk")
 end
