@@ -51,7 +51,6 @@ struct Cosmology
     ks::Array
     pk0::Array
     dlogk
-    primordial_lPk::AbstractInterpolation
     # Redshift and background
     zs::Array
     chis::Array
@@ -114,17 +113,23 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = be
     Dzs = reverse(s[:, 2] / s[end, 2])
     # OPT: interpolation method
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
-    PkLs, PkL = _lin_Pk(pki, Dzi, zs, ks)
+
+
+    # OPT: check order in line below and the reduce stuff
+    PkLs = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]
+    PkLs = reduce(vcat, transpose.(PkLs))
+    # OPT: check order of this too
+    PkL = LinearInterpolation((ks, zs), PkLs)
     
     if Pk_mode == "linear"
         Pk = PkL
     elseif Pk_mode == "Halofit"
-        Pk = _nonlin_Pk(cpar, zs, ks, PkLs)
+        Pk = PKnonlin(cpar, zs, ks, PkLs).pk_NL
     else 
         Pk = PkL
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(cpar, ks, pk0, dlogk, pki,
+    Cosmology(cpar, ks, pk0, dlogk,
               collect(zs), chis, chii, zi, chis[end],
               chi_LSS, Dzs, Dzi, PkL, Pk)
 end
@@ -226,18 +231,6 @@ function nonlin_Pk(cosmo::Cosmology, k, z)
     return cosmo.Pk(k, z)
 end
 
-function _nonlin_Pk(cpar::CosmoPar, zs, ks, PkLs)
-    Pk = PKnonlin(cpar, zs, ks, PkLs).pk_NL
-    return Pk
-end
-
 function lin_Pk(cosmo::Cosmology, k, z)
     return cosmo.PkL(k, z)
-end
-
-function _lin_Pk(primordial_lPk, Dz, zs, ks)
-    PkLs = [@. exp(primordial_lPk(log(k)))*Dz(zs)^2 for k in ks]
-    PkLs = reduce(vcat, transpose.(PkLs))
-    PkL = LinearInterpolation((ks, zs), PkLs)
-    return PkLs, PkL
 end

@@ -5,6 +5,7 @@ halofit:
 - Date: 2021-09-17
 =#
 
+# OPT: do we need for this to be a structure?
 struct PKnonlin
     a::Array
     k::Array
@@ -23,6 +24,7 @@ PKnonlin(cosmo::CosmoPar, z, k, PkLs) = begin
     zs = reverse(z)
     nk = length(k)
     nz = length(z)
+    # OPT: check order
     PkL = reverse(transpose(PkLs), dims=1)
     
     rsigs =[get_rsigma(PkL[i, :], logk) for i in range(1, stop=nz)]
