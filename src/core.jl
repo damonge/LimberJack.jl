@@ -1,7 +1,5 @@
 # c/(100 km/s/Mpc) in Mpc
 const CLIGHT_HMPC = 2997.92458
-# c/(km/s/Mpc) in Mpc
-const CLIGHT_MPC = 299792.458
 
 function w_tophat(x::Real)
     x2 = x^2
@@ -60,7 +58,7 @@ struct Cosmology
     chi_LSS
     Dzs::Array
     Dz::AbstractInterpolation
-    PkL::AbstractInterpolation
+    PkLz0::AbstractInterpolation
     Pk::AbstractInterpolation
 end
 
@@ -115,23 +113,25 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = be
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
 
 
-    # OPT: check order in line below and the reduce stuff
-    PkLs = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]
-    PkLs = reduce(vcat, transpose.(PkLs))
-    # OPT: check order of this too
-    PkL = LinearInterpolation((ks, zs), PkLs)
-    
     if Pk_mode == "linear"
-        Pk = PkL
+        # OPT: check order in line below and the reduce stuff
+        Pks = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]
+        Pks = reduce(vcat, transpose.(PkLs))
+        # OPT: check order of this too
+        Pk = LinearInterpolation((log.(ks), zs), log.(Pks))
     elseif Pk_mode == "Halofit"
-        Pk = PKnonlin(cpar, zs, ks, PkLs).pk_NL
+        Pk = get_PKnonlin(cpar, zs, ks, pki, Dzi)
     else 
-        Pk = PkL
+        # OPT: check order in line below and the reduce stuff
+        Pks = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]
+        Pks = reduce(vcat, transpose.(PkLs))
+        # OPT: check order of this too
+        Pk = LinearInterpolation((log.(ks), zs), log.(PkLs))
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(cpar, ks, pk0, dlogk,
               collect(zs), chis, chii, zi, chis[end],
-              chi_LSS, Dzs, Dzi, PkL, Pk)
+              chi_LSS, Dzs, Dzi, pki, Pk)
 end
 
 Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = begin
@@ -228,9 +228,11 @@ comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 
 function nonlin_Pk(cosmo::Cosmology, k, z)
-    return cosmo.Pk(k, z)
+    return @. exp(cosmo.Pk(log(k), z))
 end
 
 function lin_Pk(cosmo::Cosmology, k, z)
-    return cosmo.PkL(k, z)
+    pk0 = @. exp(cosmo.PkLz0(log(k)))
+    Dz2 = cosmo.Dz(z)^2
+    return pk0 .* Dz2
 end
