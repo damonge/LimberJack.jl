@@ -3,6 +3,8 @@ halofit:
 - Julia version: 
 - Author: andrina
 - Date: 2021-09-17
+- Modified by: damonge and JaimeRZP
+- Date: 2022-02-19
 =#
 
 function get_σ2(ks, pks, R, kind)
@@ -32,6 +34,7 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, lPkLz0, Dz)
 
     PkLz0 = exp.(lPkLz0(log.(k)))
     Dz2s = Dz(zs) .^ 2
+    # OPT: hard-coded range and number of points
     lRs = range(log(0.1), stop=log(10.0), length=64)
     lσ2s = log.([get_σ2(k, PkLz0, exp(lR), 0) for lR in lRs])
     lσ2i = CubicSplineInterpolation(lRs, lσ2s)
@@ -52,9 +55,25 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, lPkLz0, Dz)
     return pk_NL
 end 
 
+function secant(f, x0, x1, tol)
+    # TODO: fail modes
+    x_nm1 = x0
+    x_nm2 = x1
+    f_nm1 = f(x_nm1)
+    f_nm2 = f(x_nm2)
+    while abs(x_nm1 - x_nm2) > tol
+        x_n = (x_nm2*f_nm1-x_nm1*f_nm2)/(f_nm1-f_nm2)
+        x_nm2 = x_nm1
+        x_nm1 = x_n
+        f_nm2 = f_nm1
+        f_nm1 = f(x_nm1)
+    end
+    return 0.5*(x_nm2+x_nm1)
+end
+
 function get_rsigma(lσ2i, Dz2, lRmin, lRmax)
     lDz2 = log(Dz2)
-    lRsigma = find_zero(lR -> lσ2i(lR)+lDz2, (lRmin, lRmax))
+    lRsigma = secant(lR -> lσ2i(lR)+lDz2, lRmin, lRmax, 1E-4)
     return exp(lRsigma)
 end
 
@@ -63,10 +82,6 @@ function power_spectrum_nonlin(cpar::CosmoPar, PkL, k, a, rsig, neff, C)
     Ez2 = cpar.Ωm*(1+zz)^3+cpar.Ωr*(1+zz)^4+cpar.ΩΛ
     omegaMz = cpar.Ωm*(1+zz)^3 / Ez2
     omegaDEwz = cpar.ΩΛ/Ez2
-
-    # not using these to match CLASS better - might be a bug in CLASS
-    # omegaMz = gsl_spline_eval(hf->omeff, a, NULL);
-    # omegaDEwz = gsl_spline_eval(hf->deeff, a, NULL);
 
     ksigma = @. 1.0 / rsig
     neff2 = @. neff * neff

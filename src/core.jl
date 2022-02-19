@@ -45,7 +45,7 @@ end
 
 struct Cosmology
     cosmo::CosmoPar
-    # Power spectrum
+    # Powero spectrum
     ks::Array
     pk0::Array
     dlogk
@@ -116,7 +116,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = be
     if Pk_mode == "linear"
         # OPT: check order in line below and the reduce stuff
         Pks = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]
-        Pks = reduce(vcat, transpose.(PkLs))
+        Pks = reduce(vcat, transpose.(Pks))
         # OPT: check order of this too
         Pk = LinearInterpolation((log.(ks), zs), log.(Pks))
     elseif Pk_mode == "Halofit"
@@ -124,9 +124,9 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = be
     else 
         # OPT: check order in line below and the reduce stuff
         Pks = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]
-        Pks = reduce(vcat, transpose.(PkLs))
+        Pks = reduce(vcat, transpose.(Pks))
         # OPT: check order of this too
-        Pk = LinearInterpolation((log.(ks), zs), log.(PkLs))
+        Pk = LinearInterpolation((log.(ks), zs), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(cpar, ks, pk0, dlogk,
