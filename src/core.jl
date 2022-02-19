@@ -45,7 +45,7 @@ end
 
 struct Cosmology
     cosmo::CosmoPar
-    # Powero spectrum
+    # Power spectrum
     ks::Array
     pk0::Array
     dlogk
