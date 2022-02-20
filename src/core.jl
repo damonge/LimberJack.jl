@@ -64,10 +64,8 @@ end
 
 Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = begin
     # Compute linear power spectrum at z=0.
-    lkmin = -4
-    lkmax = 2
-    logk = range(lkmin, stop=lkmax, length=nk)
-    ks = 10 .^ logk
+    logk = range(log(0.0001), stop=log(100.0), length=nk)
+    ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     if tk_mode== "EisHu"
         tk = TkEisHu(cpar, ks./ cpar.h)
