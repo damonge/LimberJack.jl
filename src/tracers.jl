@@ -26,6 +26,7 @@ end
 WeakLensingTracer(cosmo::Cosmology, z_n, nz) = begin
     # N(z) normalization
     nz_norm = trapz(z_n, nz)
+    nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
 
     # Calculate chis at which to precalculate the lensing kernel
     # OPT: perhaps we don't need to sample the lensing kernel
