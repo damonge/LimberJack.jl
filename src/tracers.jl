@@ -9,8 +9,7 @@ end
 NumberCountsTracer(cosmo::Cosmology, z_n, nz, bias) = begin
     # OPT: here we only integrate to calculate the area.
     #      perhaps it'd be best to just use Simpsons.
-    nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
-    nz_norm = quadgk(nz_int, z_n[1], z_n[end], rtol=1E-5)[1]
+    nz_norm = trapz(z_n, nz)
     chi = cosmo.chi(z_n)
     hz = Hmpc(cosmo, z_n)
     w_arr = @. (nz*hz/nz_norm)
@@ -26,8 +25,7 @@ end
 
 WeakLensingTracer(cosmo::Cosmology, z_n, nz) = begin
     # N(z) normalization
-    nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
-    nz_norm = quadgk(nz_int, z_n[1], z_n[end], rtol=1E-5)[1]
+    nz_norm = trapz(z_n, nz)
 
     # Calculate chis at which to precalculate the lensing kernel
     # OPT: perhaps we don't need to sample the lensing kernel
