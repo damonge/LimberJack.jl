@@ -39,7 +39,9 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz) = begin
 
     # Calculate integral at each chi
     w_itg(zz, chii) = nz_int(zz)*(1-chii/cosmo.chi(zz))
-    w_arr = [quadgk(zz -> w_itg(zz, chi[i]), z_w[i], z_n[end])[1]
+    # OPT: use simpsons/trapz?
+    w_arr = [quadgk(zz -> w_itg(zz, chi[i]), z_w[i], z_n[end],
+                    rtol=1E-4)[1]
              for i=1:nchi]
     # Normalize
     H0 = cosmo.cosmo.h/CLIGHT_HMPC
