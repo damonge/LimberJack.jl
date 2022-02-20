@@ -247,9 +247,9 @@ using ForwardDiff
         Cl_sk_autodiff = ForwardDiff.derivative(Cl_sk, Ωm0)
         Cl_sk_anal = (Cl_sk(Ωm0+dΩm)-Cl_sk(Ωm0-dΩm))/2dΩm
 
-        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_anal-1) < 3E-3))
-        @test all(@. (abs(Cl_ss_autodiff/Cl_ss_anal-1) < 1E-3))
-        @test all(@. (abs(Cl_sk_autodiff/Cl_sk_anal-1) < 1E-3))
+        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_anal-1) < 1E-2))
+        @test all(@. (abs(Cl_ss_autodiff/Cl_ss_anal-1) < 1E-2))
+        @test all(@. (abs(Cl_sk_autodiff/Cl_sk_anal-1) < 1E-2))
     end
     
     @testset "IsHalofitDiff" begin
