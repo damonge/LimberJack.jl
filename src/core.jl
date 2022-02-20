@@ -51,18 +51,16 @@ struct Cosmology
     dlogk
     # Redshift and background
     zs::Array
-    chis::Array
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
     chi_max
     chi_LSS
-    Dzs::Array
     Dz::AbstractInterpolation
     PkLz0::AbstractInterpolation
     Pk::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
@@ -110,28 +108,31 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = be
     # OPT: interpolation method
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
 
-
     # OPT: separate zs for Pk and background
+    zs_pk = range(0., stop=3., length=nz_pk)
+    Dzs = Dzi(zs_pk)
+
     if Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = LinearInterpolation((logk, zs), log.(Pks))
+        Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
     elseif Pk_mode == "Halofit"
-        Pk = get_PKnonlin(cpar, zs, ks, pk0, Dzs)
+        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs)
     else 
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = LinearInterpolation((logk, zs), log.(Pks))
+        Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(cpar, ks, pk0, dlogk,
-              collect(zs), chis, chii, zi, chis[end],
-              chi_LSS, Dzs, Dzi, pki, Pk)
+              collect(zs), chii, zi, chis[end],
+              chi_LSS, Dzi, pki, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256,
+          nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    Cosmology(cpar, nk=nk, nz=nz, tk_mode=tk_mode, Pk_mode=Pk_mode)
+    Cosmology(cpar, nk=nk, nz=nz, nz_pk=nz_pk, tk_mode=tk_mode, Pk_mode=Pk_mode)
 end
 
 Cosmology() = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
