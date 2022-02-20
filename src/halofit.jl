@@ -21,13 +21,12 @@ function get_σ2(lks, ks, pks, R, kind)
     return trapz(lks, integrand)/(2*pi^2)
 end
 
-function get_PKnonlin(cosmo::CosmoPar, z, k, lPkLz0, Dz)
+function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs)
     nk = length(k)
     nz = length(z)
     logk = log.(k)
 
-    PkLz0 = exp.(lPkLz0(logk))
-    Dz2s = Dz(z) .^ 2
+    Dz2s = Dzs .^ 2
     # OPT: hard-coded range and number of points
     lR0 = log(0.1)
     lR1 = log(10.0)

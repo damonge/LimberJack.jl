@@ -81,7 +81,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = be
     norm = cpar.σ8^2 / σ8_2_here
     pk0[:] = pk0 .* norm
     # OPT: interpolation method
-    pki = LinearInterpolation(log.(ks), log.(pk0), extrapolation_bc=Line())
+    pki = LinearInterpolation(logk, log.(pk0), extrapolation_bc=Line())
 
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
@@ -115,19 +115,15 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = be
 
     # OPT: separate zs for Pk and background
     if Pk_mode == "linear"
-        # OPT: check order in line below and the reduce stuff
-        Pks = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]
+        Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
-        # OPT: check order of this too
-        Pk = LinearInterpolation((log.(ks), zs), log.(Pks))
+        Pk = LinearInterpolation((logk, zs), log.(Pks))
     elseif Pk_mode == "Halofit"
-        Pk = get_PKnonlin(cpar, zs, ks, pki, Dzi)
+        Pk = get_PKnonlin(cpar, zs, ks, pk0, Dzs)
     else 
-        # OPT: check order in line below and the reduce stuff
-        Pks = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]
+        Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
-        # OPT: check order of this too
-        Pk = LinearInterpolation((log.(ks), zs), log.(Pks))
+        Pk = LinearInterpolation((logk, zs), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(cpar, ks, pk0, dlogk,
