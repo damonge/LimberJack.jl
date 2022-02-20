@@ -113,6 +113,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, tk_mode="BBKS", Pk_mode="linear") = be
     Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
 
 
+    # OPT: separate zs for Pk and background
     if Pk_mode == "linear"
         # OPT: check order in line below and the reduce stuff
         Pks = [@. exp(pki(log(k)))*Dzi(zs)^2 for k in ks]

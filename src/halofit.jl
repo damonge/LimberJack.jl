@@ -7,10 +7,8 @@ halofit:
 - Date: 2022-02-19
 =#
 
-function get_σ2(ks, pks, R, kind)
-    lks = log.(ks)
-    k2 = ks .^ 2
-    k3 = k2 .* ks
+function get_σ2(lks, ks, pks, R, kind)
+    k3 = ks .^ 3
     x2 = @. (ks*R)^2
     if kind == 2
         pre = x2
@@ -27,30 +25,33 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, lPkLz0, Dz)
     nk = length(k)
     nz = length(z)
     logk = log.(k)
-    a = reverse(@. 1.0 / (1.0 + z))
-    zs = reverse(z)
-    nk = length(k)
-    nz = length(z)
 
-    PkLz0 = exp.(lPkLz0(log.(k)))
-    Dz2s = Dz(zs) .^ 2
+    PkLz0 = exp.(lPkLz0(logk))
+    Dz2s = Dz(z) .^ 2
     # OPT: hard-coded range and number of points
-    lRs = range(log(0.1), stop=log(10.0), length=64)
-    lσ2s = log.([get_σ2(k, PkLz0, exp(lR), 0) for lR in lRs])
+    lR0 = log(0.1)
+    lR1 = log(10.0)
+    lRs = range(lR0, stop=lR1, length=64)
+    lσ2s = log.([get_σ2(logk, k, PkLz0, exp(lR), 0) for lR in lRs])
     lσ2i = CubicSplineInterpolation(lRs, lσ2s)
-    rsigs = [get_rsigma(lσ2i, Dz2s[i], log(0.1), log(10.0)) for i in range(1, stop=nz)]
+    rsigs = [get_rsigma(lσ2i, Dz2s[i], lR0, lR1) for i in range(1, stop=nz)]
 
-    onederiv_ints = [get_σ2(k, PkLz0, rsigs[i], 2) * Dz2s[i] for i in range(1, stop=nz)]
-    twoderiv_ints = [get_σ2(k, PkLz0, rsigs[i], 4) * Dz2s[i] for i in range(1, stop=nz)]
+    onederiv_ints = [get_σ2(logk, k, PkLz0, rsigs[i], 2) * Dz2s[i] for i in range(1, stop=nz)]
+    twoderiv_ints = [get_σ2(logk, k, PkLz0, rsigs[i], 4) * Dz2s[i] for i in range(1, stop=nz)]
     neffs = @. 2*onederiv_ints - 3.0
     Cs = @. 4*(twoderiv_ints + onederiv_ints^2)
 
     # Interpolate linearily over a
-    pk_NLs = [power_spectrum_nonlin(cosmo, PkLz0 .* Dz2s[i], k, a[i], rsigs[i], neffs[i], Cs[i])
+    pk_NLs = [power_spectrum_nonlin(cosmo, PkLz0 .* Dz2s[i], k, z[i], rsigs[i], neffs[i], Cs[i])
               for i in range(1, stop=nz)]
-    pk_NLs = reduce(vcat,transpose.(pk_NLs))
-    pk_NLs = transpose(reverse(pk_NLs, dims=1))
-    pk_NL = LinearInterpolation((log.(k), z), log.(pk_NLs))
+    pk_NLs = transpose(reduce(vcat,transpose.(pk_NLs)))
+    # TODO: I don't know why this is 2x slower than the above
+    #pk_NLs = zeros(Real, nk, nz)
+    #for i in 1:nz
+    #    pk_NLs[:, i] = power_spectrum_nonlin(cosmo, PkLz0 .* Dz2s[i],
+    #                                         k, z[i], rsigs[i], neffs[i], Cs[i])
+    #end
+    pk_NL = LinearInterpolation((logk, z), log.(pk_NLs))
 
     return pk_NL
 end 
@@ -77,10 +78,10 @@ function get_rsigma(lσ2i, Dz2, lRmin, lRmax)
     return exp(lRsigma)
 end
 
-function power_spectrum_nonlin(cpar::CosmoPar, PkL, k, a, rsig, neff, C)
+function power_spectrum_nonlin(cpar::CosmoPar, PkL, k, z, rsig, neff, C)
     # DAM: note that below I've commented out anything to do with
     # neutrinos or non-Lambda dark energy.
-    opz = 1.0/a
+    opz = 1.0+z
     #weffa = -1.0
     Ez2 = cpar.Ωm*opz^3+cpar.Ωr*opz^4+cpar.ΩΛ
     omegaMz = cpar.Ωm*opz^3 / Ez2
