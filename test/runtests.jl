@@ -102,7 +102,7 @@ using ForwardDiff
     @testset "EisHu_Cℓs" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nk=512, tk_mode="EisHu")
-        z = range(0., stop=2., length=1024)
+        z = range(0., stop=2., length=256)
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg = NumberCountsTracer(cosmo, z, nz, 2.)
         ts = WeakLensingTracer(cosmo, z, nz)
@@ -124,18 +124,18 @@ using ForwardDiff
         Cℓ_sk_bm = [3.21788793e-08, 1.61961883e-08,
                      3.50133537e-09, 4.54239420e-10]
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-4))
-        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-4))
-        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-4))
-        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 5E-4))
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-3))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-3))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-3))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 5E-3))
         # The ℓ=10 point is a bit inaccurate for some reason
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 3E-3))
     end
     
     @testset "Halo_Cℓs" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81, nk=10000, 
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           tk_mode="EisHu", Pk_mode="Halofit")
-        z = range(0., stop=2., length=1024)
+        z = range(0., stop=2., length=256)
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg = NumberCountsTracer(cosmo, z, nz, 2.)
         ts = WeakLensingTracer(cosmo, z, nz)
@@ -152,10 +152,10 @@ using ForwardDiff
         Cℓ_gk_bm = [1.31077487e-06, 1.42425553e-06, 5.19243548e-07, 1.01852050e-07]
         Cℓ_sk_bm = [3.18928412e-08, 1.61941343e-08, 3.99846079e-09, 9.53760295e-10]
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-4))
-        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-4))
-        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-4))
-        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 5E-4))
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-3))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-3))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-3))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 1E-2))
     end
 
