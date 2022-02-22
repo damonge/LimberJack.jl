@@ -75,7 +75,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="lin
     pk0 = @. ks^cpar.n_s * tk
     σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
     norm = cpar.σ8^2 / σ8_2_here
-    pk0[:] = pk0 .* norm
+    pk0 *= norm
     # OPT: interpolation method
     pki = LinearInterpolation(logk, log.(pk0), extrapolation_bc=Line())
 
