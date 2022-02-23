@@ -6,7 +6,7 @@ using CSV
 using NPZ
 
 ell = npzread("/mnt/zfsusers/jaimerz/PhD/LimberJack.jl/data/cl_DESgc__2_DESwl__3.npz")["ell"]
-ell = [Int(floor(l)) for l in des_ell]
+ell = [Int(floor(l)) for l in ell]
 nzs = FITS("/mnt/zfsusers/jaimerz/PhD/LimberJack.jl/data/y1_redshift_distributions_v1.fits")
 nz = read(des_nzs["nz_source_mcal"], "BIN2")
 zs = read(des_nzs["nz_source_mcal"], "Z_MID")
