@@ -22,22 +22,21 @@ des_zs = read(des_nzs["nz_source_mcal"], "Z_MID")
 
 @model function model(data)
     Ωm ~ Uniform(0.2, 0.3)
-    Ωb ~ Uniform(0.0, 0.1)
     h ~ Uniform(0.6, 0.8)
-    ns ~ Uniform(0.9, 1.0)
     s8 ~ Uniform(0.7, 1.0)
-    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8, tk_mode="EisHu", Pk_mode="Halofit")
-    #cosmology = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.8, tk_mode="EisHu")
+    cosmology = LimberJack.Cosmology(Ωm, 0.05, h, 0.96, s8,
+                                     tk_mode="EisHu",
+                                     Pk_mode="Halofit")
     tg = NumberCountsTracer(cosmology, des_zs, des_nz, 2.)
     ts = WeakLensingTracer(cosmology, des_zs, des_nz)
     predictions = [angularCℓ(cosmology, tg, ts, ℓ) for ℓ in des_ell]
     data ~ MvNormal(predictions, des_cov)
 end;
 
-iterations = 100
-ϵ = 0.05
-τ = 10
+iterations = 1000
+burn = 1000
+TAP = 0.65
 
 # Start sampling.
-chain = sample(model(des_data), HMC(ϵ, τ), iterations, progress=true)
-CSV.write("Clgg_des_test_chain.csv", chain)
+chain = sample(model(data), NUTS(burn, TAP), iterations, progress=true)
+CSV.write("Cl_Halofit_chain.csv", chain)
