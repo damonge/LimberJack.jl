@@ -28,11 +28,12 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs)
 
     Dz2s = Dzs .^ 2
     # OPT: hard-coded range and number of points
-    lR0 = log(0.1)
+    lR0 = log(0.01)
     lR1 = log(10.0)
-    lRs = range(lR0, stop=lR1, length=64)
+    lRs = range(lR0, stop=lR1, length=100)
     lσ2s = log.([get_σ2(logk, k, PkLz0, exp(lR), 0) for lR in lRs])
-    lσ2i = CubicSplineInterpolation(lRs, lσ2s)
+    # When s8<0.6 lσ2i interpolation fails --> Extrapolation needed
+    lσ2i = CubicSplineInterpolation(lRs, lσ2s) #, extrapolation_bc=Line())
     rsigs = [get_rsigma(lσ2i, Dz2s[i], lR0, lR1) for i in range(1, stop=nz)]
 
     onederiv_ints = [get_σ2(logk, k, PkLz0, rsigs[i], 2) * Dz2s[i] for i in range(1, stop=nz)]
