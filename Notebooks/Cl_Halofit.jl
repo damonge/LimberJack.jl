@@ -9,8 +9,8 @@ using FITSIO
 ell = npzread("/mnt/zfsusers/jaimerz/PhD/LimberJack.jl/data/cl_DESgc__2_DESwl__3.npz")["ell"]
 ell = [Int(floor(l)) for l in ell]
 nzs = FITS("/mnt/zfsusers/jaimerz/PhD/LimberJack.jl/data/y1_redshift_distributions_v1.fits")
-nz = read(des_nzs["nz_source_mcal"], "BIN2")
-zs = read(des_nzs["nz_source_mcal"], "Z_MID")
+nz = read(nzs["nz_source_mcal"], "BIN2")
+zs = read(nzs["nz_source_mcal"], "Z_MID")
 
 true_cosmology = LimberJack.Cosmology(0.25, 0.05, 0.67, 0.96, 0.81,
                                       tk_mode="EisHu", Pk_mode="Halofit");
