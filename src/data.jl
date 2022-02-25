@@ -41,5 +41,5 @@ function Nz(bin_number, path="LimberJack.jl/data")
     nzs = FITS(nzs_fname)
     nz = read(nzs["nz_source_mcal"], bin_name)
     zs = read(nzs["nz_source_mcal"], "Z_MID")
-    Bin(nz, zs)
+    Nz(nz, zs)
 end
