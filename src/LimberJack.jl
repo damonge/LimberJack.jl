@@ -6,7 +6,7 @@ export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer, get_Fℓ
 export angularCℓ, lin_Pk, nonlin_Pk
 export Data, Nz
 
-using Interpolations, QuadGK, OrdinaryDiffEq, Trapz, ForwardDiff, LinearAlgebra
+using Interpolations, QuadGK, OrdinaryDiffEq, Trapz, ForwardDiff, LinearAlgebra, NPZ, FITSIO
 
 include("core.jl")
 include("tracers.jl")
