@@ -2,6 +2,10 @@ abstract type Nz_typ end
 abstract type Data_typ end
 
 struct Data <: Data_typ
+    tracer1::String
+    tracer2::String
+    bin1::Number
+    bin2::Number
     cl::Vector
     ell::Vector
     cov::Matrix
@@ -9,7 +13,7 @@ struct Data <: Data_typ
     nz2::Nz_typ
 end
 
-function Data(tracer1, tracer2, bin1, bin2; path="LimberJack.jl/data")
+function Data(tracer1, tracer2, bin1, bin2; path="LimberJack.jl/data/")
     cl_fname = string(path, "cl_", tracer1, "__", bin1, "_", 
                      tracer2, "__", bin2, ".npz")
     cov_fname = string(path, "cov_", tracer1, "__", bin1, "_",
@@ -25,9 +29,9 @@ function Data(tracer1, tracer2, bin1, bin2; path="LimberJack.jl/data")
     cov = npzread(cov_fname)["cov"]
     cov = cov[1:length(ell), 1:length(ell)]
     cov = Symmetric(Hermitian(cov))
-    nz1 = Nz(bin1, path)
-    nz2 = Nz(bin2, path)
-    Bin(cl, ell, cov, nz1, nz2)
+    nz1 = Nz(bin1; path=path)
+    nz2 = Nz(bin2; path=path)
+    Data(tracer1, tracer2, bin1, bin2, cl, ell, cov, nz1, nz2)
 end
 
 struct Nz <: Nz_typ
@@ -35,8 +39,8 @@ struct Nz <: Nz_typ
     zs
 end
 
-function Nz(bin_number, path="LimberJack.jl/data")
-    nzs_fname = "y1_redshift_distributions_v1.fits"
+function Nz(bin_number; path="LimberJack.jl/data/")
+    nzs_fname = string(path, "y1_redshift_distributions_v1.fits")
     bin_name = "BIN$bin_number"
     nzs = FITS(nzs_fname)
     nz = read(nzs["nz_source_mcal"], bin_name)
