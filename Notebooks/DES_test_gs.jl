@@ -39,4 +39,4 @@ TAP = 0.65
 
 # Start sampling.
 chain = sample(model(data), NUTS(burn, TAP), iterations, progress=true)
-CSV.write("Cl_Halofit_chain.csv", chain)
+CSV.write("Cl_DES_test_chain.csv", chain)
