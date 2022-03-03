@@ -74,6 +74,7 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
         end
     end
     cov_tot = reshape(vcat(cov_tot...), (78,78))
+    cov_tot = Symmetric(Hermitian(cov_tot))
     Cls_meta(cls_names, cov_names, data_vector, cov_tot)
     
 end

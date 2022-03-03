@@ -302,4 +302,11 @@ using ForwardDiff
 
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
+    
+    @testset "Cls_meta" begin
+        # Just check if this runs
+        datas = [Data("DESgc", "DESgc", 2 , 2),
+                 Data("DESgc", "DESwl", 2 , 3];
+        Cls_metas = Cls_meta(datas)
+    
 end
