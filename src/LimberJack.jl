@@ -4,8 +4,8 @@ export CosmoPar, Cosmology
 export Ez, Hmpc, comoving_radial_distance, growth_factor
 export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer, get_Fℓ
 export angularCℓ, lin_Pk, nonlin_Pk
-export Data, Nz, get_data_vector, get_tot_cov
-export get_tracers
+export Data, Nz, Cls_meta
+export get_theory
 
 using Interpolations, QuadGK, OrdinaryDiffEq, Trapz, ForwardDiff, LinearAlgebra, NPZ, FITSIO
 

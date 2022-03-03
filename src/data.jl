@@ -49,16 +49,20 @@ function Nz(bin_number; path="LimberJack.jl/data/")
     Nz(nz, zs)
 end
 
-function get_data_vector(datas)
-    return vcat([data.cl for data in datas]...)
+struct Cls_meta
+    cls_names
+    cov_names 
+    data_vector 
+    cov_tot
 end
 
-function get_tot_cov(datas; path="LimberJack.jl/data/")
-    cls_meta = [string(data.tracer1, "__", data.bin1, "_", 
-                       data.tracer2, "__", data.bin2) 
-                for data in datas]
-    cov_meta = [string(cl_i, "_", cl_j) for cl_i in cls_meta for cl_j in cls_meta]
-    covs_fnames = [string(path, "cov_", cov_fname, ".npz") for cov_fname in cov_meta]
+function Cls_meta(datas; path="LimberJack.jl/data/")
+    cls_names = [string(data.tracer1, "__", data.bin1, "_", 
+                        data.tracer2, "__", data.bin2) 
+                 for data in datas]
+    cov_names = [string(cl_i, "_", cl_j) for cl_i in cls_names for cl_j in cls_names]
+    data_vector = vcat([data.cl for data in datas]...)
+    covs_fnames = [string(path, "cov_", cov_fname, ".npz") for cov_fname in cov_names]
     cov_tot = []
     for cov_fname in covs_fnames
         if isfile(cov_fname)
@@ -69,5 +73,7 @@ function get_tot_cov(datas; path="LimberJack.jl/data/")
             push!(cov_tot, zeros(39,39))
         end
     end
-    return cov_tot = reshape(vcat(cov_tot...), (78,78))    
+    cov_tot = reshape(vcat(cov_tot...), (78,78))
+    Cls_meta(cls_names, cov_names, data_vector, cov_tot)
+    
 end

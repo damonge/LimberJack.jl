@@ -1,4 +1,4 @@
-function get_tracers(datas)
+function get_theory(cosmology, datas; path=path)
     tracers_names = []
     for data in datas
         tracer1 = string(data.tracer1, data.bin1)
@@ -21,5 +21,16 @@ function get_tracers(datas)
         end
         push!(tracers, tracer)
     end
-    return tracers
+    predictions = []
+    for data in datas
+        tracer_name1 = string(data.tracer1, data.bin1)
+        tracer_name2 = string(data.tracer2, data.bin2)
+        tracer1_id = findall(x->x==tracer_name1, tracers_names)
+        tracer2_id = findall(x->x==tracer_name2, tracers_names)
+        tracer1 = tracers[tracer1_id][1]
+        tracer2 = tracers[tracer2_id][1]
+        prediction = [angularCℓ(cosmology, tracer1, tracer2, ℓ) for ℓ in data.ell]
+        push!(predictions, prediction)
+    end
+    predictions = vcat(predictions...)
 end
