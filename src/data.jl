@@ -58,23 +58,29 @@ end
 
 function Cls_meta(datas; path="LimberJack.jl/data/")
     cls_names = [string(data.tracer1, "__", data.bin1, "_", 
-                        data.tracer2, "__", data.bin2) 
+                    data.tracer2, "__", data.bin2) 
                  for data in datas]
     cov_names = [string(cl_i, "_", cl_j) for cl_i in cls_names for cl_j in cls_names]
     data_vector = vcat([data.cl for data in datas]...)
     covs_fnames = [string(path, "cov_", cov_fname, ".npz") for cov_fname in cov_names]
-    cov_tot = []
+    covs = []
     for cov_fname in covs_fnames
         if isfile(cov_fname)
             cov = npzread(cov_fname)["cov"]
             cov = cov[1:39, 1:39]
-            push!(cov_tot, cov)
+            push!(covs, cov)
         else 
-            push!(cov_tot, zeros(39,39))
+            push!(covs, zeros(39,39))
         end
     end
-    cov_tot = reshape(vcat(cov_tot...), (78,78))
-    cov_tot = Symmetric(Hermitian(cov_tot))
+    dims = length(cls_names)
+    cov_tot = BlockArray{Number}(undef_blocks, fill(39, dims), fill(39, dims))
+    for i in 1:dims
+        for j in 1:dims
+            setblock!(cov_tot, covs[i+2*(j-1)], i,j)
+        end
+    end
+    cov_tot = Hermitian(Matrix(cov_tot))
     Cls_meta(cls_names, cov_names, data_vector, cov_tot)
     
 end

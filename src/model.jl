@@ -1,4 +1,5 @@
 function get_theory(cosmology, datas; path=path)
+    ### Doesn't need to be evaluated at each step
     tracers_names = []
     for data in datas
         tracer1 = string(data.tracer1, data.bin1)
@@ -7,6 +8,7 @@ function get_theory(cosmology, datas; path=path)
         push!(tracers_names, tracer2)
     end
     tracers_names = unique(tracers_names)
+    ###
     
     tracers = []
     for tracer_name in tracers_names
