@@ -80,7 +80,7 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
             setblock!(cov_tot, covs[i+2*(j-1)], i,j)
         end
     end
-    cov_tot = Hermitian(Matrix(cov_tot))
+    cov_tot = Symmetric(Hermitian(Matrix(cov_tot)))
     Cls_meta(cls_names, cov_names, data_vector, cov_tot)
     
 end

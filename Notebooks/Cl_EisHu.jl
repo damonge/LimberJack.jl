@@ -31,10 +31,35 @@ data = true_data #+ 0.1 * true_data .* rand(length(true_data))
     data ~ MvNormal(predictions, 0.01.*data)
 end;
 
-iterations = 1000
-burn = 1000
-TAP = 0.65
+iterations = 500
+step_size = 0.05
+samples_per_step = 10
+cores = 4
 
 # Start sampling.
-chain = sample(model(data), NUTS(burn, TAP), iterations, progress=true)
-CSV.write("Cl_EisHu_chain.csv", chain)
+folname = string("EisHu_gs_test_", "stpsz_", step_size, "_smpls_", samples_per_step)
+if isdir(folname)
+    println("Folder already exists")
+    if isfile("chain.jls")
+        println("Restarting from past chain")
+        past_chain = read("chain.jls", Chains)
+        new_chain = sample(model(data), HMC(step_size, samples_per_step), iterations,
+                           progress=true; save_state=true, resume_from=past_chain)
+    end
+else
+    mkdir(folname)
+    println("Created new folder")
+    new_chain = sample(model(data), HMC(step_size, samples_per_step),
+                iterations, progress=true; save_state=true)
+end
+
+info = describe(new_chain)[1]
+fname_info = string("info.csv")
+CSV.write(joinpath(folname, fname_info), info)
+
+
+fname_jls = string("chain.jls")
+write(joinpath(folname, fname_jls), new_chain)
+    
+fname_csv = string("chain.csv")
+CSV.write(joinpath(folname, fname_csv), new_chain)

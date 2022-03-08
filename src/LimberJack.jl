@@ -7,7 +7,7 @@ export angularCℓ, lin_Pk, nonlin_Pk
 export Data, Nz, Cls_meta
 export get_theory
 
-using Interpolations, QuadGK, OrdinaryDiffEq, Trapz, ForwardDiff, LinearAlgebra, NPZ, FITSIO, BlockArrays
+using Interpolations, QuadGK, OrdinaryDiffEq, Trapz, ForwardDiff, LinearAlgebra, NPZ, FITSIO, BlockArrays, Distributed
 
 include("core.jl")
 include("tracers.jl")
