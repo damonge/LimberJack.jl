@@ -29,12 +29,35 @@ des_zs = read(des_nzs["nz_source_mcal"], "Z_MID")
     data ~ MvNormal(predictions, des_cov)
 end;
 
-iterations = 100
-step_size = 0.05
+iterations = 500
+step_size = 0.005
 samples_per_step = 10
+cores = 4
 
 # Start sampling.
-chain = sample(model(data), HMC(step_size, samples_per_step), iterations, progress=true)
+folname = string("DES_gc2wl3_", "stpsz_", step_size, "_smpls_", samples_per_step)
+if isdir(folname)
+    println("Folder already exists")
+    if isfile("chain.jls")
+        println("Restarting from past chain")
+        past_chain = read("chain.jls", Chains)
+        new_chain = sample(model(des_data), HMC(step_size, samples_per_step), iterations,
+                           progress=true; save_state=true, resume_from=past_chain)
+    end
+else
+    mkdir(folname)
+    println("Created new folder")
+    new_chain = sample(model(des_data), HMC(step_size, samples_per_step),
+                iterations, progress=true; save_state=true)
+end
+
+info = describe(new_chain)[1]
+fname_info = string("info.csv")
+CSV.write(joinpath(folname, fname_info), info)
 
 
-CSV.write("Cl_DESgs_test_chain.csv", chain)
+fname_jls = string("chain.jls")
+write(joinpath(folname, fname_jls), new_chain)
+    
+fname_csv = string("chain.csv")
+CSV.write(joinpath(folname, fname_csv), new_chain)

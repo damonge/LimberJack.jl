@@ -21,8 +21,8 @@ data = true_data #+ 0.1 * true_data .* rand(length(true_data))
 
 @model function model(data)
     Ωm ~ Uniform(0.1, 0.4)
-    s8 ~ Uniform(0.5, 1.0)
-    h ~ Uniform(0.5, 0.9)
+    s8=0.81 #~ Uniform(0.5, 1.0)
+    h=0.67 #~ Uniform(0.5, 0.9)
     cosmology = LimberJack.Cosmology(Ωm, 0.05, h, 0.96, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
