@@ -74,12 +74,14 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
         end
     end
     dims = length(cls_names)
-    cov_tot = BlockArray{Number}(undef_blocks, fill(39, dims), fill(39, dims))
-    for i in 1:dims
-        for j in 1:dims
-            setblock!(cov_tot, covs[i+2*(j-1)], i,j)
+    cov_tot = zeros(39*dims,39*dims)
+    for j in 1:dims
+        for i in 1:39
+            println(j, i)
+            cov_tot[(39*(j-1))+i, (39*(j-1))+1:1:j*39] = covs[j][i, 1:39]
         end
     end
+    cov_tot
     cov_tot = Symmetric(Hermitian(Matrix(cov_tot)))
     Cls_meta(cls_names, cov_names, data_vector, cov_tot)
     
