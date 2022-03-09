@@ -14,7 +14,7 @@ struct Data <: Data_typ
     path::String
 end
 
-function Data(tracer1, tracer2, bin1, bin2; path="LimberJack.jl/data/")
+function Data(tracer1, tracer2, bin1, bin2; path="tests/data/")
     cl_fname = string(path, "cl_", tracer1, "__", bin1, "_", 
                      tracer2, "__", bin2, ".npz")
     cov_fname = string(path, "cov_", tracer1, "__", bin1, "_",
@@ -64,23 +64,28 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
     data_vector = vcat([data.cl for data in datas]...)
     covs_fnames = [string(path, "cov_", cov_fname, ".npz") for cov_fname in cov_names]
     covs = []
+    len = length(datas[1].ell)
     for cov_fname in covs_fnames
         if isfile(cov_fname)
             cov = npzread(cov_fname)["cov"]
-            cov = cov[1:39, 1:39]
+            cov = cov[1:len, 1:len]
             push!(covs, cov)
         else 
-            push!(covs, zeros(39,39))
+            push!(covs, zeros(len,len))
         end
     end
     dims = length(cls_names)
-    cov_tot = zeros(39*dims,39*dims)
+    
+    cov_tot = zeros(len*dims,len*dims)
+    k = 0
     for j in 1:dims
-        for i in 1:39
-            cov_tot[(39*(j-1))+i, (39*(j-1))+1:1:j*39] = covs[j][i, 1:39]
+        for i in 1:dims
+            k = 1+k
+            for l in 1:len
+                cov_tot[(len*(j-1))+l, (len*(i-1))+1:1:i*len] = covs[k][l, 1:len]
+            end
         end
     end
-    cov_tot
     cov_tot = Symmetric(Hermitian(Matrix(cov_tot)))
     Cls_meta(cls_names, cov_names, data_vector, cov_tot)
     

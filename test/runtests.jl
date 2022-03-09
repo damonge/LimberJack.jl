@@ -303,10 +303,15 @@ using ForwardDiff
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
     
-    @testset "Cls_meta" begin
+    @testset "data" begin
         # Just check if this runs
-        datas = [Data("DESgc", "DESgc", 2 , 2),
-                 Data("DESgc", "DESwl", 2 , 3];
-        Cls_metas = Cls_meta(datas)
+        path = "LimberJack.jl/test/data/"
+        datas = [Data("Dmygc", "Dmygc", 1 , 1, path=path),
+                 Data("Dmywl", "Dmywl", 2 , 2, path=path),
+                 Data("Dmygc", "Dmywl", 1 , 2, path=path)];
+        Cls_metas = Cls_meta(datas, path=path);
+        @test (Cls_metas.data_vector == [1, 2, 3])
+        @test (Cls_metas.cov_tot == [[11] [12] [13]; [12] [22] [23]; [13] [23] [33]])
+
     
 end
