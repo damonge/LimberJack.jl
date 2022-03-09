@@ -77,7 +77,6 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
     cov_tot = zeros(39*dims,39*dims)
     for j in 1:dims
         for i in 1:39
-            println(j, i)
             cov_tot[(39*(j-1))+i, (39*(j-1))+1:1:j*39] = covs[j][i, 1:39]
         end
     end
