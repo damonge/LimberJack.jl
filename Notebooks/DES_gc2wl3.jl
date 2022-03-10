@@ -3,6 +3,7 @@ using LimberJack
 using CSV
 using NPZ
 using FITSIO
+using LinearAlgebra
 
 des_data = npzread("/mnt/zfsusers/jaimerz/PhD/LimberJack.jl/data/cl_DESgc__2_DESwl__3.npz")["cl"]
 des_data = transpose(des_data)[1:39]
