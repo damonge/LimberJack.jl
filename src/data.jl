@@ -54,9 +54,13 @@ struct Cls_meta
     cov_names 
     data_vector 
     cov_tot
+    tracers_names
+    ell 
 end
 
 function Cls_meta(datas; path="LimberJack.jl/data/")
+    # Assume the same ell range for everything
+    ell = datas[1].ell
     cls_names = [string(data.tracer1, "__", data.bin1, "_", 
                     data.tracer2, "__", data.bin2) 
                  for data in datas]
@@ -87,6 +91,16 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
         end
     end
     cov_tot = Symmetric(Hermitian(Matrix(cov_tot)))
-    Cls_meta(cls_names, cov_names, data_vector, cov_tot)
+    
+    tracers_names = []
+    for data in datas
+        tracer1 = string(data.tracer1, "__", data.bin1)
+        tracer2 = string(data.tracer2, "__", data.bin2)
+        push!(tracers_names, tracer1)
+        push!(tracers_names, tracer2)
+    end
+    tracers_names = unique(tracers_names)
+    
+    Cls_meta(cls_names, cov_names, data_vector, cov_tot, tracers_names, ell)
     
 end
