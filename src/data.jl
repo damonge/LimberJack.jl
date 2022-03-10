@@ -15,19 +15,19 @@ struct Data <: Data_typ
 end
 
 function Data(tracer1, tracer2, bin1, bin2; path="tests/data/")
-    cl_fname = string(path, "cl_", tracer1, "__", bin1, "_", 
+    cl_fname = string("cl_", tracer1, "__", bin1, "_", 
                      tracer2, "__", bin2, ".npz")
-    cov_fname = string(path, "cov_", tracer1, "__", bin1, "_",
+    cov_fname = string("cov_", tracer1, "__", bin1, "_",
                       tracer2, "__", bin2, "_",
                       tracer1, "__", bin1, "_",
                       tracer2, "__", bin2, ".npz")
-    cl_file = npzread(cl_fname)
-    cov_file = npzread(cov_fname)
+    cl_file = npzread(joinpath(path, cl_fname))
+    cov_file = npzread(joinpath(path, cov_fname))
     ell = cl_file["ell"]
     ell = [Int(floor(l)) for l in ell]
     cl = cl_file["cl"]
     cl = transpose(cl)[1:length(ell)]
-    cov = npzread(cov_fname)["cov"]
+    cov = npzread(joinpath(path,cov_fname))["cov"]
     cov = cov[1:length(ell), 1:length(ell)]
     cov = Symmetric(Hermitian(cov))
     nz1 = Nz(bin1; path=path)
@@ -41,9 +41,9 @@ struct Nz <: Nz_typ
 end
 
 function Nz(bin_number; path="LimberJack.jl/data/")
-    nzs_fname = string(path, "y1_redshift_distributions_v1.fits")
+    nzs_fname = string("y1_redshift_distributions_v1.fits")
     bin_name = "BIN$bin_number"
-    nzs = FITS(nzs_fname)
+    nzs = FITS(joinpath(path, nzs_fname))
     nz = read(nzs["nz_source_mcal"], bin_name)
     zs = read(nzs["nz_source_mcal"], "Z_MID")
     Nz(nz, zs)
@@ -62,12 +62,12 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
                  for data in datas]
     cov_names = [string(cl_i, "_", cl_j) for cl_i in cls_names for cl_j in cls_names]
     data_vector = vcat([data.cl for data in datas]...)
-    covs_fnames = [string(path, "cov_", cov_fname, ".npz") for cov_fname in cov_names]
+    covs_fnames = [string("cov_", cov_fname, ".npz") for cov_fname in cov_names]
     covs = []
     len = length(datas[1].ell)
     for cov_fname in covs_fnames
-        if isfile(cov_fname)
-            cov = npzread(cov_fname)["cov"]
+        if isfile(joinpath(path, cov_fname))
+            cov = npzread(joinpath(path, cov_fname))["cov"]
             cov = cov[1:len, 1:len]
             push!(covs, cov)
         else 

@@ -304,13 +304,13 @@ using ForwardDiff
     end
     
     @testset "data" begin
-        path = "test/data/"
+        path = joinpath(pwd(), "data")
         datas = [Data("Dmygc", "Dmygc", 1 , 1, path=path),
                  Data("Dmywl", "Dmywl", 2 , 2, path=path),
                  Data("Dmygc", "Dmywl", 1 , 2, path=path)]
-        #Cls_metas = Cls_meta(datas, path=path)
-        @test 1==1 #Cls_metas.data_vector == [1, 2, 3]
-        #@test Cls_metas.cov_tot == [[11] [12] [13]; [12] [22] [23]; [13] [23] [33]]
+        Cls_metas = Cls_meta(datas, path=path)
+        @test Cls_metas.data_vector == [1, 2, 3]
+        @test Cls_metas.cov_tot == [[11] [12] [13]; [12] [22] [23]; [13] [23] [33]]
     end
     
 end
