@@ -32,5 +32,5 @@ function Theory(cosmology, cls_meta; path=path)
         push!(Cls, Cl)
     end
     Cls = vcat(Cls...)
-    Theory(Tracers, Cls)
+    Theory(tracers, Cls)
 end
