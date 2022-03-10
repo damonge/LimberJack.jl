@@ -31,9 +31,9 @@ cores = 4
 folname = string("DES_gc2gc2_gc2wl3_", "stpsz_", step_size, "_smpls_", samples_per_step)
 if isdir(folname)
     println("Folder already exists")
-    if isfile("chain.jls")
+    if isfile(joinpath(folname, "chain.jls"))
         println("Restarting from past chain")
-        past_chain = read("chain.jls", Chains)
+        past_chain = read(joinpath(folname, "chain.jls"), Chains)
         new_chain = sample(model(data_vector), HMC(step_size, samples_per_step), iterations,
                            progress=true; save_state=true, resume_from=past_chain)
     end

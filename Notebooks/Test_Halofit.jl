@@ -33,7 +33,7 @@ data = true_data #+ 0.1 * true_data .* rand(length(true_data))
 end;
 
 iterations = 500
-step_size = 0.05
+step_size = 0.005
 samples_per_step = 10
 cores = 4
 
@@ -41,9 +41,9 @@ cores = 4
 folname = string("Halofit_gs_test_", "stpsz_", step_size, "_smpls_", samples_per_step)
 if isdir(folname)
     println("Folder already exists")
-    if isfile("chain.jls")
+    if isfile(joinpath(folname, "chain.jls"))
         println("Restarting from past chain")
-        past_chain = read("chain.jls", Chains)
+        past_chain = read(joinpath(folname, "chain.jls"), Chains)
         new_chain = sample(model(data), HMC(step_size, samples_per_step), iterations,
                            progress=true; save_state=true, resume_from=past_chain)
     end
