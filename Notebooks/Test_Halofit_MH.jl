@@ -6,9 +6,9 @@ using CSV
 using NPZ
 using FITSIO
 
-ell = npzread("/mnt/zfsusers/jaimerz/PhD/LimberJack.jl/data/cl_DESgc__2_DESwl__3.npz")["ell"]
+ell = npzread("data/cl_DESgc__2_DESwl__3.npz")["ell"]
 ell = [Int(floor(l)) for l in ell]
-nzs = FITS("/mnt/zfsusers/jaimerz/PhD/LimberJack.jl/data/y1_redshift_distributions_v1.fits")
+nzs = FITS("data/y1_redshift_distributions_v1.fits")
 nz = read(nzs["nz_source_mcal"], "BIN2")
 zs = read(nzs["nz_source_mcal"], "Z_MID")
 

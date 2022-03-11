@@ -4,7 +4,7 @@ using CSV
 using NPZ
 using FITSIO
 
-path = "/mnt/zfsusers/jaimerz/PhD/LimberJack.jl/data"
+path = "data"
 datas = [Data("DESgc", "DESgc", 2 , 2, path=path),
          Data("DESgc", "DESwl", 2 , 3, path=path)];
 Cls_metas = Cls_meta(datas, path=path);
