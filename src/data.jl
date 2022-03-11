@@ -11,28 +11,35 @@ struct Data <: Data_typ
     cov::Matrix
     nz1::Nz_typ
     nz2::Nz_typ
-    path::String
+    cl_path::String
+    cov_path::String
+    nz_path::String
 end
 
-function Data(tracer1, tracer2, bin1, bin2; path="tests/data/")
+function Data(tracer1, tracer2, bin1, bin2;
+              cl_path="data",
+              cov_path="data",
+              nz_path="data")
     cl_fname = string("cl_", tracer1, "__", bin1, "_", 
                      tracer2, "__", bin2, ".npz")
     cov_fname = string("cov_", tracer1, "__", bin1, "_",
                       tracer2, "__", bin2, "_",
                       tracer1, "__", bin1, "_",
                       tracer2, "__", bin2, ".npz")
-    cl_file = npzread(joinpath(path, cl_fname))
-    cov_file = npzread(joinpath(path, cov_fname))
+    cl_file = npzread(joinpath(cl_path, cl_fname))
+    cov_file = npzread(joinpath(cov_path, cov_fname))
     ell = cl_file["ell"]
     ell = [Int(floor(l)) for l in ell]
     cl = cl_file["cl"]
     cl = transpose(cl)[1:length(ell)]
-    cov = npzread(joinpath(path,cov_fname))["cov"]
+    cov = cov_file["cov"]
     cov = cov[1:length(ell), 1:length(ell)]
     cov = Symmetric(Hermitian(cov))
-    nz1 = Nz(bin1; path=path)
-    nz2 = Nz(bin2; path=path)
-    Data(tracer1, tracer2, bin1, bin2, cl, ell, cov, nz1, nz2, path)
+    nz1 = Nz(bin1; path=nz_path)
+    nz2 = Nz(bin2; path=nz_path)
+    Data(tracer1, tracer2, bin1, bin2,
+         cl, ell, cov, nz1, nz2,
+         cl_path, cov_path, nz_path)
 end
 
 struct Nz <: Nz_typ
@@ -40,7 +47,7 @@ struct Nz <: Nz_typ
     zs
 end
 
-function Nz(bin_number; path="LimberJack.jl/data/")
+function Nz(bin_number; path="data")
     nzs_fname = string("y1_redshift_distributions_v1.fits")
     bin_name = "BIN$bin_number"
     nzs = FITS(joinpath(path, nzs_fname))
@@ -58,7 +65,7 @@ struct Cls_meta
     ell 
 end
 
-function Cls_meta(datas; path="LimberJack.jl/data/")
+function Cls_meta(datas; covs_path="data")
     # Assume the same ell range for everything
     ell = datas[1].ell
     cls_names = [string(data.tracer1, "__", data.bin1, "_", 
@@ -70,8 +77,8 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
     covs = []
     len = length(datas[1].ell)
     for cov_fname in covs_fnames
-        if isfile(joinpath(path, cov_fname))
-            cov = npzread(joinpath(path, cov_fname))["cov"]
+        if isfile(joinpath(covs_path, cov_fname))
+            cov = npzread(joinpath(covs_path, cov_fname))["cov"]
             cov = cov[1:len, 1:len]
             push!(covs, cov)
         else 
