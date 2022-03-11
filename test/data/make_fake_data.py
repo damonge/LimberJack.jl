@@ -1,7 +1,7 @@
 import numpy as np
-np.savez("cl_Dmygc__1_Dmygc__1.npz", ell=[1], cl=[1])
-np.savez("cl_Dmywl__2_Dmywl__2.npz", ell=[1], cl=[2])
-np.savez("cl_Dmygc__1_Dmywl__2.npz", ell=[1], cl=[3])
+np.savez("cl_Dmygc__1_Dmygc__1.npz", ell=[100], cl=[1])
+np.savez("cl_Dmywl__2_Dmywl__2.npz", ell=[100], cl=[2])
+np.savez("cl_Dmygc__1_Dmywl__2.npz", ell=[100], cl=[3])
 np.savez("cov_Dmygc__1_Dmygc__1_Dmygc__1_Dmygc__1.npz", cov=[11])
 np.savez("cov_Dmywl__2_Dmywl__2_Dmywl__2_Dmywl__2.npz", cov=[22])
 np.savez("cov_Dmygc__1_Dmywl__2_Dmygc__1_Dmywl__2.npz", cov=[33])

@@ -1,5 +1,5 @@
 struct Theory
-    Tracers
+    tracers
     Cls
 end
 

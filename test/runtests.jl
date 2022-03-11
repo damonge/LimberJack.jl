@@ -302,7 +302,7 @@ using ForwardDiff
 
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
-    
+
     @testset "data" begin
         path = joinpath(pwd(), "data")
         datas = [Data("Dmygc", "Dmygc", 1 , 1, path=path),
@@ -310,7 +310,7 @@ using ForwardDiff
                  Data("Dmygc", "Dmywl", 1 , 2, path=path)]
         Cls_metas = Cls_meta(datas, path=path)
         @test Cls_metas.cls_names == ["Dmygc__1_Dmygc__1", "Dmywl__2_Dmywl__2", "Dmygc__1_Dmywl__2"]
-        @test Cls_metas.tracers_names == ["Dmygc1", "Dmywl2"]
+        @test Cls_metas.tracers_names == ["Dmygc__1", "Dmywl__2"]
         @test Cls_metas.data_vector == [1, 2, 3]
         @test Cls_metas.cov_tot == [[11] [12] [13]; [12] [22] [23]; [13] [23] [33]]
     end
@@ -325,12 +325,17 @@ using ForwardDiff
                   Data("Dmywl", "Dmywl", 2 , 2, path=path)]
         Cls_metas1 = Cls_meta(datas1, path=path)
         Cls_metas2 = Cls_meta(datas2, path=path)
-        cosmo = LimberJack.Cosmology(0.25, 0.05, 0.67, 0.96, 0.81,
+        cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
                                      tk_mode="EisHu", Pk_mode="Halofit")
-        theory1 = Theory(cosmo, Cls_metas1)
-        theory2 = Theory(cosmo, Cls_metas2)
-        @test theory1.tracers == theory2.tracers
-        # We need to test order of Cls
+        theory1 = Theory(cosmo, Cls_metas1, path=path)
+        theory2 = Theory(cosmo, Cls_metas2, path=path)
+        match1 = [1.404362970770941e-5, 1.7812471683040393e-9, 1.3480288330186787e-7]
+        match2 = [1.404362970770941e-5, 1.3480288330186787e-7, 1.7812471683040393e-9]
+        tracers1 = [typeof(tracer) for tracer in theory1.tracers]
+        tracers2 = [typeof(tracer) for tracer in theory2.tracers]
+        @test tracers1 == tracers2
+        @test all(@. (abs(theory1.Cls-match1) < 1E-5))
+        @test all(@. (abs(theory2.Cls-match2) < 1E-5))
     end
     
 end

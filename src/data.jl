@@ -92,7 +92,7 @@ function Cls_meta(datas; path="LimberJack.jl/data/")
     end
     cov_tot = Symmetric(Hermitian(Matrix(cov_tot)))
     
-    tracers_names = []
+    tracers_names = Vector{String}()
     for data in datas
         tracer1 = string(data.tracer1, "__", data.bin1)
         tracer2 = string(data.tracer2, "__", data.bin2)
