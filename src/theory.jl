@@ -3,17 +3,19 @@ struct Theory
     Cls
 end
 
-function Theory(cosmology, cls_meta; path=path)
+function Theory(cosmology, cls_meta, Nzs)
+    # OPT: We probably can do Nz's better
     ell = cls_meta.ell
     tracers_names = cls_meta.tracers_names
     cls_names = cls_meta.cls_names
     tracers = []
     for tracer_name in tracers_names
-        Nzs = Nz(parse(Int, tracer_name[8]), path=path)
+        bin = parse(Int, tracer_name[8])
+        nzs = Nzs[bin]
         if occursin("gc", tracer_name)
-            tracer = NumberCountsTracer(cosmology, Nzs.zs, Nzs.nz, 2.)
+            tracer = NumberCountsTracer(cosmology, nzs.zs, nzs.nz, 2.)
         elseif occursin("wl", tracer_name)
-            tracer = WeakLensingTracer(cosmology, Nzs.zs, Nzs.nz)
+            tracer = WeakLensingTracer(cosmology, nzs.zs, nzs.nz)
         else
             print("Not implemented")
             trancer = nothing

@@ -10,6 +10,7 @@ datas = [Data("DESgc", "DESgc", 2 , 2, path=path),
 Cls_metas = Cls_meta(datas, path=path);
 cov_tot = Cls_metas.cov_tot;
 data_vector = Cls_metas.data_vector;
+Nzs = [Nz(1), Nz(2), Nz(3), Nz(4)]
 
 @model function model(data_vector)
     Ωm ~ Uniform(0.2, 0.3)
@@ -18,7 +19,7 @@ data_vector = Cls_metas.data_vector;
     cosmology = LimberJack.Cosmology(Ωm, 0.05, h, 0.96, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
-    theory = get_theory(cosmology, datas, path=path)
+    theory = get_theory(cosmology, datas, Nzs)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 

@@ -9,11 +9,8 @@ struct Data <: Data_typ
     cl::Vector
     ell::Vector
     cov::Matrix
-    nz1::Nz_typ
-    nz2::Nz_typ
     cl_path::String
     cov_path::String
-    nz_path::String
 end
 
 function Data(tracer1, tracer2, bin1, bin2;
@@ -35,11 +32,9 @@ function Data(tracer1, tracer2, bin1, bin2;
     cov = cov_file["cov"]
     cov = cov[1:length(ell), 1:length(ell)]
     cov = Symmetric(Hermitian(cov))
-    nz1 = Nz(bin1; path=nz_path)
-    nz2 = Nz(bin2; path=nz_path)
     Data(tracer1, tracer2, bin1, bin2,
-         cl, ell, cov, nz1, nz2,
-         cl_path, cov_path, nz_path)
+         cl, ell, cov,
+         cl_path, cov_path)
 end
 
 struct Nz <: Nz_typ

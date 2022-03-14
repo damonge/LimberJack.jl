@@ -17,7 +17,8 @@ datas = [Data("DESgc", "DESgc", 1, 1, cl_path=cl_path, cov_path=cov_path, nz_pat
          Data("DESgc", "DESgc", 3, 3, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
          #Data("DESgc", "DESgc", 3, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
          #Data("DESgc", "DESgc", 4, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path)];
-Cls_metas = Cls_meta(datas, path=path);
+Nzs = [Nz(1), Nz(2), Nz(3), Nz(4)]
+Cls_metas = Cls_meta(datas, cl_path=cl_path, cov_path=cov_path);
 cov_tot = Cls_metas.cov_tot;
 data_vector = Cls_metas.data_vector;
 
@@ -28,7 +29,7 @@ data_vector = Cls_metas.data_vector;
     cosmology = LimberJack.Cosmology(Ωm, 0.05, h, 0.96, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
-    theory = get_theory(cosmology, datas, path=path)
+    theory = get_theory(cosmology, datas, Nzs)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
