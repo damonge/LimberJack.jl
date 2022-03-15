@@ -4,24 +4,24 @@ using CSV
 using NPZ
 using FITSIO
 
-cl_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/DESwl_DESwl"
+cl_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/DESgc_DESgc"
 cov_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/cov"
 nz_path = "data"
-datas = [Data("DESwl", "DESwl", 0, 0, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 0, 1, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 0, 2, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 0, 3, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESwl", "DESwl", 0, 4, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 1, 1, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 1, 2, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 1, 3, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESwl", "DESwl", 1, 4, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 2, 2, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 2, 3, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESwl", "DESwl", 2, 4, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 3, 3, cl_path=cl_path, cov_path=cov_path)]; #,
-         #Data("DESwl", "DESwl", 3, 4, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESwl", "DESwl", 4, 4, cl_path=cl_path, cov_path=cov_path)];
+datas = [Data("DESgc", "DESwl", 0, 0, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 0, 1, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 0, 2, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 0, 3, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 0, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 1, 1, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 1, 2, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 1, 3, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 1, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 2, 2, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 2, 3, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 2, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 3, 3, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 3, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESwl", 4, 4, cl_path=cl_path, cov_path=cov_path)];
 Nzs = [Nz(1), Nz(2), Nz(3), Nz(4), Nz(5)]
 Cls_metas = Cls_meta(datas, covs_path=cov_path);
 cov_tot = Cls_metas.cov_tot;
@@ -44,7 +44,7 @@ samples_per_step = 10
 cores = 4
 
 # Start sampling.
-folname = string("DES_wlwl_", "stpsz_", step_size, "_smpls_", samples_per_step)
+folname = string("DES_gcgc_", "stpsz_", step_size, "_smpls_", samples_per_step)
 if isdir(folname)
     println("Folder already exists")
     if isfile(joinpath(folname, "chain.jls"))
