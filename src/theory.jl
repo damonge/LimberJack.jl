@@ -10,7 +10,7 @@ function Theory(cosmology, cls_meta, Nzs)
     cls_names = cls_meta.cls_names
     tracers = []
     for tracer_name in tracers_names
-        bin = parse(Int, tracer_name[8])
+        bin = parse(Int, tracer_name[8])+1 
         nzs = Nzs[bin]
         if occursin("gc", tracer_name)
             tracer = NumberCountsTracer(cosmology, nzs.zs, nzs.nz, 2.)

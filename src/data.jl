@@ -46,8 +46,8 @@ function Nz(bin_number; path="data")
     nzs_fname = string("y1_redshift_distributions_v1.fits")
     bin_name = "BIN$bin_number"
     nzs = FITS(joinpath(path, nzs_fname))
-    nz = read(nzs["nz_source_mcal"], bin_name)
-    zs = read(nzs["nz_source_mcal"], "Z_MID")
+    nz = read(nzs["nz_lens"], bin_name)
+    zs = read(nzs["nz_lens"], "Z_MID")
     Nz(nz, zs)
 end
 
