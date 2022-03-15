@@ -14,7 +14,7 @@ datas = [Data("DESwl", "DESwl", 1, 1, cl_path=cl_path, cov_path=cov_path),
          Data("DESwl", "DESwl", 2, 2, cl_path=cl_path, cov_path=cov_path),
          Data("DESwl", "DESwl", 2, 3, cl_path=cl_path, cov_path=cov_path),
          Data("DESwl", "DESwl", 2, 4, cl_path=cl_path, cov_path=cov_path),
-         Data("DESwl", "DESwl", 3, 3, cl_path=cl_path, cov_path=cov_path)],
+         Data("DESwl", "DESwl", 3, 3, cl_path=cl_path, cov_path=cov_path),
          Data("DESwl", "DESwl", 3, 4, cl_path=cl_path, cov_path=cov_path),
          Data("DESwl", "DESwl", 4, 4, cl_path=cl_path, cov_path=cov_path)];
 Nzs = [Nz(1), Nz(2), Nz(3), Nz(4)]
