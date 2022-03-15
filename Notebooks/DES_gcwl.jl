@@ -4,7 +4,7 @@ using CSV
 using NPZ
 using FITSIO
 
-cl_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/DESgc_DESgc"
+cl_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/DESgc_DESwl"
 cov_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/cov"
 nz_path = "data"
 datas = [Data("DESgc", "DESwl", 0, 0, cl_path=cl_path, cov_path=cov_path),
@@ -44,7 +44,7 @@ samples_per_step = 10
 cores = 4
 
 # Start sampling.
-folname = string("DES_gcgc_", "stpsz_", step_size, "_smpls_", samples_per_step)
+folname = string("DES_gcwl_", "stpsz_", step_size, "_smpls_", samples_per_step)
 if isdir(folname)
     println("Folder already exists")
     if isfile(joinpath(folname, "chain.jls"))
@@ -52,6 +52,9 @@ if isdir(folname)
         past_chain = read(joinpath(folname, "chain.jls"), Chains)
         new_chain = sample(model(data_vector), HMC(step_size, samples_per_step), iterations,
                            progress=true; save_state=true, resume_from=past_chain)
+    else
+        new_chain = sample(model(data_vector), HMC(step_size, samples_per_step),
+                    iterations, progress=true; save_state=true)
     end
 else
     mkdir(folname)

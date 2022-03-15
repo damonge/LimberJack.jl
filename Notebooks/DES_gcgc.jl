@@ -52,6 +52,9 @@ if isdir(folname)
         past_chain = read(joinpath(folname, "chain.jls"), Chains)
         new_chain = sample(model(data_vector), HMC(step_size, samples_per_step), iterations,
                            progress=true; save_state=true, resume_from=past_chain)
+    else
+        new_chain = sample(model(data_vector), HMC(step_size, samples_per_step),
+                    iterations, progress=true; save_state=true)
     end
 else
     mkdir(folname)
