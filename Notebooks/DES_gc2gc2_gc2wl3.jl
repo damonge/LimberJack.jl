@@ -19,7 +19,7 @@ Nzs = [Nz(1), Nz(2), Nz(3), Nz(4)]
     cosmology = LimberJack.Cosmology(Ωm, 0.05, h, 0.96, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
-    theory = get_theory(cosmology, datas, Nzs)
+    theory = get_theory(cosmology, Cls_metas, Nzs)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 

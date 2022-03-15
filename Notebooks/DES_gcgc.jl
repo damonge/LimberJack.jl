@@ -29,7 +29,7 @@ data_vector = Cls_metas.data_vector;
     cosmology = LimberJack.Cosmology(Ωm, 0.05, h, 0.96, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
-    theory = Theory(cosmology, datas, Nzs)
+    theory = Theory(cosmology, Cls_metas, Nzs)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
