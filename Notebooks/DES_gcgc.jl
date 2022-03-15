@@ -14,11 +14,11 @@ datas = [Data("DESgc", "DESgc", 1, 1, cl_path=cl_path, cov_path=cov_path, nz_pat
          Data("DESgc", "DESgc", 2, 2, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
          Data("DESgc", "DESgc", 2, 3, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
          #Data("DESgc", "DESgc", 2, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         Data("DESgc", "DESgc", 3, 3, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
+         Data("DESgc", "DESgc", 3, 3, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path)]; #,
          #Data("DESgc", "DESgc", 3, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
          #Data("DESgc", "DESgc", 4, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path)];
 Nzs = [Nz(1), Nz(2), Nz(3), Nz(4)]
-Cls_metas = Cls_meta(datas, cl_path=cl_path, cov_path=cov_path);
+Cls_metas = Cls_meta(datas, covs_path=cov_path);
 cov_tot = Cls_metas.cov_tot;
 data_vector = Cls_metas.data_vector;
 

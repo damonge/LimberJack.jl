@@ -7,18 +7,18 @@ using FITSIO
 cl_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/DESwl_DESwl"
 cov_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/cov"
 nz_path = "data"
-datas = [Data("DESwl", "DESwl", 1, 1, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         Data("DESwl", "DESwl", 1, 2, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         Data("DESwl", "DESwl", 1, 3, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         #Data("DESwl", "DESwl", 1, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         Data("DESwl", "DESwl", 2, 2, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         Data("DESwl", "DESwl", 2, 3, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         #Data("DESwl", "DESwl", 2, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         Data("DESwl", "DESwl", 3, 3, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path)]; #,
-         #Data("DESwl", "DESwl", 3, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path),
-         #Data("DESwl", "DESwl", 4, 4, cl_path=cl_path, cov_path=cov_path, nz_path=nz_path)];
+datas = [Data("DESwl", "DESwl", 1, 1, cl_path=cl_path, cov_path=cov_path),
+         Data("DESwl", "DESwl", 1, 2, cl_path=cl_path, cov_path=cov_path),
+         Data("DESwl", "DESwl", 1, 3, cl_path=cl_path, cov_path=cov_path),
+         #Data("DESwl", "DESwl", 1, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESwl", "DESwl", 2, 2, cl_path=cl_path, cov_path=cov_path),
+         Data("DESwl", "DESwl", 2, 3, cl_path=cl_path, cov_path=cov_path),
+         #Data("DESwl", "DESwl", 2, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESwl", "DESwl", 3, 3, cl_path=cl_path, cov_path=cov_path)]; #,
+         #Data("DESwl", "DESwl", 3, 4, cl_path=cl_path, cov_path=cov_path),
+         #Data("DESwl", "DESwl", 4, 4, cl_path=cl_path, cov_path=cov_path)];
 Nzs = [Nz(1), Nz(2), Nz(3), Nz(4)]
-Cls_metas = Cls_meta(datas, cl_path=cl_path, cov_path=cov_path);
+Cls_metas = Cls_meta(datas, covs_path=cov_path);
 cov_tot = Cls_metas.cov_tot;
 data_vector = Cls_metas.data_vector;
 
