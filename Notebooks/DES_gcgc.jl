@@ -4,24 +4,23 @@ using CSV
 using NPZ
 using FITSIO
 
-cl_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/DESgc_DESgc"
-cov_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/cov"
-nz_path = "data"
-datas = [Data("DESgc", "DESgc", 0, 0, cl_path=cl_path, cov_path=cov_path)]; #,
-         #Data("DESgc", "DESgc", 0, 1, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 0, 2, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 0, 3, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 0, 4, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 1, 1, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 1, 2, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 1, 3, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 1, 4, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 2, 2, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 2, 3, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 2, 4, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 3, 3, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 3, 4, cl_path=cl_path, cov_path=cov_path),
-         #Data("DESgc", "DESgc", 4, 4, cl_path=cl_path, cov_path=cov_path)];
+cl_path = "../data/DESY1_cls/DESgc_DESgc"
+cov_path = "../data/DESY1_cls/cov"
+datas = [Data("DESgc", "DESgc", 0, 0, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 0, 1, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 0, 2, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 0, 3, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 0, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 1, 1, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 1, 2, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 1, 3, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 1, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 2, 2, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 2, 3, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 2, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 3, 3, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 3, 4, cl_path=cl_path, cov_path=cov_path),
+         Data("DESgc", "DESgc", 4, 4, cl_path=cl_path, cov_path=cov_path)];
 Nzs = [Nz(1), Nz(2), Nz(3), Nz(4), Nz(5)]
 Cls_metas = Cls_meta(datas, covs_path=cov_path);
 cov_tot = Cls_metas.cov_tot;

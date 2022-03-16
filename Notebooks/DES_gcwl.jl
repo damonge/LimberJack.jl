@@ -4,9 +4,8 @@ using CSV
 using NPZ
 using FITSIO
 
-cl_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/DESgc_DESwl"
-cov_path = "/mnt/extraspace/gravityls_3/S8z/Cls_new_pipeline/512_DES_eBOSS_CMB/cov"
-nz_path = "data"
+cl_path = "../data/DESY1_cls/DESgc_DESwl"
+cov_path = "../data/DESY1_cls/cov"
 datas = [Data("DESgc", "DESwl", 0, 0, cl_path=cl_path, cov_path=cov_path),
          Data("DESgc", "DESwl", 0, 1, cl_path=cl_path, cov_path=cov_path),
          Data("DESgc", "DESwl", 0, 2, cl_path=cl_path, cov_path=cov_path),

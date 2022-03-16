@@ -42,7 +42,7 @@ struct Nz <: Nz_typ
     zs
 end
 
-function Nz(bin_number; path="data")
+function Nz(bin_number; path="../data/DESY1_cls")
     nzs_fname = string("y1_redshift_distributions_v1.fits")
     bin_name = "BIN$bin_number"
     nzs = FITS(joinpath(path, nzs_fname))
