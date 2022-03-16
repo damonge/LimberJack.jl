@@ -38,7 +38,9 @@ samples_per_step = 10
 cores = 4
 
 # Start sampling.
+folpath = "../chains"
 folname = string("DES_wlwl_", "stpsz_", step_size, "_smpls_", samples_per_step)
+folname = joinpath(folpath, folname)
 if isdir(folname)
     println("Folder already exists")
     if isfile(joinpath(folname, "chain.jls"))
