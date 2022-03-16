@@ -5,7 +5,7 @@ using NPZ
 using FITSIO
 
 cl_path = "../data/DESY1_cls/DESgc_DESwl"
-cov_path = "../data/DESY1_cls/cov"
+cov_path = "../data/DESY1_cls/covs"
 datas = [Data("DESgc", "DESwl", 0, 0, cl_path=cl_path, cov_path=cov_path),
          Data("DESgc", "DESwl", 0, 1, cl_path=cl_path, cov_path=cov_path),
          Data("DESgc", "DESwl", 0, 2, cl_path=cl_path, cov_path=cov_path),
