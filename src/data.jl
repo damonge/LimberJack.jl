@@ -66,33 +66,57 @@ function Cls_meta(datas; covs_path="data")
     cls_names = [string(data.tracer1, "__", data.bin1, "_", 
                     data.tracer2, "__", data.bin2) 
                  for data in datas]
-    cov_names = [string(cl_i, "_", cl_j) for cl_i in cls_names for cl_j in cls_names]
+    #cov_names = [string(cl_i, "_", cl_j) for cl_i in cls_names for cl_j in cls_names]
+    cov_names = Vector{String}()
+    dims = length(cls_names)
+    for i in 1:dims
+        for j in 1:dims
+            if i<=j
+                cl_i = cls_names[i]
+                cl_j = cls_names[j]
+                push!(cov_names, string(cl_i, "_", cl_j))
+            end
+        end
+    end
+    println(cov_names)
     data_vector = vcat([data.cl for data in datas]...)
     covs_fnames = [string("cov_", cov_fname, ".npz") for cov_fname in cov_names]
     covs = []
     len = length(datas[1].ell)
     for cov_fname in covs_fnames
         if isfile(joinpath(covs_path, cov_fname))
+            println("Found cov file for: ", cov_fname)
             cov = npzread(joinpath(covs_path, cov_fname))["cov"]
             cov = cov[1:len, 1:len]
             push!(covs, cov)
-        else 
-            push!(covs, zeros(len,len))
-        end
-    end
-    dims = length(cls_names)
-    
-    cov_tot = zeros(len*dims,len*dims)
-    k = 0
-    for j in 1:dims
-        for i in 1:dims
-            k = 1+k
-            for l in 1:len
-                cov_tot[(len*(j-1))+l, (len*(i-1))+1:1:i*len] = covs[k][l, 1:len]
+        else
+            sym_cov_fname = string("cov_",  cov_fname[22:39], cov_fname[5:21], ".npz")
+            if isfile(joinpath(covs_path, sym_cov_fname))
+                println("Found cov file for: ", sym_cov_fname)
+                cov = npzread(joinpath(covs_path, sym_cov_fname))["cov"]
+                cov = cov[1:len, 1:len]
+                push!(covs, cov)
+            else
+                println("Seeting ", cov_fname, " to zeros")
+                push!(covs, zeros(len,len))
             end
         end
     end
-    cov_tot = Symmetric(Hermitian(Matrix(cov_tot)))
+    cov_tot = zeros(len*dims,len*dims)
+    k = 0
+    for i in 1:dims
+        for j in 1:dims
+            if i<=j
+                k = 1+k
+                for l in 1:len
+                    cov_tot[(len*(j-1))+l, (len*(i-1))+1:1:i*len] = covs[k][l, 1:len]
+                end
+            end
+        end
+    end
+    cov_tot = Symmetric(transpose(cov_tot))
+    cov_tot = convert(Matrix, cov_tot)
+    #cov_tot = Hermitian(Symmetric(cov_tot))
     
     tracers_names = Vector{String}()
     for data in datas
