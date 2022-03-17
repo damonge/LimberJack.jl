@@ -91,7 +91,9 @@ end;
 iterations = 5000
 
 # Start sampling.
+folpath = "../chains"
 folname = string("Halofit_gs_test_MH")
+folname = joinpath(folpath, folname)
 if isdir(folname)
     println("Folder already exists")
     if isfile(joinpath(folname, "chain.jls"))
