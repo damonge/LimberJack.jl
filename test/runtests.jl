@@ -3,6 +3,7 @@ using LimberJack
 using ForwardDiff
 
 @testset "All tests" begin
+
     @testset "BMChi" begin
         cosmo = Cosmology()
         ztest = [0.1, 0.5, 1.0, 3.0]
@@ -305,10 +306,10 @@ using ForwardDiff
 
     @testset "data" begin
         path = joinpath(pwd(), "data")
-        datas = [Data("Dmygc", "Dmygc", 1 , 1, path=path),
-                 Data("Dmywl", "Dmywl", 2 , 2, path=path),
-                 Data("Dmygc", "Dmywl", 1 , 2, path=path)]
-        Cls_metas = Cls_meta(datas, path=path)
+        datas = [Data("Dmygc", "Dmygc", 1 , 1, cl_path=path, cov_path=path),
+                 Data("Dmywl", "Dmywl", 2 , 2, cl_path=path, cov_path=path),
+                 Data("Dmygc", "Dmywl", 1 , 2, cl_path=path, cov_path=path)]
+        Cls_metas = Cls_meta(datas, covs_path=path)
         @test Cls_metas.cls_names == ["Dmygc__1_Dmygc__1", "Dmywl__2_Dmywl__2", "Dmygc__1_Dmywl__2"]
         @test Cls_metas.tracers_names == ["Dmygc__1", "Dmywl__2"]
         @test Cls_metas.data_vector == [1, 2, 3]
@@ -317,20 +318,23 @@ using ForwardDiff
     
     @testset "theory" begin
         path = joinpath(pwd(), "data")
-        datas1 = [Data("Dmygc", "Dmygc", 1 , 1, path=path),
-                 Data("Dmywl", "Dmywl", 2 , 2, path=path),
-                 Data("Dmygc", "Dmywl", 1 , 2, path=path)]
-        datas2 = [Data("Dmygc", "Dmygc", 1 , 1, path=path),
-                  Data("Dmygc", "Dmywl", 1 , 2, path=path),
-                  Data("Dmywl", "Dmywl", 2 , 2, path=path)]
-        Cls_metas1 = Cls_meta(datas1, path=path)
-        Cls_metas2 = Cls_meta(datas2, path=path)
+        datas1 = [Data("Dmygc", "Dmygc", 1 , 1, cl_path=path, cov_path=path),
+                  Data("Dmywl", "Dmywl", 2 , 2, cl_path=path, cov_path=path),
+                  Data("Dmygc", "Dmywl", 1 , 2, cl_path=path, cov_path=path)]
+        datas2 = [Data("Dmygc", "Dmygc", 1 , 1, cl_path=path, cov_path=path),
+                  Data("Dmygc", "Dmywl", 1 , 2, cl_path=path, cov_path=path),
+                  Data("Dmywl", "Dmywl", 2 , 2, cl_path=path, cov_path=path)]
+        Cls_metas1 = Cls_meta(datas1, covs_path=path)
+        Cls_metas2 = Cls_meta(datas2, covs_path=path)
         cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
                                      tk_mode="EisHu", Pk_mode="Halofit")
-        theory1 = Theory(cosmo, Cls_metas1, path=path)
-        theory2 = Theory(cosmo, Cls_metas2, path=path)
-        match1 = [1.404362970770941e-5, 1.7812471683040393e-9, 1.3480288330186787e-7]
-        match2 = [1.404362970770941e-5, 1.3480288330186787e-7, 1.7812471683040393e-9]
+        nuisances = Dict("b1"=> 2.0, "b2"=> 2.0)
+        Nzs = [Nz(1; path=path), Nz(2; path=path), Nz(3; path=path),
+               Nz(4; path=path), Nz(5; path=path)]
+        theory1 = Theory(cosmo, Cls_metas1, Nzs, nuisances)
+        theory2 = Theory(cosmo, Cls_metas2, Nzs, nuisances)
+        match1 = [3.353603676098882e-5, 2.114314544813784e-9, 1.294707571087517e-7]
+        match2 = [3.353603676098882e-5, 1.294707571087517e-7, 2.114314544813784e-9]
         tracers1 = [typeof(tracer) for tracer in theory1.tracers]
         tracers2 = [typeof(tracer) for tracer in theory2.tracers]
         @test tracers1 == tracers2

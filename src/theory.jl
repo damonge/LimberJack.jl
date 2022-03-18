@@ -3,7 +3,7 @@ struct Theory
     Cls
 end
 
-function Theory(cosmology, cls_meta, Nzs)
+function Theory(cosmology, cls_meta, Nzs, Nuisances)
     # OPT: We probably can do Nz's better
     ell = cls_meta.ell
     tracers_names = cls_meta.tracers_names
@@ -13,7 +13,8 @@ function Theory(cosmology, cls_meta, Nzs)
         bin = parse(Int, tracer_name[8])+1 
         nzs = Nzs[bin]
         if occursin("gc", tracer_name)
-            tracer = NumberCountsTracer(cosmology, nzs.zs, nzs.nz, 2.)
+            bias = string("b", bin)
+            tracer = NumberCountsTracer(cosmology, nzs.zs, nzs.nz, Nuisances[bias])
         elseif occursin("wl", tracer_name)
             tracer = WeakLensingTracer(cosmology, nzs.zs, nzs.nz)
         else
