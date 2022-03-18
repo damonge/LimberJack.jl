@@ -54,6 +54,7 @@ end
 struct Cls_meta
     cls_names
     cov_names 
+    cov_names_mat
     data_vector 
     cov_tot
     tracers_names
@@ -103,6 +104,7 @@ function Cls_meta(datas; covs_path="data")
         end
     end
     cov_tot = zeros(len*dims,len*dims)
+    cov_names_mat = Matrix{Any}(missing, dims, dims)
     k = 0
     for i in 1:dims
         for j in 1:dims
@@ -110,13 +112,13 @@ function Cls_meta(datas; covs_path="data")
                 k = 1+k
                 for l in 1:len
                     cov_tot[(len*(j-1))+l, (len*(i-1))+1:1:i*len] = covs[k][l, 1:len]
+                    cov_names_mat[j, i] = cov_names[k]
                 end
             end
         end
     end
     cov_tot = Symmetric(transpose(cov_tot))
     cov_tot = convert(Matrix, cov_tot)
-    #cov_tot = Hermitian(Symmetric(cov_tot))
     
     tracers_names = Vector{String}()
     for data in datas
@@ -127,6 +129,6 @@ function Cls_meta(datas; covs_path="data")
     end
     tracers_names = unique(tracers_names)
     
-    Cls_meta(cls_names, cov_names, data_vector, cov_tot, tracers_names, ell)
+    Cls_meta(cls_names, cov_names, cov_names_mat, data_vector, cov_tot, tracers_names, ell)
     
 end

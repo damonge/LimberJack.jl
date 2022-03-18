@@ -64,13 +64,17 @@ else
                 iterations, progress=true; save_state=true)
 end
 
-info = describe(new_chain)[1]
-fname_info = string("info.csv")
-CSV.write(joinpath(folname, fname_info), info)
+cov_names_mat = Tables.table(Cls_metas.cov_names_mat)
+fname_info = string("cov_names_mat.csv")
+CSV.write(joinpath(folname, fname_info), cov_names_mat,
+                   writeheader=Cls_metas.cls_names)
 
+summary = describe(new_chain)[1]
+fname_summary = string("summary.csv")
+CSV.write(joinpath(folname, fname_summary), summary)
 
 fname_jls = string("chain.jls")
 write(joinpath(folname, fname_jls), new_chain)
     
 fname_csv = string("chain.csv")
-CSV.write(joinpath(folname, fname_csv), new_chain)
+CSV.write(joinpath(folname, fname_csv), new_chain))
