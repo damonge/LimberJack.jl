@@ -19,7 +19,7 @@ zs = read(nzs["nz_lens"], "Z_MID");
 
 true_cosmology = LimberJack.Cosmology(0.25, 0.05, 0.67, 0.96, 0.81,
                                       tk_mode="EisHu", Pk_mode="Halofit");
-                                      tk_mode="EisHu", Pk_mode="Halofit");
+                                     
 tg1 = NumberCountsTracer(true_cosmology, zs, nz1, 2.)
 tg2 = NumberCountsTracer(true_cosmology, zs, nz2, 2.)
 tg3 = NumberCountsTracer(true_cosmology, zs, nz3, 2.)
@@ -91,29 +91,28 @@ covmat = Diagonal(0.0001.*(data_mean.+data))
 end;
 
 iterations = 500
-step_size = 0.005
-samples_per_step = 10
-cores = 4
+TAP = 0.70
+adaptation = 100
 
 # Start sampling.
 folpath = "../chains"
-folname = string("Halofit_gs_test_", "stpsz_", step_size, "_smpls_", samples_per_step)
+folname = string("Halofit_test_", "TAP_", TAP, "_adapt_", adaptation)
 folname = joinpath(folpath, folname)
 if isdir(folname)
     println("Folder already exists")
     if isfile(joinpath(folname, "chain.jls"))
         println("Restarting from past chain")
         past_chain = read(joinpath(folname, "chain.jls"), Chains)
-        new_chain = sample(model(data), HMC(step_size, samples_per_step), iterations,
+        new_chain = sample(model(data), NUTS(adaptation, TAP), iterations,
                            progress=true; save_state=true, resume_from=past_chain)
     else
-        new_chain = sample(model(data), HMC(step_size, samples_per_step),
+        new_chain = sample(model(data), NUTS(adaptation, TAP),
                            iterations, progress=true; save_state=true)
     end
 else
     mkdir(folname)
     println("Created new folder")
-    new_chain = sample(model(data), HMC(step_size, samples_per_step),
+    new_chain = sample(model(data), NUTS(adaptation, TAP),
                 iterations, progress=true; save_state=true)
 end
 
