@@ -96,6 +96,7 @@ function Cls_meta(datas; covs_path="data")
                 println("Found cov file for: ", sym_cov_fname)
                 cov = npzread(joinpath(covs_path, sym_cov_fname))["cov"]
                 cov = cov[1:len, 1:len]
+                cov = convert(Matrix, transpose(cov))
                 push!(covs, cov)
             else
                 println("Seeting ", cov_fname, " to zeros")

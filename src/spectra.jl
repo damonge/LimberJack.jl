@@ -2,7 +2,7 @@
 function Cℓintegrand(cosmo::Cosmology,
                      t1::Tracer,
                      t2::Tracer,
-                     logk::Float64, ℓ::Int64)
+                     logk::Float64, ℓ::Float64)
     k = exp(logk)
     chi = (ℓ+0.5)/k
     if chi > cosmo.chi_max
