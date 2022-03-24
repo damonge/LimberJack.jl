@@ -1,7 +1,7 @@
-struct cls_meta
-    tracers::Vector
-    pairs::Vector
-    pairs_ids::Vector
+struct cls_meta{T<:AbstractVector}
+    tracers::T
+    pairs::T
+    pairs_ids::T
 end
 
 function cls_meta(file)
@@ -11,19 +11,12 @@ function cls_meta(file)
     cls_meta(tracers, pairs, pairs_ids)
 end
 
-struct Theory
-    tracers
-    Cls
-end
-
 function Theory(cosmology, Nuisances, cls_meta, files)
     # OPT: move these loops outside the lkl
-    ntracers = length(cls_meta.tracers)
-    tracers = Array{Any}(undef, ntracers ) 
-    for i in 1:ntracers
-        tracer_info = cls_meta.tracers[i]
-        tracer_type = tracer_info[1]
-        bin = tracer_info[2]
+    tracers = []
+    for tracer in cls_meta.tracers
+        tracer_type = tracer[1]
+        bin = tracer[2]
         nzs = files[string("nz_", tracer_type, bin)]
         zs = vec(nzs[1:1, :])
         nz = vec(nzs[2:2, :])
@@ -36,9 +29,9 @@ function Theory(cosmology, Nuisances, cls_meta, files)
             print("Not implemented")
             trancer = nothing
         end
-        tracers[i] = tracer
-        #push!(tracers, tracer)
+        push!(tracers, tracer)
     end
+    #Cls = Vector{Real}[]
     Cls = []
     for i in 1:length(cls_meta.pairs)
         pair = cls_meta.pairs[i]
@@ -46,13 +39,13 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
-        Cl = Array{Any}(undef, length(ls)) 
-        Threads.@threads for i in 1:length(ls)
-            Cl[i] = angularCℓ(cosmology, tracer1, tracer2, ls[i]) 
-        end
-        #Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls])
+        #Cl = zeros(length(ls))
+        #Threads.@threads for i in 1:length(ls)
+        #    Cl[i] = angularCℓ(cosmology, tracer1, tracer2, ls[i]) 
+        #end
+        Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls::Vector{Float64}]
         push!(Cls, Cl)
     end
-    Cls = vcat(Cls...)
-    Theory(tracers, Cls)
+    return vcat(Cls...)
+    
 end
