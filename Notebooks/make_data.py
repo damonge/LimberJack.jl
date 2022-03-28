@@ -10,8 +10,8 @@ def get_type(name):
     else:
         return '0'
     
-s = sacc.Sacc().load_fits("../data/DESY1_cls/cls_covG_new.fits")
-with open('../data/DESY1_cls/order.yml') as f:
+s = sacc.Sacc().load_fits("cls_covG_new.fits")
+with open("order.yml") as f:
     config = yaml.safe_load(f)
 
 indices = []

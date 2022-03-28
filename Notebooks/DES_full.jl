@@ -4,7 +4,7 @@ using CSV
 using NPZ
 using FITSIO
 
-files = npzread("Cls_meta.npz")
+files = npzread("../data/DESY1_cls/Cls_meta.npz")
 Cls_meta = cls_meta(files)
 cov_tot = files["cov"]
 data_vector = files["cls"]
