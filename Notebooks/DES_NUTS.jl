@@ -35,32 +35,35 @@ data_vector = files["cls"]
 end;
 
 iterations = 500
+TAP = 0.70
+adaptation = 100
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_test_", "MH")
+folname = string("DES_NUTS_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 if isdir(folname)
     println("Folder already exists")
     if isfile(joinpath(folname, "chain.jls"))
         println("Restarting from past chain")
         past_chain = read(joinpath(folname, "chain.jls"), Chains)
-        new_chain = sample(model(data_vector), MH(), iterations,
+        new_chain = sample(model(data_vector), NUTS(adaptation, TAP), iterations,
                            progress=true; save_state=true, resume_from=past_chain)
     else
-        new_chain = sample(model(data_vector), MH(), iterations,
-                    progress=true; save_state=true)
+        new_chain = sample(model(data_vector), NUTS(adaptation, TAP),
+                           iterations, progress=true; save_state=true)
     end
 else
     mkdir(folname)
     println("Created new folder")
-    new_chain = sample(model(data_vector), MH(),
-                iterations, progress=true; save_state=true)
+    new_chain = sample(model(data_vector), NUTS(adaptation, TAP),
+                       iterations, progress=true; save_state=true)
 end
 
-summary = describe(new_chain)[1]
-fname_summary = string("summary.csv")
-CSV.write(joinpath(folname, fname_summary), summary)
+info = describe(new_chain)[1]
+fname_info = string("info.csv")
+CSV.write(joinpath(folname, fname_info), info)
+
 
 fname_jls = string("chain.jls")
 write(joinpath(folname, fname_jls), new_chain)
