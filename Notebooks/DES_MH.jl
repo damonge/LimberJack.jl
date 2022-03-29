@@ -34,11 +34,11 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 10000
+iterations = 20000
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_test_", "MH")
+folname = string("DES_MH")
 folname = joinpath(folpath, folname)
 if isdir(folname)
     println("Folder already exists")
