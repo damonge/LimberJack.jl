@@ -68,5 +68,5 @@ CSV.write(joinpath(folname, fname_info), info)
 fname_jls = string("chain.jls")
 write(joinpath(folname, fname_jls), new_chain)
     
-fname_csv = string("chain.csv")
+fname_csv = string("chain_", now(), ".csv")
 CSV.write(joinpath(folname, fname_csv), new_chain)
