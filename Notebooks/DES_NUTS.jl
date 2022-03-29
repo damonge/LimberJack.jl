@@ -60,10 +60,9 @@ else
                        iterations, progress=true; save_state=true)
 end
 
-info = describe(new_chain)[1]
-fname_info = string("info.csv")
-CSV.write(joinpath(folname, fname_info), info)
-
+summary = describe(new_chain)[1]
+fname_summary = string("summary", now(), ".csv")
+CSV.write(joinpath(folname, fname_summary), summary)
 
 fname_jls = string("chain.jls")
 write(joinpath(folname, fname_jls), new_chain)

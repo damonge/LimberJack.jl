@@ -59,7 +59,7 @@ else
 end
 
 summary = describe(new_chain)[1]
-fname_summary = string("summary.csv")
+fname_summary = string("summary", now(), ".csv")
 CSV.write(joinpath(folname, fname_summary), summary)
 
 fname_jls = string("chain.jls")
