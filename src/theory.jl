@@ -46,6 +46,6 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         #end
         Cls[i] = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls::Vector{Float64}]
     end
-    return vcat(Cls...)
+    return Cls
     
 end

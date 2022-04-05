@@ -43,6 +43,7 @@ cov = s.covariance.dense[indices][:, indices]
 w, v = np.linalg.eigh(cov)
 cov = np.dot(v, np.dot(np.diag(np.fabs(w)), v.T))
 cov = np.tril(cov) + np.triu(cov.T, 1)
+inv_cov = np.linalg.inv(cov)
 
 tracer_code = {'DESgc': 1, 'DESwl': 2}
 tracers = []
@@ -67,7 +68,8 @@ for pair, l in zip(pairs, ls):
     pairs_id.append(ids)
     pairs_coded.append(pair)
     
-dict_save = {'tracers': tracers, 'pairs': pairs_coded, 'pairs_ids': pairs_id, 'cls': cls, 'cov': cov}
+dict_save = {'tracers': tracers, 'pairs': pairs_coded, 'pairs_ids': pairs_id,
+             'cls': cls, 'cov': cov, 'inv_cov': inv_cov}
 
 for n, t in s.tracers.items():
     if n.startswith('DES'):

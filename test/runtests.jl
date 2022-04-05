@@ -269,7 +269,7 @@ using ForwardDiff
         end
 
         Ωm0 = 0.3
-        dΩm = 0.01
+        dΩm = 0.001
 
         Cl_gg_autodiff = ForwardDiff.derivative(Cl_gg, Ωm0)
         Cl_gg_anal = (Cl_gg(Ωm0+dΩm)-Cl_gg(Ωm0-dΩm))/2dΩm
@@ -315,7 +315,8 @@ using ForwardDiff
         @test Cls_metas.data_vector == [1, 2, 3]
         @test Cls_metas.cov_tot == [[11] [12] [13]; [12] [22] [23]; [13] [23] [33]]
     end
-    
+
+#=
     @testset "theory" begin
         path = joinpath(pwd(), "data")
         datas1 = [Data("Dmygc", "Dmygc", 1 , 1, cl_path=path, cov_path=path),
@@ -341,5 +342,5 @@ using ForwardDiff
         @test all(@. (abs(theory1.Cls-match1) < 1E-5))
         @test all(@. (abs(theory2.Cls-match2) < 1E-5))
     end
-    
+=#    
 end
