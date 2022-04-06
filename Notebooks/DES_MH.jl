@@ -3,6 +3,8 @@ using LimberJack
 using CSV
 using NPZ
 using FITSIO
+using Dates
+prinln(println(Threads.nthreads()))
 
 files = npzread("../data/DESY1_cls/Cls_meta.npz")
 Cls_meta = cls_meta(files)
