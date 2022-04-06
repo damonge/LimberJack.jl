@@ -4,7 +4,7 @@ using CSV
 using NPZ
 using FITSIO
 using Dates
-prinln(println(Threads.nthreads()))
+prinln(Threads.nthreads())
 
 files = npzread("../data/DESY1_cls/Cls_meta.npz")
 Cls_meta = cls_meta(files)
@@ -32,7 +32,7 @@ data_vector = files["cls"]
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = Theory(cosmology, nuisances, Cls_meta, files)
+    theory = vcat(Theory(cosmology, nuisances, Cls_meta, files)...)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
