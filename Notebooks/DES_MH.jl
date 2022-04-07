@@ -4,7 +4,7 @@ using CSV
 using NPZ
 using FITSIO
 using Dates
-prinln(Threads.nthreads())
+println(Threads.nthreads())
 
 files = npzread("../data/DESY1_cls/Cls_meta.npz")
 Cls_meta = cls_meta(files)
@@ -12,9 +12,9 @@ cov_tot = files["cov"]
 data_vector = files["cls"]
 
 @model function model(data_vector; cov_tot=cov_tot)
-    Ωm ~ Uniform(0.2, 0.3)
-    h ~ Uniform(0.6, 0.8)
-    s8 ~ Uniform(0.7, 1.0)
+    Ωm ~ Uniform(0.1, 0.5)
+    h ~ Uniform(0.5, 0.9)
+    s8 ~ Uniform(0.6, 1.0)
     
     b0 ~ Uniform(1.0, 3.0)
     b1 ~ Uniform(1.0, 3.0)

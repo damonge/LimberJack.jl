@@ -15,15 +15,6 @@ function Cℓintegrand(cosmo::Cosmology,
     k*w1*w2*pk
 end
 
-function angularCℓ_old(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ::Number)
-    # OPT: we are not optimizing the limits of integration
-    Cℓ = quadgk(lk -> Cℓintegrand(cosmo, t1, t2, lk, ℓ),
-                log(10^-4), log(10^2), rtol=1E-5)[1]/(ℓ+0.5)
-    fℓ1 = get_Fℓ(t1, ℓ)
-    fℓ2 = get_Fℓ(t2, ℓ)
-    return Cℓ * fℓ1 * fℓ2
-end
-
 function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ::Number; res=200)
     # OPT: we are not optimizing the limits of integration
     logks = LinRange(log(10^-4),log(10^2), res)
