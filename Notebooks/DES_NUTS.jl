@@ -3,6 +3,7 @@ using LimberJack
 using CSV
 using NPZ
 using FITSIO
+using Dates
 
 files = npzread("../data/DESY1_cls/Cls_meta.npz")
 Cls_meta = cls_meta(files)
@@ -10,15 +11,15 @@ cov_tot = files["cov"]
 data_vector = files["cls"]
 
 @model function model(data_vector; cov_tot=cov_tot)
-    Ωm ~ Uniform(0.2, 0.3)
-    h ~ Uniform(0.6, 0.8)
-    s8 ~ Uniform(0.7, 1.0)
+    Ωm ~ Uniform(0.1, 0.6)
+    h = 0.67 #h ~ Uniform(0.6, 0.8)
+    s8 ~ Uniform(0.6, 1.0)
     
-    b0 ~ Uniform(1.0, 3.0)
-    b1 ~ Uniform(1.0, 3.0)
-    b2 ~ Uniform(1.0, 3.0)
-    b3 ~ Uniform(1.0, 3.0)
-    b4 ~ Uniform(1.0, 3.0)
+    b0 = 1.41 #~ Uniform(1.0, 3.0)
+    b1 = 1.62 #~ Uniform(1.0, 3.0)
+    b2 = 1.60 #~ Uniform(1.0, 3.0)
+    b3 = 1.92 #~ Uniform(1.0, 3.0)
+    b4 = 2.00 #~ Uniform(1.0, 3.0)
     
     nuisances = Dict("b0" => b0,
                      "b1" => b1,
@@ -34,8 +35,8 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 500
-TAP = 0.70
+iterations = 1000
+TAP = 0.60
 adaptation = 100
 
 # Start sampling.

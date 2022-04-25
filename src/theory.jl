@@ -33,8 +33,10 @@ function Theory(cosmology, Nuisances, cls_meta, files)
     end
     #Cls = Vector{Real}[]
     npairs = length(cls_meta.pairs)
-    Cls = Vector{Vector}(undef, npairs)
-    @inbounds Threads.@threads for i in 1:npairs
+    #Cls = Vector{Vector}(undef, npairs)
+    Cls = []
+    #@inbounds Threads.@threads for i in 1:npairs
+    @inbounds for i in 1:npairs
         pair = cls_meta.pairs[i]
         ids = cls_meta.pairs_ids[i]
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
@@ -44,7 +46,9 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         #@inbounds for i in 1:length(ls)
         #    Cl[i] = angularCℓ(cosmology, tracer1, tracer2, ls[i]) 
         #end
-        Cls[i] = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls::Vector{Float64}]
+        #Cls[i] = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls::Vector{Float64}]
+        Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls::Vector{Float64}]
+        push!(Cls, Cl)
     end
     return Cls
     

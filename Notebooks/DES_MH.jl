@@ -12,12 +12,12 @@ cov_tot = files["cov"]
 data_vector = files["cls"]
 
 @model function model(data_vector; cov_tot=cov_tot)
-    Ωm ~ Uniform(0.1, 0.5)
-    h = 0.67 #~ Uniform(0.5, 0.9)
-    s8 = 0.81 #~ Uniform(0.6, 1.0)
+    Ωm ~ Uniform(0.1, 0.6)
+    h = 0.67 #h ~ Uniform(0.6, 0.8)
+    s8 ~ Uniform(0.6, 1.0)
     
-    b0 = 1.42 # ~ Uniform(1.0, 3.0)
-    b1 = 1.65 #~ Uniform(1.0, 3.0)
+    b0 = 1.41 #~ Uniform(1.0, 3.0)
+    b1 = 1.62 #~ Uniform(1.0, 3.0)
     b2 = 1.60 #~ Uniform(1.0, 3.0)
     b3 = 1.92 #~ Uniform(1.0, 3.0)
     b4 = 2.00 #~ Uniform(1.0, 3.0)
