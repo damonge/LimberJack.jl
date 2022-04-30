@@ -17,11 +17,11 @@ data_vector = files["cls"]
     s8 ~ Uniform(0.6, 1.0)
     ns ~ Uniform(0.87, 1.07)
     
-    b0 = 1.41 #~ Uniform(1.0, 3.0)
-    b1 = 1.62 #~ Uniform(1.0, 3.0)
-    b2 = 1.60 #~ Uniform(1.0, 3.0)
-    b3 = 1.92 #~ Uniform(1.0, 3.0)
-    b4 = 2.00 #~ Uniform(1.0, 3.0)
+    b0 = 1.69 #1.41 #~ Uniform(1.0, 3.0)
+    b1 = 2.05 #1.62 #~ Uniform(1.0, 3.0)
+    b2 = 2.01 #1.60 #~ Uniform(1.0, 3.0)
+    b3 = 2.46 #1.92 #~ Uniform(1.0, 3.0)
+    b4 = 2.54 #2.00 #~ Uniform(1.0, 3.0)
     
     nuisances = Dict("b0" => b0,
                      "b1" => b1,
