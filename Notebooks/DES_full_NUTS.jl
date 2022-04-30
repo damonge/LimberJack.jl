@@ -12,14 +12,16 @@ data_vector = files["cls"]
 
 @model function model(data_vector; cov_tot=cov_tot)
     Ωm ~ Uniform(0.1, 0.6)
-    h = 0.67 #h ~ Uniform(0.6, 0.8)
+    Ωb ~ Uniform(0.03, 0.07)
+    h ~ Uniform(0.6, 0.9)
     s8 ~ Uniform(0.6, 1.0)
+    ns ~ Uniform(0.87, 1.07)
     
-    b0 = 1.41 #~ Uniform(1.0, 3.0)
-    b1 = 1.62 #~ Uniform(1.0, 3.0)
-    b2 = 1.60 #~ Uniform(1.0, 3.0)
-    b3 = 1.92 #~ Uniform(1.0, 3.0)
-    b4 = 2.00 #~ Uniform(1.0, 3.0)
+    b0 ~ Uniform(1.0, 3.0)
+    b1 ~ Uniform(1.0, 3.0)
+    b2 ~ Uniform(1.0, 3.0)
+    b3 ~ Uniform(1.0, 3.0)
+    b4 ~ Uniform(1.0, 3.0)
     
     nuisances = Dict("b0" => b0,
                      "b1" => b1,
@@ -27,7 +29,7 @@ data_vector = files["cls"]
                      "b3" => b3,
                      "b4" => b4)
     
-    cosmology = LimberJack.Cosmology(Ωm, 0.05, h, 0.96, s8,
+    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
@@ -35,13 +37,13 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 1000
+iterations = 5000
 TAP = 0.60
-adaptation = 100
+adaptation = 1000
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_NUTS_", "TAP", TAP)
+folname = string("DES_full_NUTS_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 if isdir(folname)
     println("Folder already exists")

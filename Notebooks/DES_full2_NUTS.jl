@@ -15,11 +15,11 @@ data_vector = files["cls"]
     h = 0.67 #h ~ Uniform(0.6, 0.8)
     s8 ~ Uniform(0.6, 1.0)
     
-    b0 = 1.41 #~ Uniform(1.0, 3.0)
-    b1 = 1.62 #~ Uniform(1.0, 3.0)
-    b2 = 1.60 #~ Uniform(1.0, 3.0)
-    b3 = 1.92 #~ Uniform(1.0, 3.0)
-    b4 = 2.00 #~ Uniform(1.0, 3.0)
+    b0 ~ Uniform(1.0, 3.0)
+    b1 ~ Uniform(1.0, 3.0)
+    b2 ~ Uniform(1.0, 3.0)
+    b3 ~ Uniform(1.0, 3.0)
+    b4 ~ Uniform(1.0, 3.0)
     
     nuisances = Dict("b0" => b0,
                      "b1" => b1,
@@ -35,13 +35,13 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 1000
+iterations = 2000
 TAP = 0.60
-adaptation = 100
+adaptation = 500
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_NUTS_", "TAP", TAP)
+folname = string("DES_full2_NUTS_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 if isdir(folname)
     println("Folder already exists")
