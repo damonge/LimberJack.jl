@@ -84,12 +84,13 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
 end
 
 function get_IA(cosmo::Cosmology, [A_IA, alpha_IA])
-    z0 = 0.62
-    C1ρcrit = 0.0134
-    C1pm0 = C1ρcrit*cosmo.cosmo.Ωm
     zs = cosmo.z_of_chi(chis)
-    Dzs = cosmo.Dz(zs)
-    return @.(A_IA * ((1+zs)/(1+z0))^alpha_IA * (C1pm0/Dzs))
+    #z0 = 0.62
+    #C1ρcrit = 0.0134
+    #C1pm0 = C1ρcrit*cosmo.cosmo.Ωm
+    #Dzs = cosmo.Dz(zs)
+    #return @.(A_IA * ((1+zs)/(1+z0))^alpha_IA * (C1pm0/Dzs))
+    return A_IA*((1 + z)/1.62)^alpha_IA
 end
 
 function get_Fℓ(t::Tracer, ℓ)

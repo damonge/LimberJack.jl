@@ -28,8 +28,8 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         elseif tracer_type == 2
             dzi = string("dz_k", bin)
             zs = @.(vec(nzs[1:1, :]) - Nuisances[dzi])
-            A_IA = string("A_IA", bin)
-            alpha_IA = string("alpha_IA", bin)
+            A_IA = string("A_IA")
+            alpha_IA = string("alpha_IA")
             IA = [A_IA, alpha_IA]
             tracer = WeakLensingTracer(cosmology, zs, nz, IA)
         else
