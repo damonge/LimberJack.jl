@@ -90,7 +90,7 @@ function get_IA(cosmo::Cosmology, [A_IA, alpha_IA])
     #C1pm0 = C1ρcrit*cosmo.cosmo.Ωm
     #Dzs = cosmo.Dz(zs)
     #return @.(A_IA * ((1+zs)/(1+z0))^alpha_IA * (C1pm0/Dzs))
-    return A_IA*((1 + z)/1.62)^alpha_IA
+    return @.(A_IA*((1 + zs)/1.62)^alpha_IA)
 end
 
 function get_Fℓ(t::Tracer, ℓ)
