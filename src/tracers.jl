@@ -19,11 +19,11 @@ end
 
 struct WeakLensingTracer <: Tracer
     wint::AbstractInterpolation
-    bias
+    mbias
     lpre::Int
 end
 
-WeakLensingTracer(cosmo::Cosmology, z_n, nz) = begin
+WeakLensingTracer(cosmo::Cosmology, z_n, nz, mbias; IA=false) = begin
     # N(z) normalization
     nz_norm = trapz(z_n, nz)
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
@@ -46,12 +46,20 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz) = begin
     H0 = cosmo.cosmo.h/CLIGHT_HMPC
     lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
     w_arr = @. w_arr * chi * lens_prefac * (1+z_w) / nz_norm
+    if IA != false:
+        nz_norm = trapz(z_n, nz)
+        chi = cosmo.chi(z_n)
+        hz = Hmpc(cosmo, z_n)
+        As = get_IA(cosmo, IA)
+        w_arr = @.(w_arr - As*(nz*hz/nz_norm))
+    end
 
     # Interpolate
     # Fix first element
     chi[1] = 0.0
-    wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
-    WeakLensingTracer(wint, 1.0, 2)
+    wint = LinearInterpolation(ichi, w_arr, extrapolation_bc=0)
+    bias = mbias+1 
+    WeakLensingTracer(wint, bias , 2)
 end
 
 struct CMBLensingTracer <: Tracer
@@ -73,6 +81,15 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     # Interpolate
     wint = LinearInterpolation(chis, w_arr, extrapolation_bc=0)
     CMBLensingTracer(wint, 1.0, 1)
+end
+
+function get_IA(cosmo::Cosmology, [A_IA, alpha_IA])
+    z0 = 0.62
+    C1ρcrit = 0.0134
+    C1pm0 = C1ρcrit*cosmo.cosmo.Ωm
+    zs = cosmo.z_of_chi(chis)
+    Dzs = cosmo.Dz(zs)
+    return @.(A_IA * ((1+zs)/(1+z0))^alpha_IA * (C1pm0/Dzs))
 end
 
 function get_Fℓ(t::Tracer, ℓ)
