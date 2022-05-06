@@ -18,8 +18,10 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         tracer_type = tracer[1]
         bin = tracer[2]
         nzs = files[string("nz_", tracer_type, bin)]
-        zs = vec(nzs[1:1, :])
+        dzi = string("dz", bin)
+        zs = @.(vec(nzs[1:1, :]) +  dzi)
         nz = vec(nzs[2:2, :])
+        
         if tracer_type == 1
             bias = string("b", bin)
             tracer = NumberCountsTracer(cosmology, zs, nz, Nuisances[bias])
