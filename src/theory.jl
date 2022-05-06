@@ -18,14 +18,16 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         tracer_type = tracer[1]
         bin = tracer[2]
         nzs = files[string("nz_", tracer_type, bin)]
-        dzi = string("dz", bin)
-        zs = @.(vec(nzs[1:1, :]) +  dzi)
         nz = vec(nzs[2:2, :])
         
         if tracer_type == 1
             bias = string("b", bin)
+            dzi = string("dz_g", bin)
+            zs = @.(vec(nzs[1:1, :]) -  dzi)
             tracer = NumberCountsTracer(cosmology, zs, nz, Nuisances[bias])
         elseif tracer_type == 2
+            dzi = string("dz_k", bin)
+            zs = @.(vec(nzs[1:1, :]) -  dzi
             tracer = WeakLensingTracer(cosmology, zs, nz)
         else
             print("Not implemented")
