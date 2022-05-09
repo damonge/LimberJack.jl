@@ -31,8 +31,8 @@ function Theory(cosmology, Nuisances, cls_meta, files)
             mbias = Nuisances[mbias]
             dzi = string("dz_k", bin)
             zs = vec(nzs[1:1, :]) .- Nuisances[dzi]
-            IA = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
-            tracer = WeakLensingTracer(cosmology, zs, nz, mbias; IA=IA)
+            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
+            tracer = WeakLensingTracer(cosmology, zs, nz, mbias; IA_params=IA_params)
         else
             print("Not implemented")
             trancer = nothing
