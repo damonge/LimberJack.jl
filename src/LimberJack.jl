@@ -6,7 +6,7 @@ export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer, get_Fℓ
 export Cℓintegrand, angularCℓ, lin_Pk, nonlin_Pk
 export Theory, cls_meta
 
-using Interpolations, OrdinaryDiffEq, ForwardDiff, LinearAlgebra
+using Interpolations, OrdinaryDiffEq, ForwardDiff, LinearAlgebra, QuadGK
 
 include("core.jl")
 include("tracers.jl")
