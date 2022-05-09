@@ -51,7 +51,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz, mbias; IA_params=[]) = begin
         hz = Hmpc(cosmo, z_w)
         As = get_IA(cosmo, z_w, IA_params)
         nz_w = [nz_int(z) for z in z_w]
-        corr =  @. As * (nz_w * nz / nz_norm)
+        corr =  @. As * (nz_w * hz / nz_norm)
         w_arr = @. w_arr - corr
     end
 
