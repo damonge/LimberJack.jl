@@ -48,8 +48,11 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz, mbias; IA_params=[]) = begin
     w_arr = @. w_arr * chi * lens_prefac * (1+z_w) / nz_norm
     if IA_params != []
         hz = Hmpc(cosmo, z_w)
-        As = get_IA(cosmo, chi, IA_params)
-        w_arr = @.(w_arr - As*(nz*hz/nz_norm))
+        As = get_IA(cosmo, z_w, IA_params)
+        corr =  @. As*(nz*hz/nz_norm)
+        pritnln(corr)
+        println(w_arr)
+        w_arr = @. w_arr - corr
     end
 
     # Interpolate
@@ -81,16 +84,10 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     CMBLensingTracer(wint, 1.0, 1)
 end
 
-function get_IA(cosmo::Cosmology, chis, IA_params)
+function get_IA(cosmo::Cosmology, zs, IA_params)
     A_IA = IA_params[1]
     alpha_IA = IA_params[2]
-    zs = cosmo.z_of_chi(chis)
-    #z0 = 0.62
-    #C1ρcrit = 0.0134
-    #C1pm0 = C1ρcrit*cosmo.cosmo.Ωm
-    #Dzs = cosmo.Dz(zs)
-    #return @.(A_IA * ((1+zs)/(1+z0))^alpha_IA * (C1pm0/Dzs))
-    return @.(A_IA*((1 + zs)/1.62)^alpha_IA)
+    return @. A_IA*((1 + zs)/1.62)^alpha_IA
 end
 
 function get_Fℓ(t::Tracer, ℓ)
