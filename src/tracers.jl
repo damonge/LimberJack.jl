@@ -50,7 +50,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz, mbias; IA_params=[]) = begin
         nz_norm = trapz(z_n, nz)
         chi = cosmo.chi(z_n)
         hz = Hmpc(cosmo, z_n)
-        As = get_IA(cosmo, IA_params)
+        As = get_IA(cosmo, chi, IA_params)
         w_arr = @.(w_arr - As*(nz*hz/nz_norm))
     end
 
@@ -83,7 +83,7 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     CMBLensingTracer(wint, 1.0, 1)
 end
 
-function get_IA(cosmo::Cosmology, IA_params)
+function get_IA(cosmo::Cosmology, chis, IA_params)
     A_IA = IA_params[1]
     alpha_IA = IA_params[2]
     zs = cosmo.z_of_chi(chis)
