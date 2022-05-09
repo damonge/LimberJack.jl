@@ -57,7 +57,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz, mbias; IA_params=[]) = begin
     # Interpolate
     # Fix first element
     chi[1] = 0.0
-    wint = LinearInterpolation(ichi, w_arr, extrapolation_bc=0)
+    wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
     bias = mbias+1 
     WeakLensingTracer(wint, bias , 2)
 end
