@@ -47,9 +47,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz, mbias; IA_params=[]) = begin
     lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
     w_arr = @. w_arr * chi * lens_prefac * (1+z_w) / nz_norm
     if IA_params != []
-        nz_norm = trapz(z_n, nz)
-        chi = cosmo.chi(z_n)
-        hz = Hmpc(cosmo, z_n)
+        hz = Hmpc(cosmo, z_w)
         As = get_IA(cosmo, chi, IA_params)
         w_arr = @.(w_arr - As*(nz*hz/nz_norm))
     end
