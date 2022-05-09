@@ -19,7 +19,7 @@ end
 
 struct WeakLensingTracer <: Tracer
     wint::AbstractInterpolation
-    mbias
+    bias
     lpre::Int
 end
 
