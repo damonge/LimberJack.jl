@@ -22,14 +22,17 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         
         if tracer_type == 1
             bias = string("b", bin)
+            bias = Nuisances[bias]
             dzi = string("dz_g", bin)
             zs = @.(vec(nzs[1:1, :]) - Nuisances[dzi])
-            tracer = NumberCountsTracer(cosmology, zs, nz, Nuisances[bias])
+            tracer = NumberCountsTracer(cosmology, zs, nz, bias)
         elseif tracer_type == 2
+            mbias = string("m", bin)
+            mbias = Nuisances[mbias]
             dzi = string("dz_k", bin)
             zs = @.(vec(nzs[1:1, :]) - Nuisances[dzi])
             IA = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
-            tracer = WeakLensingTracer(cosmology, zs, nz, IA)
+            tracer = WeakLensingTracer(cosmology, zs, nz, mbias; IA=IA)
         else
             print("Not implemented")
             trancer = nothing
