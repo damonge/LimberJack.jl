@@ -6,7 +6,7 @@ struct NumberCountsTracer <: Tracer
     lpre::Int
 end
 
-NumberCountsTracer(cosmo::Cosmology, z_n, nz, bias) = begin
+NumberCountsTracer(cosmo::Cosmology, z_n, nz; bias=0.0) = begin
     # OPT: here we only integrate to calculate the area.
     #      perhaps it'd be best to just use Simpsons.
     nz_norm = trapz(z_n, nz)
@@ -23,7 +23,7 @@ struct WeakLensingTracer <: Tracer
     lpre::Int
 end
 
-WeakLensingTracer(cosmo::Cosmology, z_n, nz, mbias; IA_params=[]) = begin
+WeakLensingTracer(cosmo::Cosmology, z_n, nz; mbias=-1.0, IA_params=[0.0, 0.0]) = begin
     # N(z) normalization
     nz_norm = trapz(z_n, nz)
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
@@ -47,7 +47,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz, mbias; IA_params=[]) = begin
     lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
     w_arr = @. w_arr * chi * lens_prefac * (1+z_w) / nz_norm
     
-    if IA_params != []
+    if IA_params != [0.0, 0.0]
         hz = Hmpc(cosmo, z_w)
         As = get_IA(cosmo, z_w, IA_params)
         nz_w = [nz_int(z) for z in z_w]
