@@ -25,7 +25,7 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         if tracer_type == 1
             
             bias_name = string("b", bin)
-            if bias in nui_names
+            if bias_name in nui_names
                 bias = Nuisances[bias_name]
             else
                 bias = 0.0
