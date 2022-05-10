@@ -60,7 +60,7 @@ function Theory(cosmology, Nuisances, cls_meta, files)
                 IA_params = [0.0, 0.0]
             end
 
-            tracer = WeakLensingTracer(cosmology, zs, nz, mbias; IA_params=IA_params)
+            tracer = WeakLensingTracer(cosmology, zs, nz; mbias=mbias, IA_params=IA_params)
         else
             print("Not implemented")
             trancer = nothing
