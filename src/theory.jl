@@ -34,7 +34,7 @@ function Theory(cosmology, Nuisances, cls_meta, files)
             dzi_name = string("dz_g", bin)
             if dzi_name in nui_names
                 dzi = Nuisances[dzi_name]
-                zs = zs .- Nuisances[dzi]
+                zs = zs .-dzi
             end
             
             tracer = NumberCountsTracer(cosmology, zs, nz; bias=bias)
@@ -51,7 +51,7 @@ function Theory(cosmology, Nuisances, cls_meta, files)
             dzi_name = string("dz_k", bin)
             if dzi_name in nui_names
                 dzi = Nuisances[dzi_name]
-                zs = zs .- Nuisances[dzi]
+                zs = zs .- dzi
             end
             
             if ("A_IA" in nui_names) & ("alpha_IA" in nui_names)
