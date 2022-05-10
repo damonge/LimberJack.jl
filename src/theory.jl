@@ -58,6 +58,7 @@ function Theory(cosmology, Nuisances, cls_meta, files)
                 IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
             else 
                 IA_params = [0.0, 0.0]
+            end
 
             tracer = WeakLensingTracer(cosmology, zs, nz, mbias; IA_params=IA_params)
         else
