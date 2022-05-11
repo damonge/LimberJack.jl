@@ -2,11 +2,12 @@ abstract type Tracer end
 
 struct NumberCountsTracer <: Tracer
     wint::AbstractInterpolation
-    bias
+    bias::Float64
     lpre::Int
 end
 
-NumberCountsTracer(cosmo::Cosmology, z_n, nz; bias=0.0) = begin
+NumberCountsTracer(cosmo::Cosmology, z_n::Vector{Float64}, nz::Vector{Float64};
+                   bias=0.0) = begin
     # OPT: here we only integrate to calculate the area.
     #      perhaps it'd be best to just use Simpsons.
     nz_norm = trapz(z_n, nz)
@@ -19,11 +20,12 @@ end
 
 struct WeakLensingTracer <: Tracer
     wint::AbstractInterpolation
-    bias
+    bias::Float64
     lpre::Int
 end
 
-WeakLensingTracer(cosmo::Cosmology, z_n, nz; mbias=-1.0, IA_params=[0.0, 0.0]) = begin
+WeakLensingTracer(cosmo::Cosmology, z_n::Vector{Float64}, nz::Vector{Float64};
+                  mbias=-1.0, IA_params=[0.0, 0.0]) = begin
     # N(z) normalization
     nz_norm = trapz(z_n, nz)
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
@@ -65,7 +67,7 @@ end
 
 struct CMBLensingTracer <: Tracer
     wint::AbstractInterpolation
-    bias
+    bias::Float64
     lpre::Int
 end
 
@@ -84,13 +86,13 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     CMBLensingTracer(wint, 1.0, 1)
 end
 
-function get_IA(cosmo::Cosmology, zs, IA_params)
+function get_IA(cosmo::Cosmology, zs::Vector{Float64}, IA_params::Vector{Float64})
     A_IA = IA_params[1]
     alpha_IA = IA_params[2]
     return @. A_IA*((1 + zs)/1.62)^alpha_IA * (0.0134 * cosmo.cosmo.Ωm / cosmo.Dz(zs))
 end
 
-function get_Fℓ(t::Tracer, ℓ)
+function get_Fℓ(t::Tracer, ℓ::Real)
     if t.lpre == 2
         return @. sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2
     elseif t.lpre == 1
