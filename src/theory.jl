@@ -79,7 +79,6 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         push!(Cls, Cl)
     end
     return Cls
-    
 end
 
 function Theory_parallel(cosmology, Nuisances, cls_meta, files)
@@ -141,27 +140,17 @@ function Theory_parallel(cosmology, Nuisances, cls_meta, files)
         tracers[i] = tracer
         
     end
-    
 
     npairs = length(cls_meta.pairs)
     Cls = Vector{Vector{Float64}}(undef, npairs)
     @inbounds Threads.@threads for i in 1:npairs
-    #@inbounds for i in 1:npairs
         pair = cls_meta.pairs[i]
         ids = cls_meta.pairs_ids[i]
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
-        #Cl = zeros(length(ls))
-        #@inbounds for i in 1:length(ls)
-        #    Cl[i] = angularCℓ(cosmology, tracer1, tracer2, ls[i]) 
-        #end
         Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls::Vector{Float64}]
         Cls[i] = Cl
-        println(typeof(Cl))
-        #push!(Cls, Cl)
     end
-    println(typeof(Cls))
-    return Cls
-    
+    return Cls 
 end
