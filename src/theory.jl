@@ -141,7 +141,7 @@ function Theory_parallel(cosmology, Nuisances, cls_meta, files)
     end
 
     npairs = length(cls_meta.pairs)
-    Cls = Vector{Vector{ForwardDiff.Dual{Nothing, Float64, 2}}}(undef, npairs)
+    Cls = Vector{Vector{Union{Real, ForwardDiff.Dual{Nothing, Float64, 2}}}}(undef, npairs)
     @inbounds Threads.@threads for i in 1:npairs
         pair = cls_meta.pairs[i]
         ids = cls_meta.pairs_ids[i]
