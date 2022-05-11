@@ -149,8 +149,7 @@ function Theory_parallel(cosmology, Nuisances, cls_meta, files)
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
-        Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls::Vector{Float64}]
-        Cls[i] = Cl
+        Cls[i] = angularCℓs(cosmology, tracer1, tracer2, ls)
     end
     return Cls 
 end
