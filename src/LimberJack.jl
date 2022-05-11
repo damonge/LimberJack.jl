@@ -12,7 +12,6 @@ include("core.jl")
 include("tracers.jl")
 include("spectra.jl")
 include("halofit.jl")
-include("data.jl")
 include("theory.jl")
 
 
