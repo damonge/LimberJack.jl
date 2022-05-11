@@ -8,7 +8,7 @@ using FITSIO
 
 # Add four processes to use for sampling.
 using ClusterManager
-#add 20 processes on the long queue
+# add 20 processes on the long queue
 cores = 4
 ClusterManagers.addprocs_lsf(cores; bsub_flags = `-q berg`)
 #loading Turing on the processes

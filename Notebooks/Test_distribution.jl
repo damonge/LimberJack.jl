@@ -71,9 +71,9 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 1000
+iterations = 10
 TAP = 0.60
-adaptation = 500
+adaptation = 5
 nchains = 4
 
 # Start sampling.
@@ -87,12 +87,12 @@ new_chains = mapreduce(c ->sample(model(data_vector), NUTS(adaptation, TAP),
                    iterations, progress=true; save_state=true), chainscat, 1:nchains)
 
 
-summary = describe(new_chain)[1]
+summary = describe(new_chains)[1]
 fname_summary = string("summary", now(), ".csv")
 CSV.write(joinpath(folname, fname_summary), summary)
 
 fname_jls = string("chain.jls")
-write(joinpath(folname, fname_jls), new_chain)
+write(joinpath(folname, fname_jls), new_chains)
     
 fname_csv = string("chain_", now(), ".csv")
-CSV.write(joinpath(folname, fname_csv), new_chain)
+CSV.write(joinpath(folname, fname_csv), new_chains)
