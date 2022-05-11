@@ -1,74 +1,98 @@
 using Turing
-using Random
-using ForwardDiff
 using LimberJack
 using CSV
 using NPZ
 using FITSIO
+using Dates
 
-# Add four processes to use for sampling.
-using ClusterManager
-# add 20 processes on the long queue
-cores = 4
-ClusterManagers.addprocs_lsf(cores; bsub_flags = `-q berg`)
-#loading Turing on the processes
-@everywhere using Turing, LimberJack
+println(Threads.nthreads())
+files = npzread("../data/DESY1_cls/Cls_meta.npz")
+Cls_meta = cls_meta(files)
+cov_tot = files["cov"]
+data_vector = files["cls"]
 
-ell = npzread("data/cl_DESgc__2_DESwl__3.npz")["ell"]
-ell = [Int(floor(l)) for l in ell]
-nzs = FITS("data/y1_redshift_distributions_v1.fits")
-nz = read(nzs["nz_source_mcal"], "BIN2")
-zs = read(nzs["nz_source_mcal"], "Z_MID")
+@model function model(data_vector; cov_tot=cov_tot)
+    Ωm ~ Uniform(0.1, 0.6)
+    Ωb = 0.05 #~ Uniform(0.03, 0.07)
+    h = 0.67 #~ Uniform(0.6, 0.9)
+    s8 ~ Uniform(0.6, 1.0)
+    ns = 0.96 #~ Uniform(0.87, 1.07)
+    
+    b0 = 1.69 #1.41 #~ Uniform(1.0, 3.0)
+    b1 = 2.05 #1.62 #~ Uniform(1.0, 3.0)
+    b2 = 2.01 #1.60 #~ Uniform(1.0, 3.0)
+    b3 = 2.46 #1.92 #~ Uniform(1.0, 3.0)
+    b4 = 2.54 #2.00 #~ Uniform(1.0, 3.0)
+    
+    #dz_g0 ~ Normal(0.008, 0.007)
+    #dz_g1 ~ Normal(-0.005, 0.007)
+    #dz_g2 ~ Normal(0.006, 0.006)
+    #dz_g3 ~ Normal(0.0, 0.010)
+    #dz_g4 ~ Normal(0.0, 0.010)
+    
+    #dz_k0 ~ Normal(-0.001, 0.016)
+    #dz_k1 ~ Normal(-0.019, 0.013)
+    #dz_k2 ~ Normal(-0.009, 0.011)
+    #dz_k3 ~ Normal(-0.018, 0.022)
+    
+    #m0 ~ Normal(0.0, 0.035)
+    #m1 ~ Normal(0.0, 0.035)
+    #m2 ~ Normal(0.0, 0.035)
+    #m3 ~ Normal(0.0, 0.035)
+    
+    #A_IA ~ Uniform(-5, 5) 
+    #alpha_IA ~ Uniform(-5, 5)
 
-true_cosmology = LimberJack.Cosmology(0.25, 0.05, 0.67, 0.96, 0.81,
-                                      tk_mode="EisHu", Pk_mode="Halofit");
-tg = NumberCountsTracer(true_cosmology, zs, nz, 2.)
-ts = WeakLensingTracer(true_cosmology, zs, nz)
-true_data = [angularCℓ(true_cosmology, tg, ts, ℓ) for ℓ in ell]
-data = true_data #+ 0.1 * true_data .* rand(length(true_data)) 
-
-@model function model(data)
-    Ωm ~ Uniform(0.1, 0.4)
-    s8 ~ Uniform(0.5, 1.0)
-    h ~ Uniform(0.5, 0.9)
-    cosmology = LimberJack.Cosmology(Ωm, 0.05, h, 0.96, s8,
+    nuisances = Dict("b0" => b0,
+                     "b1" => b1,
+                     "b2" => b2,
+                     "b3" => b3,
+                     "b4" => b4) #,
+                     #"dz_g0" => dz_g0,
+                     #"dz_g1" => dz_g1,
+                     #"dz_g2" => dz_g2,
+                     #"dz_g3" => dz_g3,
+                     #"dz_g4" => dz_g4,
+                     #"dz_k0" => dz_k0,
+                     #"dz_k1" => dz_k1,
+                     #"dz_k2" => dz_k2,
+                     #"dz_k3" => dz_k3,
+                     #"m0" => m0,
+                     #"m1" => m1,
+                     #"m2" => m2,
+                     #"m3" => m3,
+                     #"A_IA" => A_IA,
+                     #"alpha_IA" => alpha_IA)
+    
+    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
-    tg = NumberCountsTracer(cosmology, zs, nz, 2.)
-    ts = WeakLensingTracer(cosmology, zs, nz)
-    predictions = [angularCℓ(cosmology, tg, ts, ℓ) for ℓ in ell]
-    data ~ MvNormal(predictions, 0.01.*data)
+    
+    theory = vcat(Theory(cosmology, nuisances, Cls_meta, files)...)
+    data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 10
-step_size = 0.05
-samples_per_step = 5
+iterations = 100
+TAP = 0.60
+adaptation = 20
+nchains = 4
+
 # Start sampling.
+folpath = "../chains"
+folname = string("test_threading_", "TAP", TAP)
+folname = joinpath(folpath, folname)
+mkdir(folname)
+println("Created new folder")
 
-folname = string("Parallelization_test_", "stpsz_", step_size, "_smpls_", samples_per_step)
-if isdir(folname)
-    println("Folder already exists")
-    if isfile("chain.jls")
-        println("Restarting from past chain")
-        past_chain = read("chain.jls", Chains)
-        new_chain = sample(model(data), HMC(step_size, samples_per_step),
-                           MCMCDistributed(), iterations, cores, progress=true;
-                           save_state=true, resume_from=past_chain)
-    end
-else
-    mkdir(folname)
-    println("Created new folder")
-    new_chain = sample(model(data), HMC(step_size, samples_per_step),
-                       MCMCDistributed(), iterations, cores, progress=true; save_state=true)
-end
+new_chains = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
+                   iterations, nchains, progress=true; save_state=true)
 
-info = describe(new_chain)[1]
-fname_info = string("info.csv")
-CSV.write(joinpath(folname, fname_info), info)
-
+summary = describe(new_chains)[1]
+fname_summary = string("summary", now(), ".csv")
+CSV.write(joinpath(folname, fname_summary), summary)
 
 fname_jls = string("chain.jls")
-write(joinpath(folname, fname_jls), new_chain)
+write(joinpath(folname, fname_jls), new_chains)
     
-fname_csv = string("chain.csv")
-CSV.write(joinpath(folname, fname_csv), new_chain)
+fname_csv = string("chain_", now(), ".csv")
+CSV.write(joinpath(folname, fname_csv), new_chains)
