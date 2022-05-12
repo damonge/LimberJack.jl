@@ -11,10 +11,157 @@ function cls_meta(file)
     cls_meta(tracers, pairs, pairs_ids)
 end
 
+function fill_NuisancePars(params_dict)
+    nui_names = keys(params_dict)
+    
+    if "b0" in nui_names
+        b0 = params_dict["b0"]
+    else 
+        b0 = 1.0
+    end
+    
+    if "b1" in nui_names
+        b1 = params_dict["b1"]
+    else
+        b1 = 1.0
+    end
+    
+    if "b2" in nui_names
+        b2 = params_dict["b2"]
+    else 
+        b2 = 1.0
+    end
+    
+    if "b3" in nui_names    
+        b3 = params_dict["b3"]
+    else 
+        b3 = 1.0
+    end
+    
+    if "b4" in nui_names
+        b4 = params_dict["b4"]
+    else 
+        b4 = 1.0
+    end 
+
+    if "dz_g0" in nui_names
+        dz_g0 = params_dict["dz_g0"]
+    else 
+        dz_g0 = 0.0
+    end
+
+     if "dz_g1" in nui_names
+        dz_g1 = params_dict["dz_g1"]
+    else 
+        dz_g1 = 0.0
+    end
+    
+    if "dz_g2" in nui_names
+        dz_g2 = params_dict["dz_g2"]
+    else 
+        dz_g2 = 0.0
+    end
+    
+    if "dz_g3" in nui_names
+        dz_g3 = params_dict["dz_g3"]
+    else 
+        dz_g3 = 0.0
+    end
+    
+    if "dz_g4" in nui_names
+        dz_g4 = params_dict["dz_g4"]
+    else 
+        dz_g4 = 0.0
+    end
+
+    if "dz_k0" in nui_names
+        dz_k0 = params_dict["dz_k0"]
+    else 
+        dz_k0 = 0.0
+    end
+    
+    if "dz_k1" in nui_names
+        dz_k1 = params_dict["dz_k1"]
+    else 
+        dz_k1 = 0.0
+    end
+    
+        if "dz_k2" in nui_names
+        dz_k2 = params_dict["dz_k2"]
+    else 
+        dz_k2 = 0.0
+    end
+    
+    if "dz_k3" in nui_names
+        dz_k3 = params_dict["dz_k3"]
+    else 
+        dz_k3 = 0.0
+    end
+
+    if "m0" in nui_names
+        m0 = params_dict["m0"]
+    else 
+        m0 = -1.0
+    end
+    
+    if "m1" in nui_names
+        m1 = params_dict["m1"]
+    else 
+        m1 = -1.0
+    end
+    
+    if "m2" in nui_names
+        m2 = params_dict["m2"]
+    else 
+        m2 = -1.0
+    end
+    
+    if "m3" in nui_names
+        m3 = params_dict["m3"]
+    else 
+        m3 = -1.0
+    end
+    
+    if "A_IA" in nui_names
+        A_IA = params_dict["A_IA"]
+    else 
+        A_IA = 0.0
+    end
+    
+    if "alpha_IA" in nui_names
+        alpha_IA = params_dict["alpha_IA"]
+    else 
+        alpha_IA = 0.0
+    end
+    
+    nuisances = Dict("b0" => b0,
+                     "b1" => b1,
+                     "b2" => b2,
+                     "b3" => b3,
+                     "b4" => b4,
+                     "dz_g0" => dz_g0,
+                     "dz_g1" => dz_g1,
+                     "dz_g2" => dz_g2,
+                     "dz_g3" => dz_g3,
+                     "dz_g4" => dz_g4,
+                     "dz_k0" => dz_k0,
+                     "dz_k1" => dz_k1,
+                     "dz_k2" => dz_k2,
+                     "dz_k3" => dz_k3,
+                     "m0" => m0,
+                     "m1" => m1,
+                     "m2" => m2,
+                     "m3" => m3,
+                     "A_IA" => A_IA,
+                     "alpha_IA" => alpha_IA)
+    
+    return nuisances
+end
+
 function Theory(cosmology, Nuisances, cls_meta, files)
     # OPT: move these loops outside the lkl
     tracers = []
-    nui_names = keys(Nuisances)
+    Nuisances = fill_NuisancesPars(Nuisances)
     for tracer in cls_meta.tracers
         tracer_type = tracer[1]
         bin = tracer[2]
@@ -23,44 +170,15 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         zs = vec(nzs[1:1, :])
         
         if tracer_type == 1
-            
-            bias_name = string("b", bin)
-            if bias_name in nui_names
-                bias = Nuisances[bias_name]
-            else
-                bias = 0.0
-            end
-            
-            dzi_name = string("dz_g", bin)
-            if dzi_name in nui_names
-                dzi = Nuisances[dzi_name]
-                zs = zs .-dzi
-            end
-            
-            tracer = NumberCountsTracer(cosmology, zs, nz; bias=bias)
-            
+            bias = Nuisances[string("b", bin)]
+            dzi = Nuisances[string("dz_g", bin)]
+            tracer = NumberCountsTracer(cosmology, zs .- dzi, nz; bias=bias)
         elseif tracer_type == 2
-            
-            mbias_name = string("m", bin)
-            if mbias_name in nui_names
-                mbias = Nuisances[mbias_name]
-            else
-                mbias = -1.0
-            end
-            
-            dzi_name = string("dz_k", bin)
-            if dzi_name in nui_names
-                dzi = Nuisances[dzi_name]
-                zs = zs .- dzi
-            end
-            
-            if ("A_IA" in nui_names) & ("alpha_IA" in nui_names)
-                IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
-            else 
-                IA_params = [0.0, 0.0]
-            end
-
-            tracer = WeakLensingTracer(cosmology, zs, nz; mbias=mbias, IA_params=IA_params)
+            mbias = Nuisances[string("m", bin)]
+            dzi = Nuisances[string("dz_k", bin)]
+            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
+            tracer = WeakLensingTracer(cosmology, zs .- dzi, nz;
+                                       mbias=mbias, IA_params=IA_params)
         else
             print("Not implemented")
             trancer = nothing
@@ -83,7 +201,7 @@ end
 
 function Theory_parallel(cosmology, Nuisances, cls_meta, files)
     # OPT: move these loops outside the lkl
-    nui_names = keys(Nuisances)
+    Nuisances = fill_NuisancesPars(Nuisances)
     ntracers = length(cls_meta.tracers)
     tracers = Array{Any}(undef, ntracers)
     @inbounds Threads.@threads for i in 1:ntracers
@@ -95,44 +213,15 @@ function Theory_parallel(cosmology, Nuisances, cls_meta, files)
         zs = vec(nzs[1:1, :])
         
         if tracer_type == 1
-            
-            bias_name = string("b", bin)
-            if bias_name in nui_names
-                bias = Nuisances[bias_name]
-            else
-                bias = 0.0
-            end
-            
-            dzi_name = string("dz_g", bin)
-            if dzi_name in nui_names
-                dzi = Nuisances[dzi_name]
-                zs = zs .-dzi
-            end
-            
-            tracer = NumberCountsTracer(cosmology, zs, nz; bias=bias)
-            
+            bias = Nuisances[string("b", bin)]
+            dzi = Nuisances[string("dz_g", bin)]
+            tracer = NumberCountsTracer(cosmology, zs .- dzi, nz; bias=bias)
         elseif tracer_type == 2
-            
-            mbias_name = string("m", bin)
-            if mbias_name in nui_names
-                mbias = Nuisances[mbias_name]
-            else
-                mbias = -1.0
-            end
-            
-            dzi_name = string("dz_k", bin)
-            if dzi_name in nui_names
-                dzi = Nuisances[dzi_name]
-                zs = zs .- dzi
-            end
-            
-            if ("A_IA" in nui_names) & ("alpha_IA" in nui_names)
-                IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
-            else 
-                IA_params = [0.0, 0.0]
-            end
-
-            tracer = WeakLensingTracer(cosmology, zs, nz; mbias=mbias, IA_params=IA_params)
+            mbias = Nuisances[string("m", bin)]
+            dzi = Nuisances[string("dz_k", bin)]
+            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
+            tracer = WeakLensingTracer(cosmology, zs .- dzi, nz;
+                                       mbias=mbias, IA_params=IA_params)
         else
             print("Not implemented")
             trancer = nothing
