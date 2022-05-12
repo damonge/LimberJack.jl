@@ -56,7 +56,7 @@ end
 function Theory_parallel(cosmology, Nuisances, cls_meta, files)
     # OPT: move these loops outside the lkl
     Nuisances = fill_NuisancePars(Nuisances)
-    #ntracers = length(cls_meta.tracers)
+    ntracers = length(cls_meta.tracers)
     tracers = [] #Array{Any}(undef, ntracers)
     @inbounds Threads.@threads for i in 1:ntracers
         tracer = cls_meta.tracers[i]
