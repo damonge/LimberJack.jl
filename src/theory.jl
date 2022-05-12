@@ -161,7 +161,7 @@ end
 function Theory(cosmology, Nuisances, cls_meta, files)
     # OPT: move these loops outside the lkl
     tracers = []
-    Nuisances = fill_NuisancesPars(Nuisances)
+    Nuisances = fill_NuisancePars(Nuisances)
     for tracer in cls_meta.tracers
         tracer_type = tracer[1]
         bin = tracer[2]
@@ -201,7 +201,7 @@ end
 
 function Theory_parallel(cosmology, Nuisances, cls_meta, files)
     # OPT: move these loops outside the lkl
-    Nuisances = fill_NuisancesPars(Nuisances)
+    Nuisances = fill_NuisancePars(Nuisances)
     ntracers = length(cls_meta.tracers)
     tracers = Array{Any}(undef, ntracers)
     @inbounds Threads.@threads for i in 1:ntracers
