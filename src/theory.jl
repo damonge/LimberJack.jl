@@ -11,95 +11,6 @@ function cls_meta(file)
     cls_meta(tracers, pairs, pairs_ids)
 end
 
-function Theory(cosmology, Nuisances, cls_meta, files)
-    # OPT: move these loops outside the lkl
-    tracers = []
-    Nuisances = fill_NuisancePars(Nuisances)
-    for tracer in cls_meta.tracers
-        tracer_type = tracer[1]
-        bin = tracer[2]
-        nzs = files[string("nz_", tracer_type, bin)]
-        nz = vec(nzs[2:2, :])
-        zs = vec(nzs[1:1, :])
-        
-        if tracer_type == 1
-            bias = Nuisances[string("b", bin)]
-            dzi = Nuisances[string("dz_g", bin)]
-            tracer = NumberCountsTracer(cosmology, zs .- dzi, nz; bias=bias)
-        elseif tracer_type == 2
-            mbias = Nuisances[string("m", bin)]
-            dzi = Nuisances[string("dz_k", bin)]
-            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
-            tracer = WeakLensingTracer(cosmology, zs .- dzi, nz;
-                                       mbias=mbias, IA_params=IA_params)
-        else
-            print("Not implemented")
-            trancer = nothing
-        end
-        push!(tracers, tracer)
-    end
-    npairs = length(cls_meta.pairs)
-    Cls = []
-    @inbounds for i in 1:npairs
-        pair = cls_meta.pairs[i]
-        ids = cls_meta.pairs_ids[i]
-        ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
-        tracer1 = tracers[ids[1]]
-        tracer2 = tracers[ids[2]]
-        #Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls]
-        Cl = angularCℓs(cosmology, tracer1, tracer2, ls)
-        push!(Cls, Cl)
-    end
-    return Cls
-end
-
-function Theory_parallel(cosmology, Nuisances, cls_meta, files)
-    # OPT: move these loops outside the lkl
-    Nuisances = fill_NuisancePars(Nuisances)
-    ntracers = length(cls_meta.tracers)
-    tracers = [] #Array{Any}(undef, ntracers)
-    @inbounds Threads.@threads for i in 1:ntracers
-        tracer = cls_meta.tracers[i]
-        tracer_type = tracer[1]
-        bin = tracer[2]
-        nzs = files[string("nz_", tracer_type, bin)]
-        nz = vec(nzs[2:2, :])
-        zs = vec(nzs[1:1, :])
-        
-        if tracer_type == 1
-            bias = Nuisances[string("b", bin)]
-            dzi = Nuisances[string("dz_g", bin)]
-            tracer = NumberCountsTracer(cosmology, zs .- dzi, nz; bias=bias)
-        elseif tracer_type == 2
-            mbias = Nuisances[string("m", bin)]
-            dzi = Nuisances[string("dz_k", bin)]
-            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
-            tracer = WeakLensingTracer(cosmology, zs .- dzi, nz;
-                                       mbias=mbias, IA_params=IA_params)
-        else
-            print("Not implemented")
-            trancer = nothing
-        end
-        push!(tracers, tracer)
-        #tracers[i] = tracer
-        
-    end
-
-    npairs = length(cls_meta.pairs)
-    Cls = Vector{Vector{Union{Real, ForwardDiff.Dual{Nothing, Float64, 2}}}}(undef, npairs)
-    @inbounds Threads.@threads for i in 1:npairs
-        pair = cls_meta.pairs[i]
-        ids = cls_meta.pairs_ids[i]
-        ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
-        tracer1 = tracers[ids[1]]
-        tracer2 = tracers[ids[2]]
-        Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls]
-        push!(Cls, Cl)
-        #Cls[i] = angularCℓs(cosmology, tracer1, tracer2, ls)
-    end
-    return Cls 
-end
-
 function fill_NuisancePars(params_dict)
     nui_names = keys(params_dict)
     
@@ -223,25 +134,111 @@ function fill_NuisancePars(params_dict)
         alpha_IA = 0.0
     end
     
-    return Dict("b0" => b0,
-                 "b1" => b1,
-                 "b2" => b2,
-                 "b3" => b3,
-                 "b4" => b4,
-                 "dz_g0" => dz_g0,
-                 "dz_g1" => dz_g1,
-                 "dz_g2" => dz_g2,
-                 "dz_g3" => dz_g3,
-                 "dz_g4" => dz_g4,
-                 "dz_k0" => dz_k0,
-                 "dz_k1" => dz_k1,
-                 "dz_k2" => dz_k2,
-                 "dz_k3" => dz_k3,
-                 "m0" => m0,
-                 "m1" => m1,
-                 "m2" => m2,
-                 "m3" => m3,
-                 "A_IA" => A_IA,
-                 "alpha_IA" => alpha_IA)
+    nuisances = Dict("b0" => b0,
+                     "b1" => b1,
+                     "b2" => b2,
+                     "b3" => b3,
+                     "b4" => b4,
+                     "dz_g0" => dz_g0,
+                     "dz_g1" => dz_g1,
+                     "dz_g2" => dz_g2,
+                     "dz_g3" => dz_g3,
+                     "dz_g4" => dz_g4,
+                     "dz_k0" => dz_k0,
+                     "dz_k1" => dz_k1,
+                     "dz_k2" => dz_k2,
+                     "dz_k3" => dz_k3,
+                     "m0" => m0,
+                     "m1" => m1,
+                     "m2" => m2,
+                     "m3" => m3,
+                     "A_IA" => A_IA,
+                     "alpha_IA" => alpha_IA)
+    
+    return nuisances
+end
 
+function Theory(cosmology, Nuisances, cls_meta, files)
+    # OPT: move these loops outside the lkl
+    tracers = []
+    Nuisances = fill_NuisancePars(Nuisances)
+    for tracer in cls_meta.tracers
+        tracer_type = tracer[1]
+        bin = tracer[2]
+        nzs = files[string("nz_", tracer_type, bin)]
+        nz = vec(nzs[2:2, :])
+        zs = vec(nzs[1:1, :])
+        
+        if tracer_type == 1
+            bias = Nuisances[string("b", bin)]
+            dzi = Nuisances[string("dz_g", bin)]
+            tracer = NumberCountsTracer(cosmology, zs .- dzi, nz; bias=bias)
+        elseif tracer_type == 2
+            mbias = Nuisances[string("m", bin)]
+            dzi = Nuisances[string("dz_k", bin)]
+            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
+            tracer = WeakLensingTracer(cosmology, zs .- dzi, nz;
+                                       mbias=mbias, IA_params=IA_params)
+        else
+            print("Not implemented")
+            trancer = nothing
+        end
+        push!(tracers, tracer)
+    end
+    npairs = length(cls_meta.pairs)
+    Cls = []
+    @inbounds for i in 1:npairs
+        pair = cls_meta.pairs[i]
+        ids = cls_meta.pairs_ids[i]
+        ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
+        tracer1 = tracers[ids[1]]
+        tracer2 = tracers[ids[2]]
+        Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls]
+        push!(Cls, Cl)
+    end
+    return Cls
+end
+
+function Theory_parallel(cosmology, Nuisances, cls_meta, files)
+    # OPT: move these loops outside the lkl
+    Nuisances = fill_NuisancePars(Nuisances)
+    ntracers = length(cls_meta.tracers)
+    tracers = Array{Any}(undef, ntracers)
+    @inbounds Threads.@threads for i in 1:ntracers
+        tracer = cls_meta.tracers[i]
+        tracer_type = tracer[1]
+        bin = tracer[2]
+        nzs = files[string("nz_", tracer_type, bin)]
+        nz = vec(nzs[2:2, :])
+        zs = vec(nzs[1:1, :])
+        
+        if tracer_type == 1
+            bias = Nuisances[string("b", bin)]
+            dzi = Nuisances[string("dz_g", bin)]
+            tracer = NumberCountsTracer(cosmology, zs .- dzi, nz; bias=bias)
+        elseif tracer_type == 2
+            mbias = Nuisances[string("m", bin)]
+            dzi = Nuisances[string("dz_k", bin)]
+            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
+            tracer = WeakLensingTracer(cosmology, zs .- dzi, nz;
+                                       mbias=mbias, IA_params=IA_params)
+        else
+            print("Not implemented")
+            trancer = nothing
+        end
+        tracers[i] = tracer
+        
+    end
+
+    npairs = length(cls_meta.pairs)
+    Cls = Vector{Vector{Union{Real, ForwardDiff.Dual{Nothing, Float64, 2}}}}(undef, npairs)
+    @inbounds Threads.@threads for i in 1:npairs
+        pair = cls_meta.pairs[i]
+        ids = cls_meta.pairs_ids[i]
+        ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
+        tracer1 = tracers[ids[1]]
+        tracer2 = tracers[ids[2]]
+        Cls[i] = angularCℓs(cosmology, tracer1, tracer2, ls)
+    end
+    return Cls 
 end
