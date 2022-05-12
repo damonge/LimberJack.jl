@@ -188,7 +188,7 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         tracers[i] = tracer
     end
     npairs = length(cls_meta.pairs)
-    Cls = Vector{Vector{Real}}}(undef, npairs)
+    Cls = Vector{Vector{Real}}(undef, npairs)
     @inbounds for i in 1:npairs
         pair = cls_meta.pairs[i]
         ids = cls_meta.pairs_ids[i]
