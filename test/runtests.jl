@@ -76,7 +76,7 @@ using ForwardDiff
         tg = NumberCountsTracer(cosmo, z, nz, 2.)
         ts = WeakLensingTracer(cosmo, z, nz)
         tk = CMBLensingTracer(cosmo)
-        ℓs = [10, 30, 100, 300]
+        ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
         Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
         Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
@@ -108,7 +108,7 @@ using ForwardDiff
         tg = NumberCountsTracer(cosmo, z, nz, 2.)
         ts = WeakLensingTracer(cosmo, z, nz)
         tk = CMBLensingTracer(cosmo)
-        ℓs = [10, 30, 100, 300]
+        ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
         Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
         Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
@@ -141,7 +141,7 @@ using ForwardDiff
         tg = NumberCountsTracer(cosmo, z, nz, 2.)
         ts = WeakLensingTracer(cosmo, z, nz)
         tk = CMBLensingTracer(cosmo)
-        ℓs = [10, 30, 100, 300]
+        ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
         Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
         Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
@@ -238,7 +238,7 @@ using ForwardDiff
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             tg = NumberCountsTracer(cosmo, z, nz, 2.)
-            ℓs = [10, 30, 100, 300]
+            ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
             return Cℓ_gg
         end
@@ -250,7 +250,7 @@ using ForwardDiff
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             ts = WeakLensingTracer(cosmo, z, nz)
-            ℓs = [10, 30, 100, 300]
+            ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
             return Cℓ_ss
         end
@@ -263,7 +263,7 @@ using ForwardDiff
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             ts = WeakLensingTracer(cosmo, z, nz)
             tk = CMBLensingTracer(cosmo)
-            ℓs = [10, 30, 100, 300]
+            ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
             return Cℓ_sk
         end
@@ -304,43 +304,3 @@ using ForwardDiff
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
 
-    @testset "data" begin
-        path = joinpath(pwd(), "data")
-        datas = [Data("Dmygc", "Dmygc", 1 , 1, cl_path=path, cov_path=path),
-                 Data("Dmywl", "Dmywl", 2 , 2, cl_path=path, cov_path=path),
-                 Data("Dmygc", "Dmywl", 1 , 2, cl_path=path, cov_path=path)]
-        Cls_metas = Cls_meta(datas, covs_path=path)
-        @test Cls_metas.cls_names == ["Dmygc__1_Dmygc__1", "Dmywl__2_Dmywl__2", "Dmygc__1_Dmywl__2"]
-        @test Cls_metas.tracers_names == ["Dmygc__1", "Dmywl__2"]
-        @test Cls_metas.data_vector == [1, 2, 3]
-        @test Cls_metas.cov_tot == [[11] [12] [13]; [12] [22] [23]; [13] [23] [33]]
-    end
-
-#=
-    @testset "theory" begin
-        path = joinpath(pwd(), "data")
-        datas1 = [Data("Dmygc", "Dmygc", 1 , 1, cl_path=path, cov_path=path),
-                  Data("Dmywl", "Dmywl", 2 , 2, cl_path=path, cov_path=path),
-                  Data("Dmygc", "Dmywl", 1 , 2, cl_path=path, cov_path=path)]
-        datas2 = [Data("Dmygc", "Dmygc", 1 , 1, cl_path=path, cov_path=path),
-                  Data("Dmygc", "Dmywl", 1 , 2, cl_path=path, cov_path=path),
-                  Data("Dmywl", "Dmywl", 2 , 2, cl_path=path, cov_path=path)]
-        Cls_metas1 = Cls_meta(datas1, covs_path=path)
-        Cls_metas2 = Cls_meta(datas2, covs_path=path)
-        cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                                     tk_mode="EisHu", Pk_mode="Halofit")
-        nuisances = Dict("b1"=> 2.0, "b2"=> 2.0)
-        Nzs = [Nz(1; path=path), Nz(2; path=path), Nz(3; path=path),
-               Nz(4; path=path), Nz(5; path=path)]
-        theory1 = Theory(cosmo, Cls_metas1, Nzs, nuisances)
-        theory2 = Theory(cosmo, Cls_metas2, Nzs, nuisances)
-        match1 = [3.353603676098882e-5, 2.114314544813784e-9, 1.294707571087517e-7]
-        match2 = [3.353603676098882e-5, 1.294707571087517e-7, 2.114314544813784e-9]
-        tracers1 = [typeof(tracer) for tracer in theory1.tracers]
-        tracers2 = [typeof(tracer) for tracer in theory2.tracers]
-        @test tracers1 == tracers2
-        @test all(@. (abs(theory1.Cls-match1) < 1E-5))
-        @test all(@. (abs(theory2.Cls-match2) < 1E-5))
-    end
-=#    
-end
