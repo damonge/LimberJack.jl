@@ -71,10 +71,12 @@ using ForwardDiff
     
     @testset "BBKS_Cℓs" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
-        z = range(0., stop=2., length=1024)
+        z = Vector(range(0., stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz, 2.)
-        ts = WeakLensingTracer(cosmo, z, nz)
+        tg = NumberCountsTracer(cosmo, z, nz; bias=2.0)
+        ts = WeakLensingTracer(cosmo, z, nz;
+                               mbias=-1.0,
+                               IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
@@ -103,10 +105,12 @@ using ForwardDiff
     @testset "EisHu_Cℓs" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nk=512, tk_mode="EisHu")
-        z = range(0., stop=2., length=256)
+        z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz, 2.)
-        ts = WeakLensingTracer(cosmo, z, nz)
+        tg = NumberCountsTracer(cosmo, z, nz; bias=2.0)
+        ts = WeakLensingTracer(cosmo, z, nz;
+                               mbias=-1.0,
+                               IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
@@ -136,10 +140,12 @@ using ForwardDiff
     @testset "Halo_Cℓs" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           tk_mode="EisHu", Pk_mode="Halofit")
-        z = range(0., stop=2., length=256)
+        z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz, 2.)
-        ts = WeakLensingTracer(cosmo, z, nz)
+        tg = NumberCountsTracer(cosmo, z, nz; bias=2.0)
+        ts = WeakLensingTracer(cosmo, z, nz;
+                               mbias=-1.0,
+                               IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
@@ -163,10 +169,10 @@ using ForwardDiff
     @testset "CreateTracer" begin
         p_of_z(x) = @. exp(-0.5*((x-0.5)/0.05)^2)
 
-        z = range(0., stop=2., length=2048)
-        pz = p_of_z(z)
+        z = Vector(range(0., stop=2., length=2048))
+        nz = Vector(p_of_z(z))
         cosmo = Cosmology()
-        t = NumberCountsTracer(cosmo, z, pz, 2.)
+        t = NumberCountsTracer(cosmo, z, nz; bias=1.0)
 
         wz1 = t.wint(cosmo.chi(0.5))
         hz = Hmpc(cosmo, 0.5)
@@ -235,9 +241,9 @@ using ForwardDiff
             Ωm = p
             cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
                                          tk_mode="EisHu", Pk_mode="Halofit")
-            z = range(0., stop=2., length=256)
-            nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            tg = NumberCountsTracer(cosmo, z, nz, 2.)
+            z = Vector(range(0., stop=2., length=256))
+            nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
+            tg = NumberCountsTracer(cosmo, z, nz; bias=2.0)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
             return Cℓ_gg
@@ -247,9 +253,11 @@ using ForwardDiff
             Ωm = p
             cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
                                          tk_mode="EisHu", Pk_mode="Halofit")
-            z = range(0., stop=2., length=256)
-            nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz)
+            z = Vector(range(0., stop=2., length=256))
+            nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
+            ts = WeakLensingTracer(cosmo, z, nz;
+                                   mbias=-1.0,
+                                   IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
             return Cℓ_ss
@@ -261,7 +269,9 @@ using ForwardDiff
                                          tk_mode="EisHu", Pk_mode="Halofit")
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz)
+            ts = WeakLensingTracer(cosmo, z, nz;
+                                   mbias=-1.0,
+                                   IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
@@ -303,4 +313,4 @@ using ForwardDiff
 
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
-
+end

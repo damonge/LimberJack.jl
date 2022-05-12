@@ -7,7 +7,7 @@ struct NumberCountsTracer <: Tracer
 end
 
 NumberCountsTracer(cosmo::Cosmology, z_n::Vector{Float64}, nz::Vector{Float64};
-                   bias=0.0) = begin
+                   bias=1.0) = begin
     # OPT: here we only integrate to calculate the area.
     #      perhaps it'd be best to just use Simpsons.
     nz_norm = trapz(z_n, nz)
@@ -61,7 +61,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n::Vector{Float64}, nz::Vector{Float64};
     # Fix first element
     chi[1] = 0.0
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
-    bias = mbias+1 
+    bias = mbias+1.0 
     WeakLensingTracer(wint, bias , 2)
 end
 
