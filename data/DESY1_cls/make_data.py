@@ -11,7 +11,7 @@ def get_type(name):
         return '0'
     
 s = sacc.Sacc().load_fits("cls_covG_new.fits")
-with open("order2.yml") as f:
+with open("order.yml") as f:
     config = yaml.safe_load(f)
 
 indices = []

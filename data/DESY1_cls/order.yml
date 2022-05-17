@@ -1,4 +1,5 @@
 order:
+    # gc-gc
     - tracers: ['DESgc__0', 'DESgc__0']
       ell_cuts: [0, 145]
     - tracers: ['DESgc__1', 'DESgc__1']
@@ -9,6 +10,8 @@ order:
       ell_cuts: [0, 371]
     - tracers: ['DESgc__4', 'DESgc__4']
       ell_cuts: [0, 435]
+
+    # gc -wl
     - tracers: ['DESgc__0', 'DESwl__0']
       ell_cuts: [0, 145]
     - tracers: ['DESgc__0', 'DESwl__1']
@@ -49,6 +52,8 @@ order:
       ell_cuts: [0, 435]
     - tracers: ['DESgc__4', 'DESwl__3']
       ell_cuts: [0, 435]
+
+    # wl -wl
     - tracers: ['DESwl__0', 'DESwl__0']
       ell_cuts: [30, 2000]
     - tracers: ['DESwl__0', 'DESwl__1']
