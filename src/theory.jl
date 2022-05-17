@@ -198,9 +198,9 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
         Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls]
-        append!(Cls, Cl)
+        push!(Cls, Cl)
     end
-    return Cls
+    return vcat(Cls...)
 end
 
 function Theory_parallel(cosmology, Nuisances, cls_meta, files)
