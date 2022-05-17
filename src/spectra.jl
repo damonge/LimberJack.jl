@@ -31,7 +31,7 @@ function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector{Flo
     # OPT: we are not optimizing the limits of integration
     logks = LinRange(log(10^-4),log(10^2), res)
     dlogk = logks[2]-logks[1]
-    Cℓs = zeros(typeof(cosmology.cosmo.Ωm), length(ℓs))
+    Cℓs = zeros(typeof(cosmo.cosmo.Ωm), length(ℓs))
           # Vector{Union{Real, ForwardDiff.Dual{Nothing, Float64, 2}}}(undef, length(ℓs))
     for i in 1:length(ℓs)
         ℓ = ℓs[i]
