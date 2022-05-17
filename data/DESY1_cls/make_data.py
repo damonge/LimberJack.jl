@@ -67,9 +67,13 @@ for pair, l in zip(pairs, ls):
     pair = [typ1, bin1, typ2, bin2]
     pairs_id.append(ids)
     pairs_coded.append(pair)
-    
+
+lengths = [len(l) for l in ls]
+lengths = np.concatenate([[0], lengths])
+idx  = np.cumsum(lengths)
+
 dict_save = {'tracers': tracers, 'pairs': pairs_coded, 'pairs_ids': pairs_id,
-             'cls': cls, 'cov': cov, 'inv_cov': inv_cov}
+             'cls': cls, 'cov': cov, 'inv_cov': inv_cov, 'idx': idx}
 
 for n, t in s.tracers.items():
     if n.startswith('DES'):

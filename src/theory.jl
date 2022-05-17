@@ -198,7 +198,7 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
         Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls]
-        push!(Cls, Cl)
+        append!(Cls, Cl)
     end
     return Cls
 end
@@ -219,12 +219,16 @@ function Theory_parallel(cosmology, Nuisances, cls_meta, files)
         if tracer_type == 1
             bias = Nuisances[string("b", bin)]
             dzi = Nuisances[string("dz_g", bin)]
-            tracer = NumberCountsTracer(cosmology, zs .- dzi, nz; bias=bias)
+            zs .=  zs .- dzi
+            sel = zs .> 0.
+            tracer = NumberCountsTracer(cosmology, zs[sel], nz[sel]; bias=bias)
         elseif tracer_type == 2
             mbias = Nuisances[string("m", bin)]
             dzi = Nuisances[string("dz_k", bin)]
             IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
-            tracer = WeakLensingTracer(cosmology, zs .- dzi, nz;
+            zs .=  zs .- dzi
+            sel = zs .> 0.
+            tracer = WeakLensingTracer(cosmology, zs[sel], nz[sel];
                                        mbias=mbias, IA_params=IA_params)
         else
             print("Not implemented")
@@ -235,14 +239,16 @@ function Theory_parallel(cosmology, Nuisances, cls_meta, files)
     end
 
     npairs = length(cls_meta.pairs)
-    Cls = Vector{Vector{Union{Real, ForwardDiff.Dual{Nothing, Float64, 2}}}}(undef, npairs)
+    idx = files["idx"]
+    total_len = last(idx)
+    Cls = zeros(typeof(cosmology.cosmo.Ωm), total_len)
     @inbounds Threads.@threads for i in 1:npairs
         pair = cls_meta.pairs[i]
         ids = cls_meta.pairs_ids[i]
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
-        Cls[i] = angularCℓs(cosmology, tracer1, tracer2, ls)
+        Cls[idx[i]+1:idx[i+1]+1] = angularCℓs(cosmology, tracer1, tracer2, ls)
     end
     return Cls 
 end
