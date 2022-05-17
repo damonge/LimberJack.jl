@@ -248,7 +248,7 @@ function Theory_parallel(cosmology, Nuisances, cls_meta, files)
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
-        Cls[idx[i]+1:idx[i+1]+1] = angularCℓs(cosmology, tracer1, tracer2, ls)
+        Cls[idx[i]+1:idx[i+1]] = angularCℓs(cosmology, tracer1, tracer2, ls)
     end
     return Cls 
 end
