@@ -48,6 +48,7 @@ struct Cosmology
     # Power spectrum
     ks::Array
     pk0::Array
+    logk
     dlogk
     # Redshift and background
     zs::Array
@@ -124,7 +125,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="lin
         Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(cpar, ks, pk0, dlogk,
+    Cosmology(cpar, ks, pk0, logk, dlogk,
               collect(zs), chii, zi, chis[end],
               chi_LSS, Dzi, pki, Pk)
 end

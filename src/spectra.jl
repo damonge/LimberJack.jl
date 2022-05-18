@@ -16,10 +16,10 @@ function Cℓintegrand(cosmo::Cosmology,
     k*w1*w2*pk
 end
 
-function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ::Float64; res=1000)
+function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ::Float64)
     # OPT: we are not optimizing the limits of integration
-    logks = LinRange(log(10^-4),log(10^2), res)
-    dlogk = logks[2]-logks[1]
+    logks = cosmo.logk
+    dlogk = cosmo.dlogk
     integrand = [Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5) for logk in logks]
     Cℓ = sum(0.5 .* (integrand[1:res-1] .+ integrand[2:res]) .* dlogk)
     fℓ1 = get_Fℓ(t1, ℓ)
@@ -27,10 +27,10 @@ function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ::Float64; res
     return Cℓ * fℓ1 * fℓ2
 end
 
-function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector{Float64}; res=1000)
+function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector{Float64})
     # OPT: we are not optimizing the limits of integration
-    logks = LinRange(log(10^-4),log(10^2), res)
-    dlogk = logks[2]-logks[1]
+    logks = cosmo.logk
+    dlogk = cosmo.dlogk
     Cℓs = zeros(typeof(cosmo.cosmo.Ωm), length(ℓs))
           # Vector{Union{Real, ForwardDiff.Dual{Nothing, Float64, 2}}}(undef, length(ℓs))
     for i in 1:length(ℓs)
