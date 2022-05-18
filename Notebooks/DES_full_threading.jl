@@ -96,7 +96,6 @@ new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
 #                   iterations, nchains, progress=true; save_state=true,
 #                   resume_from=past_chain)
 
-
 summary = describe(new_chain)[1]
 fname_summary = string("summary", now(), ".csv")
 CSV.write(joinpath(folname, fname_summary), summary)
