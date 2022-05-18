@@ -16,7 +16,7 @@ function Cℓintegrand(cosmo::Cosmology,
     k*w1*w2*pk
 end
 
-function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ::Float64; res=200)
+function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ::Float64; res=1000)
     # OPT: we are not optimizing the limits of integration
     logks = LinRange(log(10^-4),log(10^2), res)
     dlogk = logks[2]-logks[1]
@@ -27,7 +27,7 @@ function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ::Float64; res
     return Cℓ * fℓ1 * fℓ2
 end
 
-function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector{Float64}; res=200)
+function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector{Float64}; res=1000)
     # OPT: we are not optimizing the limits of integration
     logks = LinRange(log(10^-4),log(10^2), res)
     dlogk = logks[2]-logks[1]
