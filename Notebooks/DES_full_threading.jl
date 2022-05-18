@@ -67,34 +67,36 @@ data_vector = files["cls"]
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = vcat(Theory(cosmology, nuisances, Cls_meta, files)...)
+    theory = Theory(cosmology, nuisances, Cls_meta, files)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 5000
+iterations = 2000
 TAP = 0.60
-adaptation = 1000
+adaptation = 500
+nchains = 4
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_NUTS_", "TAP", TAP)
+folname = string("DES_full_parallel_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 if isdir(folname)
     println("Folder already exists")
     if isfile(joinpath(folname, "chain.jls"))
         println("Restarting from past chain")
         past_chain = read(joinpath(folname, "chain.jls"), Chains)
-        new_chain = sample(model(data_vector), NUTS(adaptation, TAP), iterations,
-                           progress=true; save_state=true, resume_from=past_chain)
+        new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
+                           iterations, nchains, progress=true; save_state=true,
+                           resume_from=past_chain)
     else
-        new_chain = sample(model(data_vector), NUTS(adaptation, TAP),
-                           iterations, progress=true; save_state=true)
+        new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
+                           iterations, nchains, progress=true; save_state=true)
     end
 else
     mkdir(folname)
     println("Created new folder")
-    new_chain = sample(model(data_vector), NUTS(adaptation, TAP),
-                       iterations, progress=true; save_state=true)
+    new_chain = sample(model(data_vector), NUTS(adaptation, TAP),  MCMCThreads(),
+                       iterations, nchains, progress=true; save_state=true)
 end
 
 summary = describe(new_chain)[1]
