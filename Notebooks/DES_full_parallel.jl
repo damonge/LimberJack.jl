@@ -79,23 +79,21 @@ adaptation = 1000
 folpath = "../chains"
 folname = string("DES_full_parallel_", "TAP", TAP)
 folname = joinpath(folpath, folname)
+
 if isdir(folname)
-    println("Folder already exists")
-    if isfile(joinpath(folname, "chain.jls"))
-        println("Restarting from past chain")
-        past_chain = read(joinpath(folname, "chain.jls"), Chains)
-        new_chain = sample(model(data_vector), NUTS(adaptation, TAP), iterations,
-                           progress=true; save_state=true, resume_from=past_chain)
-    else
-        new_chain = sample(model(data_vector), NUTS(adaptation, TAP),
-                           iterations, progress=true; save_state=true)
-    end
-else
-    mkdir(folname)
-    println("Created new folder")
-    new_chain = sample(model(data_vector), NUTS(adaptation, TAP),
-                       iterations, progress=true; save_state=true)
+    println("Removed folder")
+    rm(folname)
 end
+
+mkdir(folname)
+println("Created new folder")
+
+new_chain = sample(model(data_vector), NUTS(adaptation, TAP),
+                   iterations, progress=true; save_state=true)
+
+#new_chain = sample(model(data_vector), NUTS(adaptation, TAP), iterations,
+#                   progress=true; save_state=true, resume_from=past_chain)
+
 
 summary = describe(new_chain)[1]
 fname_summary = string("summary", now(), ".csv")
