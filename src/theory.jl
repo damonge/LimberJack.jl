@@ -160,51 +160,6 @@ end
 
 function Theory(cosmology, Nuisances, cls_meta, files)
     # OPT: move these loops outside the lkl
-    tracers = []
-    Nuisances = fill_NuisancePars(Nuisances)
-    for tracer in cls_meta.tracers
-        tracer_type = tracer[1]
-        bin = tracer[2]
-        nzs = files[string("nz_", tracer_type, bin)]
-        nz = vec(nzs[2:2, :])
-        zs = vec(nzs[1:1, :])
-        
-        if tracer_type == 1
-            bias = Nuisances[string("b", bin)]
-            dzi = Nuisances[string("dz_g", bin)]
-            zs_shift =  zs .- dzi
-            sel = zs_shift .> 0.
-            tracer = NumberCountsTracer(cosmology, zs_shift[sel], nz[sel]; bias=bias)
-        elseif tracer_type == 2
-            mbias = Nuisances[string("m", bin)]
-            dzi = Nuisances[string("dz_k", bin)]
-            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
-            zs_shift =  zs .- dzi
-            sel = zs_shift .> 0.
-            tracer = WeakLensingTracer(cosmology, zs_shift[sel], nz[sel];
-                                       mbias=mbias, IA_params=IA_params)
-        else
-            print("Not implemented")
-            trancer = nothing
-        end
-        push!(tracers, tracer)
-    end
-    npairs = length(cls_meta.pairs)
-    Cls = []
-    @inbounds for i in 1:npairs
-        pair = cls_meta.pairs[i]
-        ids = cls_meta.pairs_ids[i]
-        ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
-        tracer1 = tracers[ids[1]]
-        tracer2 = tracers[ids[2]]
-        Cl = [angularCℓ(cosmology, tracer1, tracer2, l) for l in ls]
-        push!(Cls, Cl)
-    end
-    return vcat(Cls...)
-end
-
-function Theory_parallel(cosmology, Nuisances, cls_meta, files)
-    # OPT: move these loops outside the lkl
     Nuisances = fill_NuisancePars(Nuisances)
     ntracers = length(cls_meta.tracers)
     tracers = Array{Any}(undef, ntracers)
