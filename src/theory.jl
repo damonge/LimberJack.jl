@@ -162,15 +162,14 @@ function Theory(cosmology, Nuisances, cls_meta, files)
     # OPT: move these loops outside the lkl
     Nuisances = fill_NuisancePars(Nuisances)
     ntracers = length(cls_meta.tracers)
-    tracers = Array{Any}(undef, ntracers)
-    @inbounds Threads.@threads for i in 1:ntracers
+    tracers = []
+    for i in 1:ntracers
         tracer = cls_meta.tracers[i]
         tracer_type = tracer[1]
         bin = tracer[2]
         nzs = files[string("nz_", tracer_type, bin)]
         nz = vec(nzs[2:2, :])
         zs = vec(nzs[1:1, :])
-        
         if tracer_type == 1
             bias = Nuisances[string("b", bin)]
             dzi = Nuisances[string("dz_g", bin)]
@@ -189,10 +188,9 @@ function Theory(cosmology, Nuisances, cls_meta, files)
             print("Not implemented")
             trancer = nothing
         end
-        tracers[i] = tracer
+        push!(tracers, tracer)
         
     end
-
     npairs = length(cls_meta.pairs)
     idx = files["idx"]
     total_len = last(idx)
