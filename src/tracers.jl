@@ -2,7 +2,7 @@ abstract type Tracer end
 
 struct NumberCountsTracer <: Tracer
     wint::AbstractInterpolation
-    bias::Float64
+    bias
     lpre::Int
 end
 
@@ -20,7 +20,7 @@ end
 
 struct WeakLensingTracer <: Tracer
     wint::AbstractInterpolation
-    bias::Float64
+    bias
     lpre::Int
 end
 
@@ -86,7 +86,7 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     CMBLensingTracer(wint, 1.0, 1)
 end
 
-function get_IA(cosmo::Cosmology, zs, IA_params::Vector{Float64})
+function get_IA(cosmo::Cosmology, zs, IA_params)
     A_IA = IA_params[1]
     alpha_IA = IA_params[2]
     return @. A_IA*((1 + zs)/1.62)^alpha_IA * (0.0134 * cosmo.cosmo.Ωm / cosmo.Dz(zs))
