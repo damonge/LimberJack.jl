@@ -6,7 +6,7 @@ struct NumberCountsTracer <: Tracer
     lpre::Int
 end
 
-NumberCountsTracer(cosmo::Cosmology, z_n::Vector{Float64}, nz::Vector{Float64};
+NumberCountsTracer(cosmo::Cosmology, z_n, nz;
                    bias=1.0) = begin
     # OPT: here we only integrate to calculate the area.
     #      perhaps it'd be best to just use Simpsons.
@@ -24,7 +24,7 @@ struct WeakLensingTracer <: Tracer
     lpre::Int
 end
 
-WeakLensingTracer(cosmo::Cosmology, z_n::Vector{Float64}, nz::Vector{Float64};
+WeakLensingTracer(cosmo::Cosmology, z_n, nz;
                   mbias=-1.0, IA_params=[0.0, 0.0]) = begin
     # N(z) normalization
     nz_norm = trapz(z_n, nz)

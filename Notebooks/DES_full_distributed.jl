@@ -4,15 +4,16 @@ using CSV
 using NPZ
 using FITSIO
 using Dates
+using Distributed
 
-println(Threads.nthreads())
+@everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-files = npzread("../data/DESY1_cls/Cls_meta.npz")
-Cls_meta = cls_meta(files)
-cov_tot = files["cov"]
-data_vector = files["cls"]
+@everywhere files = npzread("../data/DESY1_cls/Cls_meta.npz")
+@everywhere Cls_meta = cls_meta(files)
+@everywhere cov_tot = files["cov"]
+@everywhere data_vector = files["cls"]
 
-@model function model(data_vector; cov_tot=cov_tot)
+@everywhere @model function model(data_vector; cov_tot=cov_tot)
     Ωm ~ Uniform(0.1, 0.6)
     Ωb ~ Uniform(0.03, 0.07)
     h ~ Uniform(0.6, 0.9)
@@ -73,15 +74,16 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 2000
-TAP = 0.60
-adaptation = 500
-nchains = 4
+iterations = 2
+TAP = 0.1
+adaptation = 2
+nchains = nprocs()
 
 # Start sampling.
 folpath = "../chains"
 folname = string("DES_full_distributed_", "TAP", TAP)
 folname = joinpath(folpath, folname)
+
 
 if isdir(folname)
     println("Removed folder")
@@ -90,20 +92,27 @@ end
 
 mkdir(folname)
 println("Created new folder")
+ 
+println(string(myid()))
+
 
 new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
                    iterations, nchains, progress=true; save_state=true)
 
-#new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
-#                   iterations, nchains, progress=true; save_state=true,
-#                   resume_from=past_chain)
+#= 
+new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
+                   iterations, nchains, progress=true; save_state=true,
+                   resume_from=past_chain)
 
-summary = describe(new_chain)[1]
-fname_summary = string("summary", now(), ".csv")
-CSV.write(joinpath(folname, fname_summary), summary)
+if myid() == 1
+    summary = describe(new_chain)[1]
+    fname_summary = string("summary", now(), ".csv")
+    CSV.write(joinpath(folname, fname_summary), summary)
 
-fname_jls = string("chain.jls")
-write(joinpath(folname, fname_jls), new_chain)
-    
-fname_csv = string("chain_", now(), ".csv")
-CSV.write(joinpath(folname, fname_csv), new_chain)
+    fname_jls = string("chain.jls")
+    write(joinpath(folname, fname_jls), new_chain)
+
+    fname_csv = string("chain_", now(), ".csv")
+    CSV.write(joinpath(folname, fname_csv), new_chain)
+end
+=#
