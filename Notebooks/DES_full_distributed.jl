@@ -86,7 +86,6 @@ folpath = "../chains"
 folname = string("DES_full_distributed_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
-
 if isdir(folname)
     println("Removed folder")
     rm(folname)
@@ -94,9 +93,6 @@ end
 
 mkdir(folname)
 println("Created new folder")
- 
-println(string(myid()))
-
 
 new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
                    iterations, nchains, progress=true; save_state=true)
@@ -105,16 +101,14 @@ new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
 new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
                    iterations, nchains, progress=true; save_state=true,
                    resume_from=past_chain)
-
-if myid() == 1
-    summary = describe(new_chain)[1]
-    fname_summary = string("summary", now(), ".csv")
-    CSV.write(joinpath(folname, fname_summary), summary)
-
-    fname_jls = string("chain.jls")
-    write(joinpath(folname, fname_jls), new_chain)
-
-    fname_csv = string("chain_", now(), ".csv")
-    CSV.write(joinpath(folname, fname_csv), new_chain)
-end
 =#
+
+summary = describe(new_chain)[1]
+fname_summary = string("summary", now(), ".csv")
+CSV.write(joinpath(folname, fname_summary), summary)
+
+fname_jls = string("chain.jls")
+write(joinpath(folname, fname_jls), new_chain)
+
+fname_csv = string("chain_", now(), ".csv")
+CSV.write(joinpath(folname, fname_csv), new_chain)

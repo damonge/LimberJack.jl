@@ -80,7 +80,7 @@ adaptation = 1000
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_parallel_", "TAP", TAP)
+folname = string("DES_full_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
