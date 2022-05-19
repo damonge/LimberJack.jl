@@ -19,11 +19,11 @@ data_vector = files["cls"]
     s8 ~ Uniform(0.6, 1.0)
     ns ~ Uniform(0.87, 1.07)
     
-    b0 ~ Uniform(1.0, 3.0)
-    b1 ~ Uniform(1.0, 3.0)
-    b2 ~ Uniform(1.0, 3.0)
-    b3 ~ Uniform(1.0, 3.0)
-    b4 ~ Uniform(1.0, 3.0)
+    b0 ~ Uniform(0.8, 3.0)
+    b1 ~ Uniform(0.8, 3.0)
+    b2 ~ Uniform(0.8, 3.0)
+    b3 ~ Uniform(0.8, 3.0)
+    b4 ~ Uniform(0.8, 3.0)
 
     nuisances = Dict("b0" => b0,
                      "b1" => b1,
@@ -35,7 +35,7 @@ data_vector = files["cls"]
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = vcat(Theory_parallel(cosmology, nuisances, Cls_meta, files)...)
+    theory = vcat(Theory(cosmology, nuisances, Cls_meta, files)...)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
@@ -45,7 +45,7 @@ adaptation = 1000
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_parallel_", "TAP", TAP)
+folname = string("DES_cosmo_bias_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
