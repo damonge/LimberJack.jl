@@ -73,10 +73,10 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 2000
+iterations = 5000
 TAP = 0.60
-adaptation = 500
-nchains = Threads.nthreads()
+adaptation = 1000
+#nchains = Threads.nthreads()
 
 # Start sampling.
 folpath = "../chains"
@@ -91,8 +91,8 @@ end
 mkdir(folname)
 println("Created new folder")
 
-new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
-                   iterations, nchains, progress=true; save_state=true)
+new_chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+                   iterations, progress=true; save_state=true)
 
 #new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
 #                   iterations, nchains, progress=true; save_state=true,
