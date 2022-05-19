@@ -1,10 +1,12 @@
-using Turing
-using LimberJack
-using CSV
-using NPZ
-using FITSIO
-using Dates
 using Distributed
+using Turing
+
+@everywhere using Turing
+@everywhere using LimberJack
+@everywhere using CSV
+@everywhere using NPZ
+@everywhere using FITSIO
+@everywhere using Dates
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
