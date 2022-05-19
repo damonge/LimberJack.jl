@@ -6,6 +6,7 @@ using FITSIO
 using Dates
 
 println(Threads.nthreads())
+
 files = npzread("../data/DESY1_cls/Cls_meta.npz")
 Cls_meta = cls_meta(files)
 cov_tot = files["cov"]

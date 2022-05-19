@@ -1,10 +1,9 @@
 using Turing
-using Random
-using ForwardDiff
 using LimberJack
 using CSV
 using NPZ
 using FITSIO
+using Dates
 
 println(Threads.nthreads())
 
