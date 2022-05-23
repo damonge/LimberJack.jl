@@ -8,6 +8,7 @@ halofit:
 =#
 
 function get_σ2(lks, ks, pks, R, kind)
+    nlks = length(lks)
     k3 = ks .^ 3
     x2 = @. (ks*R)^2
     if kind == 2
@@ -18,7 +19,9 @@ function get_σ2(lks, ks, pks, R, kind)
         pre = 1
     end
     integrand = @. k3 * pre * exp(-x2) * pks
-    return trapz(lks, integrand)/(2*pi^2)
+    integral = sum(@.(0.5*(integrand[2:nlks]+integrand[1:nlks-1])*(lks[2:nlks]-lks[1:nlks-1])))/(2*pi^2)
+    #trapz(lks, integrand)/(2*pi^2)
+    return integral
 end
 
 function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs)
