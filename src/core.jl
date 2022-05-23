@@ -96,7 +96,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="lin
     zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
     Ezs_LSS = _Ez(cpar, zs_LSS)
-    chi_LSS = sum(@.(0.5*((1.0/Ezs[2:nz])+(1.0/Ezs[1:nz-1]))*dzs_LSS)*norm
+    chi_LSS = sum(@.(0.5*((1.0/Ezs[2:nz])+(1.0/Ezs[1:nz-1]))*dzs_LSS))*norm
     #chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
     # ODE solution for growth factor
