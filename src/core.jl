@@ -82,14 +82,21 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="lin
 
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
+    zs_LSS = range(0., stop=1100., length=nz)
+    dzs = mean(zs[2:nchi]-zs[1:nchi-1])
+    dzs_LSS = mean(zs_LSS[2:nchi]-zs_LSS[1:nchi-1])
     norm = CLIGHT_HMPC / cpar.h
-    chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
-            for zz in zs]
+    #chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
+    #        for zz in zs]
+    Ezs = [ _Ez(cpar, z) for z in zs]
+    chis = cumsum(0.5 .* (1.0 ./ Ezs[2:nz] .+ 1.0 ./ Ez[1:nz-1]) .* dzs)
     # OPT: tolerances, interpolation method
     chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
     zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
-    chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
+    Ezs_LSS = [ _Ez(cpar, z) for z in zs_LSS]
+    chi_LSS = sum(0.5 .* (1.0 ./ Ezs[2:nz] .+ 1.0 ./ Ez[1:nz-1]) .* dzs_LSS)
+    #chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
     # ODE solution for growth factor
     z_ini = 1000.0

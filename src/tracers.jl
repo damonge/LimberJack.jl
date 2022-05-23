@@ -40,14 +40,16 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     dz = (z_n[end]-z_n[1])/length(z_n)
     nchi = trunc(Int, z_n[end]/dz)
     z_w = range(0.00001, stop=z_n[end], length=nchi)
+    dz_w = mean(z_w[2:nchi]-z_w[1:nchi-1])
     chi = cosmo.chi(z_w)
 
     # Calculate integral at each chi
     w_itg(zz, chii) = nz_int(zz)*(1-chii/cosmo.chi(zz))
-    # OPT: use simpsons/trapz?
-    w_arr = [quadgk(zz -> w_itg(zz, chi[i]), z_w[i], z_n[end],
-                    rtol=1E-4)[1]
-             for i=1:nchi]
+    #w_arr = [quadgk(zz -> w_itg(zz, chi[i]), z_w[i], z_n[end],
+    #                rtol=1E-4)[1]
+    #         for i=1:nchi]
+    w_arr = [sum(@.(0.5*(w_itg(z_w, chi[i])[1:nchi-1]+w_itg(z_w, chi[i])[2:nchi])*dz_w))
+             for i in 1:nchi]
     # Normalize
     H0 = cosmo.cosmo.h/CLIGHT_HMPC
     lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
