@@ -4,7 +4,7 @@ struct cls_meta{T<:AbstractVector}
     pairs_ids::T
 end
 
-function cls_meta(file)
+cls_meta(file) = begin
     tracers = [c[:] for c in eachrow(file["tracers"])]
     pairs = [c[:] for c in eachrow(file["pairs"])]
     pairs_ids = [c[:] for c in eachrow(file["pairs_ids"])]
@@ -158,7 +158,14 @@ function fill_NuisancePars(params_dict)
     return nuisances
 end
 
-function Theory(cosmology, Nuisances, cls_meta, files)
+
+struct Theory
+    tracers
+    cls
+end
+
+Theory(cosmology, Nuisances, cls_meta, files) = begin
+    
     # OPT: move these loops outside the lkl
     Nuisances = fill_NuisancePars(Nuisances)
     ntracers = length(cls_meta.tracers)
@@ -173,14 +180,17 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         if tracer_type == 1
             bias = Nuisances[string("b", bin)]
             dzi = Nuisances[string("dz_g", bin)]
-            tracer = NumberCountsTracer(cosmology, zs_shift[sel], nz[sel];
-                                        dz=dzi, bias=bias)
+            zs_shift =  zs .- dzi
+            sel = zs_shift .> 0.
+            tracer = NumberCountsTracer(cosmology, zs_shift[sel], nz[sel]; bias=bias)
         elseif tracer_type == 2
             mbias = Nuisances[string("m", bin)]
             dzi = Nuisances[string("dz_k", bin)]
             IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
+            zs_shift =  zs .- dzi
+            sel = zs_shift .> 0.
             tracer = WeakLensingTracer(cosmology, zs_shift[sel], nz[sel];
-                                       dz=dzi, mbias=mbias, IA_params=IA_params)
+                                       mbias=mbias, IA_params=IA_params)
         else
             print("Not implemented")
             trancer = nothing
@@ -188,17 +198,23 @@ function Theory(cosmology, Nuisances, cls_meta, files)
         push!(tracers, tracer)
         
     end
+    
     npairs = length(cls_meta.pairs)
     idx = files["idx"]
     total_len = last(idx)
-    Cls = zeros(typeof(cosmology.cosmo.Ωm), total_len)
+    cls = zeros(typeof(cosmology.cosmo.Ωm), total_len)
     @inbounds Threads.@threads for i in 1:npairs
+    #cls = []
+    #for i in 1:npairs
         pair = cls_meta.pairs[i]
         ids = cls_meta.pairs_ids[i]
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
-        Cls[idx[i]+1:idx[i+1]] = angularCℓs(cosmology, tracer1, tracer2, ls)
+        cls[idx[i]+1:idx[i+1]] = angularCℓs(cosmology, tracer1, tracer2, ls)
+        #append!(cls, angularCℓs(cosmology, tracer1, tracer2, ls))
     end
-    return Cls 
+    
+    Theory(tracers, cls)
+    
 end

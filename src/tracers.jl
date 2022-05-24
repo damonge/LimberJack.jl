@@ -1,53 +1,60 @@
 abstract type Tracer end
 
 struct NumberCountsTracer <: Tracer
+    warr
+    chis
     wint::AbstractInterpolation
     bias
     lpre::Int
 end
 
 NumberCountsTracer(cosmo::Cosmology, z_n, nz;
-                   dz=0.0, bias=1.0) = begin
-    # OPT: here we only integrate to calculate the area.
-    #      perhaps it'd be best to just use Simpsons.
-    #nz_norm = trapz(z_n, nz)
-    m = length(z_n)
+                   bias=1.0) = begin
+
+    nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
+    
     res = cosmo.settings.nz
-    nz_norm = sum(0.5 .* (nz[1:m-1] .+ nz[2:m]) .* (z_n[2:m] .- z_n[1:m-1]))
-    z_w = range(0.00001, stop=z_n[end]-dz, length=res)
+    z_w = range(0.00001, stop=z_n[end], length=res)
+    dz_w = (z_w[end]-z_w[1])/res
+    nz_w = nz_int(z_w)
+    
+    nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
     chi = cosmo.chi(z_w)
     hz = Hmpc(cosmo, z_w)
-    w_arr = @. (nz*hz/nz_norm)
+    
+    w_arr = @. (nz_w*hz/nz_norm)
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
-    NumberCountsTracer(wint, bias, 0)
+    
+    NumberCountsTracer(w_arr, chi, wint, bias, 0)
 end
 
 struct WeakLensingTracer <: Tracer
+    warr
+    chis
     wint::AbstractInterpolation
     bias
     lpre::Int
 end
 
 WeakLensingTracer(cosmo::Cosmology, z_n, nz;
-                  dz=0.0, mbias=-1.0, IA_params=[0.0, 0.0]) = begin
-    # N(z) normalization
-    #nz_norm = trapz(z_n, nz)
-    m = length(z_n)
+                  mbias=-1.0, IA_params=[0.0, 0.0]) = begin
+    
+    nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
+    
     res = cosmo.settings.nz
-    nz_norm = sum(0.5 .* (nz[1:m-1] .+ nz[2:m]) .* (z_n[2:m] .- z_n[1:m-1]))
-    z_n_shift = z_n .- dz
-    nz_int = LinearInterpolation(z_n_shift, nz, extrapolation_bc=0)
+    z_w = range(0.00001, stop=z_n[end], length=res)
+    dz_w = (z_w[end]-z_w[1])/res
+    nz_w = nz_int(z_w)
+    chi = cosmo.chi(z_w)
+    
+    nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
 
     # Calculate chis at which to precalculate the lensing kernel
     # OPT: perhaps we don't need to sample the lensing kernel
     #      at all zs.
-    z_w = range(0.00001, stop=z_n_shift[end], length=res)
-    dz_w = (z_w[end]-z_w[1])/res
-    chi = cosmo.chi(z_w)
-
     # Calculate integral at each chi
-    w_itg(zz, chii) = nz_int(zz)*(1-chii/cosmo.chi(zz))
-    w_arr = [sum(@.(0.5*(w_itg(z_w, chi[i])[i:res-1]+w_itg(z_w, chi[i])[i+1:res])*dz_w))
+    w_itg(chii) = @.(nz_w*(1-chii/chi))
+    w_arr = [sum(@.(0.5*(w_itg(chi[i])[i:res-1]+w_itg(chi[i])[i+1:res])*dz_w))
              for i in 1:res]
     # Normalize
     H0 = cosmo.cosmo.h/CLIGHT_HMPC
@@ -57,7 +64,6 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     if IA_params != [0.0, 0.0]
         hz = Hmpc(cosmo, z_w)
         As = get_IA(cosmo, z_w, IA_params)
-        nz_w = [nz_int(z) for z in z_w]
         corr =  @. As * (nz_w * hz / nz_norm)
         w_arr = @. w_arr - corr
     end
@@ -67,7 +73,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     chi[1] = 0.0
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
     bias = mbias+1.0 
-    WeakLensingTracer(wint, bias , 2)
+    WeakLensingTracer(w_arr, chi, wint, bias , 2)
 end
 
 struct CMBLensingTracer <: Tracer

@@ -70,10 +70,10 @@ struct Cosmology
     Pk::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar, settigs::Settings) = begin
+Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Load settings
     nk = settings.nk
-    nk_pk = settings.nk_pk
+    nz_pk = settings.nz_pk
     nz = settings.nz
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(100.0), length=nk)
@@ -134,11 +134,11 @@ Cosmology(cpar::CosmoPar, settigs::Settings) = begin
     zs_pk = range(0., stop=3., length=nz_pk)
     Dzs = Dzi(zs_pk)
 
-    if Pk_mode == "linear"
+    if settings.Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
         Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
-    elseif Pk_mode == "Halofit"
+    elseif settings.Pk_mode == "Halofit"
         Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs)
     else 
         Pks = [@. pk*Dzs^2 for pk in pk0]
