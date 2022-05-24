@@ -22,6 +22,14 @@ function _σR2(ks, pk, dlogk, R)
     return sum(integ)*dlogk/(2*pi^2)
 end
 
+struct Settings
+    nz::Int
+    nz_pk::Int
+    nk::Int
+    tk_mode::String
+    Pk_mode::String
+end
+
 struct CosmoPar{T}
     Ωm::T
     Ωb::T
@@ -44,6 +52,7 @@ CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
 end
 
 struct Cosmology
+    settings::Settings
     cosmo::CosmoPar
     # Power spectrum
     ks::Array
@@ -61,14 +70,18 @@ struct Cosmology
     Pk::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(cpar::CosmoPar, settigs::Settings) = begin
+    # Load settings
+    nk = settings.nk
+    nk_pk = settings.nk_pk
+    nz = settings.nz
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
-    if tk_mode== "EisHu"
+    if settings.tk_mode== "EisHu"
         tk = TkEisHu(cpar, ks./ cpar.h)
-    elseif tk_mode== "BBKS"
+    elseif settings.tk_mode== "BBKS"
         tk = TkBBKS(cpar, ks)
     else
         print("Transfer function not implemented")
@@ -133,7 +146,7 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="lin
         Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(cpar, ks, pk0, logk, dlogk,
+    Cosmology(settings, cpar, ks, pk0, logk, dlogk,
               collect(zs), chii, zi, chis[end],
               chi_LSS, Dzi, pki, Pk)
 end
@@ -141,7 +154,8 @@ end
 Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256,
           nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    Cosmology(cpar, nk=nk, nz=nz, nz_pk=nz_pk, tk_mode=tk_mode, Pk_mode=Pk_mode)
+    settings = Settings(nz, nz_pk, nk, tk_mode, Pk_mode)
+    Cosmology(cpar, settings)
 end
 
 Cosmology() = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)

@@ -7,14 +7,16 @@ struct NumberCountsTracer <: Tracer
 end
 
 NumberCountsTracer(cosmo::Cosmology, z_n, nz;
-                   bias=1.0) = begin
+                   dz=0.0, bias=1.0) = begin
     # OPT: here we only integrate to calculate the area.
     #      perhaps it'd be best to just use Simpsons.
     #nz_norm = trapz(z_n, nz)
-    res = length(z_n)
-    nz_norm = sum(0.5 .* (nz[1:res-1] .+ nz[2:res]) .* (z_n[2:res] .- z_n[1:res-1]))
-    chi = cosmo.chi(z_n)
-    hz = Hmpc(cosmo, z_n)
+    m = length(z_n)
+    res = cosmo.settings.nz
+    nz_norm = sum(0.5 .* (nz[1:m-1] .+ nz[2:m]) .* (z_n[2:m] .- z_n[1:m-1]))
+    z_w = range(0.00001, stop=z_n[end]-dz, length=res)
+    chi = cosmo.chi(z_w)
+    hz = Hmpc(cosmo, z_w)
     w_arr = @. (nz*hz/nz_norm)
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
     NumberCountsTracer(wint, bias, 0)
@@ -27,25 +29,24 @@ struct WeakLensingTracer <: Tracer
 end
 
 WeakLensingTracer(cosmo::Cosmology, z_n, nz;
-                  mbias=-1.0, IA_params=[0.0, 0.0]) = begin
+                  dz=0.0, mbias=-1.0, IA_params=[0.0, 0.0]) = begin
     # N(z) normalization
     #nz_norm = trapz(z_n, nz)
-    res = length(z_n)
-    nz_norm = sum(0.5 .* (nz[1:res-1] .+ nz[2:res]) .* (z_n[2:res] .- z_n[1:res-1]))
-    nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
+    m = length(z_n)
+    res = cosmo.settings.nz
+    nz_norm = sum(0.5 .* (nz[1:m-1] .+ nz[2:m]) .* (z_n[2:m] .- z_n[1:m-1]))
+    z_n_shift = z_n .- dz
+    nz_int = LinearInterpolation(z_n_shift, nz, extrapolation_bc=0)
 
     # Calculate chis at which to precalculate the lensing kernel
     # OPT: perhaps we don't need to sample the lensing kernel
     #      at all zs.
-    z_w = range(0.00001, stop=z_n[end], length=res)
+    z_w = range(0.00001, stop=z_n_shift[end], length=res)
     dz_w = (z_w[end]-z_w[1])/res
     chi = cosmo.chi(z_w)
 
     # Calculate integral at each chi
     w_itg(zz, chii) = nz_int(zz)*(1-chii/cosmo.chi(zz))
-    #w_arr = [quadgk(zz -> w_itg(zz, chi[i]), z_w[i], z_n[end],
-    #                rtol=1E-4)[1]
-    #         for i=1:nchi]
     w_arr = [sum(@.(0.5*(w_itg(z_w, chi[i])[i:res-1]+w_itg(z_w, chi[i])[i+1:res])*dz_w))
              for i in 1:res]
     # Normalize
