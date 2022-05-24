@@ -37,10 +37,8 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     # Calculate chis at which to precalculate the lensing kernel
     # OPT: perhaps we don't need to sample the lensing kernel
     #      at all zs.
-    dz = (z_n[end]-z_n[1])/length(z_n)
-    nchi = trunc(Int, z_n[end]/dz)
-    z_w = range(0.00001, stop=z_n[end], length=nchi)
-    dz_w = (z_w[end]-z_w[1])/nchi
+    z_w = range(0.00001, stop=z_n[end], length=res)
+    dz_w = (z_w[end]-z_w[1])/res
     chi = cosmo.chi(z_w)
 
     # Calculate integral at each chi
@@ -48,8 +46,8 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     #w_arr = [quadgk(zz -> w_itg(zz, chi[i]), z_w[i], z_n[end],
     #                rtol=1E-4)[1]
     #         for i=1:nchi]
-    w_arr = [sum(@.(0.5*(w_itg(z_w, chi[i])[i:nchi-1]+w_itg(z_w, chi[i])[i+1:nchi])*dz_w))
-             for i in 1:nchi]
+    w_arr = [sum(@.(0.5*(w_itg(z_w, chi[i])[i:res-1]+w_itg(z_w, chi[i])[i+1:res])*dz_w))
+             for i in 1:res]
     # Normalize
     H0 = cosmo.cosmo.h/CLIGHT_HMPC
     lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
