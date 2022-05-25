@@ -35,7 +35,7 @@ data_vector = files["cls"]
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = vcat(Theory(cosmology, nuisances, Cls_meta, files)...)
+    theory = Theory(cosmology, nuisances, Cls_meta, files).cls
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 

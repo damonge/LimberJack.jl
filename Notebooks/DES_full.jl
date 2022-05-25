@@ -24,23 +24,19 @@ data_vector = files["cls"]
     b2 ~ Uniform(0.8, 3.0)
     b3 ~ Uniform(0.8, 3.0)
     b4 ~ Uniform(0.8, 3.0)
-    
-    dz_g0 ~ Normal(0.008, 0.007)
-    dz_g1 ~ Normal(-0.005, 0.007)
-    dz_g2 ~ Normal(0.006, 0.006)
-    dz_g3 ~ Normal(0.0, 0.010)
-    dz_g4 ~ Normal(0.0, 0.010)
-    
-    dz_k0 ~ Normal(-0.001, 0.016)
-    dz_k1 ~ Normal(-0.019, 0.013)
-    dz_k2 ~ Normal(-0.009, 0.011)
-    dz_k3 ~ Normal(-0.018, 0.022)
-    
+    dz_g0 ~ TruncatedNormal(0.008, 0.007, -0.2, 0.2)
+    dz_g1 ~ TruncatedNormal(-0.005, 0.007, -0.2, 0.2)
+    dz_g2 ~ TruncatedNormal(0.006, 0.006, -0.2, 0.2)
+    dz_g3 ~ TruncatedNormal(0.0, 0.010, -0.2, 0.2)
+    dz_g4 ~ TruncatedNormal(0.0, 0.010, -0.2, 0.2)
+    dz_k0 ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
+    dz_k1 ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
+    dz_k2 ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
+    dz_k3 ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
     m0 ~ Normal(0.0, 0.035)
     m1 ~ Normal(0.0, 0.035)
     m2 ~ Normal(0.0, 0.035)
     m3 ~ Normal(0.0, 0.035)
-    
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
 
@@ -69,7 +65,7 @@ data_vector = files["cls"]
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = Theory(cosmology, nuisances, Cls_meta, files)
+    theory = Theory(cosmology, nuisances, Cls_meta, files).cls
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
