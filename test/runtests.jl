@@ -1,28 +1,33 @@
 using Test
 using LimberJack
 using ForwardDiff
+using PyCall 
+
+ccl = pyimport("pyccl")
+np = pyimport("numpy")
 
 @testset "All tests" begin
 
     @testset "BMChi" begin
         cosmo = Cosmology()
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="bbks", 
+                                            matter_power_spectrum="linear",
+                                            Omega_g=0, Omega_k=0)
         ztest = [0.1, 0.5, 1.0, 3.0]
         chi = comoving_radial_distance(cosmo, ztest)
-        chi_bm = [437.1870424,
-                  1973.09067532,
-                  3451.41630697,
-                  6638.67844433]
+        chi_bm = ccl.comoving_radial_distance(cosmo_bm,
+                                              1 ./ (1 .+ z_test)) 
         @test all(@. (abs(chi/chi_bm-1.0) < 1E-4))
     end
 
     @testset "BMGrowth" begin
         cosmo = Cosmology()
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="bbks", 
+                                            matter_power_spectrum="linear",
+                                            Omega_g=0, Omega_k=0)
         ztest = [0.1, 0.5, 1.0, 3.0]
         Dz = growth_factor(cosmo, ztest)
-        Dz_bm = [0.94966513,
-                 0.77320274,
-                 0.61185874,
-                 0.31898209]
+        Dz_bm = ccl.growth_factor(cosmo1, 1 ./ (1 .+ z_bg_test))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Dz/Dz_bm-1.0) < 2E-4))
     end
@@ -79,11 +84,11 @@ using ForwardDiff
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
-        Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
-        Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
-        Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
-        Cℓ_gk = [angularCℓ(cosmo, tg, tk, ℓ) for ℓ in ℓs]
-        Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
+        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
+        Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
+        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs) 
+        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs)
+        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs) 
         Cℓ_gg_bm = [7.02850428e-05, 7.43987364e-05,
                     2.92323380e-05, 4.91394610e-06]
         Cℓ_gs_bm = [7.26323570e-08, 7.29532942e-08,
@@ -113,11 +118,11 @@ using ForwardDiff
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
-        Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
-        Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
-        Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
-        Cℓ_gk = [angularCℓ(cosmo, tg, tk, ℓ) for ℓ in ℓs]
-        Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
+        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
+        Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
+        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs) 
+        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs) 
+        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs) 
         Cℓ_gg_bm = [7.60013901e-05, 8.33928286e-05,
                      3.05959806e-05, 4.89394772e-06]
         Cℓ_gs_bm = [7.90343478e-08, 8.04101857e-08,
@@ -148,11 +153,11 @@ using ForwardDiff
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
-        Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
-        Cℓ_gs = [angularCℓ(cosmo, tg, ts, ℓ) for ℓ in ℓs]
-        Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
-        Cℓ_gk = [angularCℓ(cosmo, tg, tk, ℓ) for ℓ in ℓs]
-        Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
+        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
+        Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
+        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs) 
+        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs) 
+        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs) 
         Cℓ_gg_bm = [7.57445927e-05, 8.26337569e-05, 3.02763731e-05, 5.86734959e-06]
         Cℓ_gs_bm = [7.87411925e-08, 7.96026876e-08, 2.71972767e-08, 5.31526718e-09]
         Cℓ_ss_bm = [1.86729492e-08, 8.22346781e-09, 1.89325128e-09, 4.82204679e-10]
@@ -245,7 +250,7 @@ using ForwardDiff
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             tg = NumberCountsTracer(cosmo, z, nz; bias=2.0)
             ℓs = [10.0, 30.0, 100.0, 300.0]
-            Cℓ_gg = [angularCℓ(cosmo, tg, tg, ℓ) for ℓ in ℓs]
+            Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
         end
         
@@ -259,7 +264,7 @@ using ForwardDiff
                                    mbias=-1.0,
                                    IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
-            Cℓ_ss = [angularCℓ(cosmo, ts, ts, ℓ) for ℓ in ℓs]
+            Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
         end
         
@@ -274,7 +279,7 @@ using ForwardDiff
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
             ℓs = [10.0, 30.0, 100.0, 300.0]
-            Cℓ_sk = [angularCℓ(cosmo, ts, tk, ℓ) for ℓ in ℓs]
+            Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
         end
 
