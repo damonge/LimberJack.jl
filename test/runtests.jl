@@ -16,7 +16,7 @@ np = pyimport("numpy")
         ztest = [0.1, 0.5, 1.0, 3.0]
         chi = comoving_radial_distance(cosmo, ztest)
         chi_bm = ccl.comoving_radial_distance(cosmo_bm,
-                                              1 ./ (1 .+ z_test)) 
+                                              1 ./ (1 .+ ztest)) 
         @test all(@. (abs(chi/chi_bm-1.0) < 1E-4))
     end
 
@@ -27,7 +27,7 @@ np = pyimport("numpy")
                                             Omega_g=0, Omega_k=0)
         ztest = [0.1, 0.5, 1.0, 3.0]
         Dz = growth_factor(cosmo, ztest)
-        Dz_bm = ccl.growth_factor(cosmo1, 1 ./ (1 .+ z_bg_test))
+        Dz_bm = ccl.growth_factor(cosmo_bm, 1 ./ (1 .+ ztest))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Dz/Dz_bm-1.0) < 2E-4))
     end
