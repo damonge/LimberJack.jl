@@ -94,19 +94,22 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     pki = LinearInterpolation(logk, log.(pk0), extrapolation_bc=Line())
 
     # Compute redshift-distance relation
-    zs = Vector(range(0., stop=3., length=nz))
+    zs = Vector(range(0., 3., nz))
     zs_LSS = Vector(range(0., stop=1100., length=nz))
-    dzs = (zs[end]-zs[1])/nz
     dzs_LSS = (zs_LSS[end]-zs_LSS[1])/nz
+    
+    xs = Vector(range(0, log(1+1100), nz))
+    dx = sum(xs[2:nz]-xs[1:nz-1])/(nz-1)
+    zs_log = exp.(xs) .- 1
     norm = CLIGHT_HMPC / cpar.h
-    #chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
-    #        for zz in zs]
-    Ezs = _Ez(cpar, zs)
-    chis = zeros(typeof(Ezs[1]), nz)
-    chis[2:nz] = cumsum(@.(0.5*((1.0/Ezs[2:nz])+(1.0 ./ Ezs[1:nz-1]))*dzs*norm))
+    Ezs = _Ez(cpar, zs_log)
+    hzs = Ezs ./ norm
+    chis = zeros(typeof(Ezs[1]), nz+1)
+    chis[2:settings.nz+1] = cumsum((1 .+ zs_log) ./ hzs)
+    chis = dx * @.(0.5*(chis[2:nz+1]+chis[1:nz])-0.5*chis[2])
     # OPT: tolerances, interpolation method
-    chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
-    zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
+    chii = LinearInterpolation(zs_log, chis, extrapolation_bc=Line())
+    zi = LinearInterpolation(chis, zs_log, extrapolation_bc=Line())
     # Distance to LSS
     Ezs_LSS = _Ez(cpar, zs_LSS)
     chi_LSS = sum(@.(0.5*((1.0/Ezs[2:nz])+(1.0/Ezs[1:nz-1]))*dzs_LSS))*norm
@@ -147,12 +150,12 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(settings, cpar, ks, pk0, logk, dlogk,
-              collect(zs), chii, zi, chis[end],
+              collect(zs), chii, zi, chii(3.0),
               chi_LSS, Dzi, pki, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256,
-          nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=300,
+          nz=300, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
     settings = Settings(nz, nz_pk, nk, tk_mode, Pk_mode)
     Cosmology(cpar, settings)
