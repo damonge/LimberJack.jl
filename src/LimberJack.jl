@@ -6,7 +6,7 @@ export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer, get_Fℓ
 export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
 export Theory, Theory_parallel, cls_meta, fill_NuisancePars
 
-using Interpolations, OrdinaryDiffEq, ForwardDiff, LinearAlgebra, PyCall
+using Interpolations, OrdinaryDiffEq, ForwardDiff, LinearAlgebra, PyCall, Trapz, QuadGK
 
 include("core.jl")
 include("tracers.jl")
