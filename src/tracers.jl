@@ -18,7 +18,9 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz;
     dz_w = (z_w[end]-z_w[1])/res
     nz_w = nz_int(z_w)
     
-    nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
+    #nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
+    nz_norm = trapz(z_w, nz_w)
+    
     chi = cosmo.chi(z_w)
     hz = Hmpc(cosmo, z_w)
     
@@ -47,15 +49,17 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     nz_w = nz_int(z_w)
     chi = cosmo.chi(z_w)
     
-    nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
+    #nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
+    nz_norm = trapz(z_w, nz_w)
 
     # Calculate chis at which to precalculate the lensing kernel
     # OPT: perhaps we don't need to sample the lensing kernel
     #      at all zs.
     # Calculate integral at each chi
     w_itg(chii) = @.(nz_w*(1-chii/chi))
-    w_arr = [sum(@.(0.5*(w_itg(chi[i])[i:res-1]+w_itg(chi[i])[i+1:res])*dz_w))
-             for i in 1:res]
+    #w_arr = [sum(@.(0.5*(w_itg(chi[i])[i:res-1]+w_itg(chi[i])[i+1:res])*dz_w))
+    #         for i in 1:res]
+    w_arr = [trapz(z_w, w_itg(chi[i])) for i in 1:res]
     # Normalize
     H0 = cosmo.cosmo.h/CLIGHT_HMPC
     lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
