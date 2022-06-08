@@ -10,6 +10,7 @@ print("Growth: ", ccl.growth_factor(cosmo1, 1./(1+z_bg_test)))
 ks_test = np.array([0.001, 0.01, 0.1, 1.0, 10.0])
 print("Pk0-1: ", ccl.linear_matter_power(cosmo1, ks_test, 1.))
 print("Pk0-2: ", ccl.linear_matter_power(cosmo2, ks_test, 1.))
+print("Pk0-3: ", ccl.nonlin_matter_power(cosmo3, ks_test, 1.))
 
 z = np.linspace(0., 2., 1024)
 wz = np.exp(-0.5*((z-0.5)/0.05)**2)

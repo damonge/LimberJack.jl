@@ -94,26 +94,15 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     pki = LinearInterpolation(logk, log.(pk0), extrapolation_bc=Line())
 
     # Compute redshift-distance relation
-    zs = Vector(range(0., 3., nz))
-    zs_LSS = Vector(range(0., stop=1100., length=nz))
-    dzs_LSS = (zs_LSS[end]-zs_LSS[1])/nz
-    
-    xs = Vector(range(0, log(1+1100), nz))
-    dx = sum(xs[2:nz]-xs[1:nz-1])/(nz-1)
-    zs_log = exp.(xs) .- 1
+    zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / cpar.h
-    Ezs = _Ez(cpar, zs_log)
-    hzs = Ezs ./ norm
-    chis = zeros(typeof(Ezs[1]), nz+1)
-    chis[2:settings.nz+1] = cumsum((1 .+ zs_log) ./ hzs)
-    chis = dx * @.(0.5*(chis[2:nz+1]+chis[1:nz])-0.5*chis[2])
+    chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
+            for zz in zs]
     # OPT: tolerances, interpolation method
-    chii = LinearInterpolation(zs_log, chis, extrapolation_bc=Line())
-    zi = LinearInterpolation(chis, zs_log, extrapolation_bc=Line())
+    chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
+    zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
-    Ezs_LSS = _Ez(cpar, zs_LSS)
-    chi_LSS = sum(@.(0.5*((1.0/Ezs[2:nz])+(1.0/Ezs[1:nz-1]))*dzs_LSS))*norm
-    #chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
+    chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
     # ODE solution for growth factor
     z_ini = 1000.0

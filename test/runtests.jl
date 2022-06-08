@@ -89,7 +89,7 @@ np = pyimport("numpy")
                                             Omega_g=0, Omega_k=0)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = nonlin_Pk(cosmo, ks, 0)
-        pk_bm = ccl.linear_matter_power(cosmo_bm, ks, 1.)
+        pk_bm = ccl.nonlin_matter_power(cosmo_bm, ks, 1.)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(pk/pk_bm-1.0) < 1E-3))
     end

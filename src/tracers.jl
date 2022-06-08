@@ -18,7 +18,7 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz;
     dz_w = (z_w[end]-z_w[1])/res
     nz_w = nz_int(z_w)
     
-    nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
+    nz_norm = (dz_w/3)*(nz_w[1]+2*sum(nz_w[1:2:res-2])+4*sum(nz_w[2:2:res-1])+nz_w[res])
     chi = cosmo.chi(z_w)
     hz = Hmpc(cosmo, z_w)
     
