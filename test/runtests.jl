@@ -8,6 +8,11 @@ np = pyimport("numpy")
 
 @testset "All tests" begin
     
+    @testset "CreateCosmo" begin
+        cosmo = Cosmology()
+        @test cosmo.cosmo.Ωm == 0.3
+    end
+    
     @testset "BMHz" begin
         cosmo = Cosmology()
         cosmo_class = ccl.boltzmann.classy.Class()
@@ -51,45 +56,57 @@ np = pyimport("numpy")
     end
 
     @testset "PkBBKS" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
+        cosmo = Cosmology()
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="bbks", 
+                                            matter_power_spectrum="linear",
+                                            Omega_g=0, Omega_k=0)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = nonlin_Pk(cosmo, ks, 0.0)
-        pk_bm = [2.01570296e+04,
-                 7.77178497e+04,
-                 1.04422728e+04,
-                 7.50841197e+01,
-                 2.02624683e-01]
+        pk_bm = ccl.linear_matter_power(cosmo_bm, ks, 1.)
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(pk/pk_bm-1.0) < 3E-4))
+        @test all(@. (abs(pk/pk_bm-1.0) <  0.0005))
     end
 
     @testset "PkEisHu" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          nk=768, tk_mode="EisHu")
+                          nk=256, tk_mode="EisHu")
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
+                                            matter_power_spectrum="linear",
+                                            Omega_g=0, Omega_k=0)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = nonlin_Pk(cosmo, ks, 0.0)
-        pk_bm = [2.12222992e+04,
-                 8.83444294e+04,
-                 1.05452648e+04,
-                 8.22064850e+01,
-                 2.41173851e-01]
+        pk_bm = ccl.linear_matter_power(cosmo_bm, ks, 1.)
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(pk/pk_bm-1.0) < 3E-4))
+        @test all(@. (abs(pk/pk_bm-1.0) < 0.0005))
     end
 
     @testset "PkHalofit" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nk=512, tk_mode="EisHu", 
                           Pk_mode="Halofit")
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
+                                            matter_power_spectrum="halofit",
+                                            Omega_g=0, Omega_k=0)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk = nonlin_Pk(cosmo, ks, 0)
-        pk_bm = [2.12015208e+04,
-                 8.75109090e+04,
-                 1.15273287e+04,
-                 8.52170268e+02,
-                 1.31682588e+01]
+        pk_bm = ccl.linear_matter_power(cosmo_bm, ks, 1.)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(pk/pk_bm-1.0) < 1E-3))
+    end
+    
+    @testset "CreateTracer" begin
+        p_of_z(x) = @. exp(-0.5*((x-0.5)/0.05)^2)
+
+        z = Vector(range(0., stop=2., length=200))
+        nz = Vector(p_of_z(z))
+        cosmo = Cosmology()
+        t = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+
+        wz1 = t.wint(cosmo.chi(0.5))
+        hz = Hmpc(cosmo, 0.5)
+        wz2 = p_of_z(0.5)*hz/(sqrt(2π)*0.05)
+
+        @test abs(wz2/wz1 - 1) < 1E-4
     end
     
     @testset "BBKS_Cℓs" begin
@@ -187,26 +204,6 @@ np = pyimport("numpy")
         @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 1E-2))
-    end
-
-    @testset "CreateTracer" begin
-        p_of_z(x) = @. exp(-0.5*((x-0.5)/0.05)^2)
-
-        z = Vector(range(0., stop=2., length=2048))
-        nz = Vector(p_of_z(z))
-        cosmo = Cosmology()
-        t = NumberCountsTracer(cosmo, z, nz; bias=1.0)
-
-        wz1 = t.wint(cosmo.chi(0.5))
-        hz = Hmpc(cosmo, 0.5)
-        wz2 = p_of_z(0.5)*hz/(sqrt(2π)*0.05)
-
-        @test abs(wz2/wz1 - 1) < 1E-4
-    end
-
-    @testset "CreateCosmo" begin
-        cosmo = Cosmology()
-        @test cosmo.cosmo.Ωm == 0.3
     end
 
     @testset "IsBaseDiff" begin
