@@ -96,8 +96,11 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / cpar.h
-    chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
-            for zz in zs]
+    chis = zeros(typeof(cpar.Ωm), nz)
+    for i in 1:nz
+        zz = zs[i]
+        chis[i] = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
+    end
     # OPT: tolerances, interpolation method
     chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
     zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())

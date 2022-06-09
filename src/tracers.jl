@@ -59,7 +59,11 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     w_itg(chii) = @.(nz_w*(1-chii/chi))
     #w_arr = [sum(@.(0.5*(w_itg(chi[i])[i:res-1]+w_itg(chi[i])[i+1:res])*dz_w))
     #         for i in 1:res]
-    w_arr = [trapz(z_w, w_itg(chi[i])) for i in 1:res]
+    w_arr = zeros(typeof(cosmo.cosmo.Ωm), res)
+    for i in 1:res
+        w_arr[i] = trapz(z_w[i:res], w_itg(chi[i])[i:res])
+    end
+    
     # Normalize
     H0 = cosmo.cosmo.h/CLIGHT_HMPC
     lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
