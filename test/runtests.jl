@@ -329,7 +329,7 @@ np = pyimport("numpy")
         end
 
         Ωm0 = 0.3
-        dΩm = 0.001
+        dΩm = 0.0001
 
         Cl_gg_autodiff = ForwardDiff.derivative(Cl_gg, Ωm0)
         Cl_gg_anal = (Cl_gg(Ωm0+dΩm)-Cl_gg(Ωm0-dΩm))/2dΩm

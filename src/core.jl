@@ -22,7 +22,8 @@ function _σR2(ks, pk, dlogk, R)
     return sum(integ)*dlogk/(2*pi^2)
 end
 
-struct Settings
+mutable struct Settings
+    cosmo_type::DataType
     nz::Int
     nz_pk::Int
     nk::Int
@@ -72,6 +73,7 @@ end
 
 Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Load settings
+    cosmo_type = settings.cosmo_type
     nk = settings.nk
     nz_pk = settings.nz_pk
     nz = settings.nz
@@ -96,7 +98,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / cpar.h
-    chis = zeros(typeof(cpar.Ωm), nz)
+    chis = zeros(cosmo_type, nz)
     for i in 1:nz
         zz = zs[i]
         chis[i] = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
@@ -147,10 +149,11 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
               chi_LSS, Dzi, pki, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256,
-          nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=500,
+          nz=500, nz_pk=100, tk_mode="BBKS", Pk_mode="linear") = begin
+    cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    settings = Settings(nz, nz_pk, nk, tk_mode, Pk_mode)
+    settings = Settings(cosmo_type, nz, nz_pk, nk, tk_mode, Pk_mode)
     Cosmology(cpar, settings)
 end
 
@@ -237,6 +240,14 @@ function _dgrowth!(dd, d, cosmo::CosmoPar, a)
 end
 
 # Functions we will actually export
+function chi_to_z(cosmo::Cosmology, chi)
+    closest_chi, idx = findmin(abs(chi-cosmo.chis))
+    if closest_chi >= chi
+        idx += -1
+    end
+
+    return z
+end
 Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
 Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)

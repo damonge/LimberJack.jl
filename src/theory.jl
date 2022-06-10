@@ -11,163 +11,19 @@ cls_meta(file) = begin
     cls_meta(tracers, pairs, pairs_ids)
 end
 
-function fill_NuisancePars(params_dict)
-    nui_names = keys(params_dict)
-    
-    if "b0" in nui_names
-        b0 = params_dict["b0"]
-    else 
-        b0 = 1.0
-    end
-    
-    if "b1" in nui_names
-        b1 = params_dict["b1"]
-    else
-        b1 = 1.0
-    end
-    
-    if "b2" in nui_names
-        b2 = params_dict["b2"]
-    else 
-        b2 = 1.0
-    end
-    
-    if "b3" in nui_names    
-        b3 = params_dict["b3"]
-    else 
-        b3 = 1.0
-    end
-    
-    if "b4" in nui_names
-        b4 = params_dict["b4"]
-    else 
-        b4 = 1.0
-    end 
-
-    if "dz_g0" in nui_names
-        dz_g0 = params_dict["dz_g0"]
-    else 
-        dz_g0 = 0.0
-    end
-
-     if "dz_g1" in nui_names
-        dz_g1 = params_dict["dz_g1"]
-    else 
-        dz_g1 = 0.0
-    end
-    
-    if "dz_g2" in nui_names
-        dz_g2 = params_dict["dz_g2"]
-    else 
-        dz_g2 = 0.0
-    end
-    
-    if "dz_g3" in nui_names
-        dz_g3 = params_dict["dz_g3"]
-    else 
-        dz_g3 = 0.0
-    end
-    
-    if "dz_g4" in nui_names
-        dz_g4 = params_dict["dz_g4"]
-    else 
-        dz_g4 = 0.0
-    end
-
-    if "dz_k0" in nui_names
-        dz_k0 = params_dict["dz_k0"]
-    else 
-        dz_k0 = 0.0
-    end
-    
-    if "dz_k1" in nui_names
-        dz_k1 = params_dict["dz_k1"]
-    else 
-        dz_k1 = 0.0
-    end
-    
-        if "dz_k2" in nui_names
-        dz_k2 = params_dict["dz_k2"]
-    else 
-        dz_k2 = 0.0
-    end
-    
-    if "dz_k3" in nui_names
-        dz_k3 = params_dict["dz_k3"]
-    else 
-        dz_k3 = 0.0
-    end
-
-    if "m0" in nui_names
-        m0 = params_dict["m0"]
-    else 
-        m0 = -1.0
-    end
-    
-    if "m1" in nui_names
-        m1 = params_dict["m1"]
-    else 
-        m1 = -1.0
-    end
-    
-    if "m2" in nui_names
-        m2 = params_dict["m2"]
-    else 
-        m2 = -1.0
-    end
-    
-    if "m3" in nui_names
-        m3 = params_dict["m3"]
-    else 
-        m3 = -1.0
-    end
-    
-    if "A_IA" in nui_names
-        A_IA = params_dict["A_IA"]
-    else 
-        A_IA = 0.0
-    end
-    
-    if "alpha_IA" in nui_names
-        alpha_IA = params_dict["alpha_IA"]
-    else 
-        alpha_IA = 0.0
-    end
-    
-    nuisances = Dict("b0" => b0,
-                     "b1" => b1,
-                     "b2" => b2,
-                     "b3" => b3,
-                     "b4" => b4,
-                     "dz_g0" => dz_g0,
-                     "dz_g1" => dz_g1,
-                     "dz_g2" => dz_g2,
-                     "dz_g3" => dz_g3,
-                     "dz_g4" => dz_g4,
-                     "dz_k0" => dz_k0,
-                     "dz_k1" => dz_k1,
-                     "dz_k2" => dz_k2,
-                     "dz_k3" => dz_k3,
-                     "m0" => m0,
-                     "m1" => m1,
-                     "m2" => m2,
-                     "m3" => m3,
-                     "A_IA" => A_IA,
-                     "alpha_IA" => alpha_IA)
-    
-    return nuisances
-end
-
-
 struct Theory
     tracers
     cls
 end
 
-Theory(cosmology, Nuisances, cls_meta, files) = begin
+Theory(cosmology, cls_meta, files;
+       Nuisances=Dict()) = begin
     
-    # OPT: move these loops outside the lkl
-    Nuisances = fill_NuisancePars(Nuisances)
+    nui_type = valtype(Nuisances)
+    if !(nui_type <: Float64) & (nui_type != Any)
+        cosmology.settings.cosmo_type = nui_type
+    end
+    
     ntracers = length(cls_meta.tracers)
     tracers = []
     for i in 1:ntracers
@@ -178,15 +34,17 @@ Theory(cosmology, Nuisances, cls_meta, files) = begin
         nz = vec(nzs[2:2, :])
         zs = vec(nzs[1:1, :])
         if tracer_type == 1
-            bias = Nuisances[string("b", bin)]
-            dzi = Nuisances[string("dz_g", bin)]
+            bias = get(Nuisances, string("b", bin), 1.0)
+            dzi = get(Nuisances, string("dz_g", bin), 0.0)
             zs_shift =  zs .- dzi
             sel = zs_shift .> 0.
-            tracer = NumberCountsTracer(cosmology, zs_shift[sel], nz[sel]; bias=bias)
+            tracer = NumberCountsTracer(cosmology, zs_shift[sel], nz[sel];
+                                        bias=bias)
         elseif tracer_type == 2
-            mbias = Nuisances[string("m", bin)]
-            dzi = Nuisances[string("dz_k", bin)]
-            IA_params = [Nuisances["A_IA"], Nuisances["alpha_IA"]]
+            mbias = get(Nuisances, string("m", bin), 0.0)
+            dzi = get(Nuisances, string("dz_k", bin), 0.0)
+            IA_params = [get(Nuisances, "A_IA", 0.0),
+                         get(Nuisances, "alpha_IA", 0.0)]
             zs_shift =  zs .- dzi
             sel = zs_shift .> 0.
             tracer = WeakLensingTracer(cosmology, zs_shift[sel], nz[sel];
@@ -202,17 +60,14 @@ Theory(cosmology, Nuisances, cls_meta, files) = begin
     npairs = length(cls_meta.pairs)
     idx = files["idx"]
     total_len = last(idx)
-    cls = zeros(typeof(cosmology.cosmo.Ωm), total_len)
+    cls = zeros(cosmology.settings.cosmo_type, total_len)
     @inbounds Threads.@threads for i in 1:npairs
-    #cls = []
-    #for i in 1:npairs
         pair = cls_meta.pairs[i]
         ids = cls_meta.pairs_ids[i]
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
         cls[idx[i]+1:idx[i+1]] = angularCℓs(cosmology, tracer1, tracer2, ls)
-        #append!(cls, angularCℓs(cosmology, tracer1, tracer2, ls))
     end
     
     Theory(tracers, cls)

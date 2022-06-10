@@ -17,8 +17,6 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz;
     z_w = range(0.00001, stop=z_n[end], length=res)
     dz_w = (z_w[end]-z_w[1])/res
     nz_w = nz_int(z_w)
-    
-    #nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
     nz_norm = trapz(z_w, nz_w)
     
     chi = cosmo.chi(z_w)
@@ -43,6 +41,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
     
+    cosmo_type = cosmo.settings.cosmo_type
     res = cosmo.settings.nz
     z_w = range(0.00001, stop=z_n[end], length=res)
     dz_w = (z_w[end]-z_w[1])/res
@@ -57,9 +56,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     #      at all zs.
     # Calculate integral at each chi
     w_itg(chii) = @.(nz_w*(1-chii/chi))
-    #w_arr = [sum(@.(0.5*(w_itg(chi[i])[i:res-1]+w_itg(chi[i])[i+1:res])*dz_w))
-    #         for i in 1:res]
-    w_arr = zeros(typeof(cosmo.cosmo.Ωm), res)
+    w_arr = zeros(cosmo_type, res)
     for i in 1:res
         w_arr[i] = trapz(z_w[i:res], w_itg(chi[i])[i:res])
     end
