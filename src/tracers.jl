@@ -37,7 +37,7 @@ struct WeakLensingTracer <: Tracer
 end
 
 WeakLensingTracer(cosmo::Cosmology, z_n, nz;
-                  mbias=-1.0, IA_params=[0.0, 0.0]) = begin
+                  mbias=0.0, IA_params=[0.0, 0.0]) = begin
     
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
     

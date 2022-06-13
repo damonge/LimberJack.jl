@@ -16,12 +16,14 @@ struct Theory
     cls
 end
 
-Theory(cosmology, cls_meta, files;
+Theory(cosmology::Cosmology, cls_meta, files;
        Nuisances=Dict()) = begin
     
     nui_type = valtype(Nuisances)
     if !(nui_type <: Float64) & (nui_type != Any)
-        cosmology.settings.cosmo_type = nui_type
+        if nui_type != Real
+            cosmology.settings.cosmo_type = nui_type
+        end
     end
     
     ntracers = length(cls_meta.tracers)

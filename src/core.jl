@@ -1,6 +1,10 @@
 # c/(100 km/s/Mpc) in Mpc
 const CLIGHT_HMPC = 2997.92458
 
+macro Name(arg)
+   string(arg)
+end
+
 function w_tophat(x::Real)
     x2 = x^2
 
@@ -137,7 +141,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         Pks = reduce(vcat, transpose.(Pks))
         Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
     elseif settings.Pk_mode == "Halofit"
-        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs)
+        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs, cosmo_type)
     else 
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
