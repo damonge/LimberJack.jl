@@ -94,7 +94,6 @@ np = pyimport("numpy")
         @test all(@. (abs(pk/pk_bm-1.0) < 1E-3))
     end
     
-
     @testset "CreateTracer" begin
         p_of_z(x) = @. exp(-0.5*((x-0.5)/0.05)^2)
 
@@ -115,6 +114,7 @@ np = pyimport("numpy")
         cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="bbks", 
                                             matter_power_spectrum="linear",
                                             Omega_g=0, Omega_k=0)
+
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
         z = Vector(range(0., stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -130,6 +130,7 @@ np = pyimport("numpy")
         Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs)
         Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs) 
         tg_bm = ccl.NumberCountsTracer(cosmo_bm, false, dndz=(z, nz), bias=(z, 1 .* np.ones_like(z)))
+
         ts_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz))
         tk_bm = ccl.CMBLensingTracer(cosmo_bm, z_source=1100)
         Cℓ_gg_bm = ccl.angular_cl(cosmo_bm, tg_bm, tg_bm, ℓs)
@@ -138,6 +139,7 @@ np = pyimport("numpy")
         Cℓ_gk_bm = ccl.angular_cl(cosmo_bm, tg_bm, tk_bm, ℓs)
         Cℓ_sk_bm = ccl.angular_cl(cosmo_bm, ts_bm, tk_bm, ℓs)
         # It'd be best if this was < 1E-4...
+
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 5E-3))
@@ -153,6 +155,7 @@ np = pyimport("numpy")
                           nk=512, tk_mode="EisHu")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+
         tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
                                mbias=0.0,
@@ -266,6 +269,7 @@ np = pyimport("numpy")
     end
     
     @testset "IsHalofitDiff" begin
+
         zs = 0.02:0.02:1.0
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         
@@ -373,7 +377,6 @@ np = pyimport("numpy")
         @test all(@. (abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0) < 1E-2))
     end
 
-    
     @testset "AreNuisancesDiff" begin
         
         function bias(p::T)::Array{T,1} where T<:Real
@@ -458,5 +461,5 @@ np = pyimport("numpy")
         @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 1E-2))
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 1E-2))
     end
-    
+          
 end
