@@ -1,6 +1,10 @@
 # c/(100 km/s/Mpc) in Mpc
 const CLIGHT_HMPC = 2997.92458
 
+macro Name(arg)
+   string(arg)
+end
+
 function w_tophat(x::Real)
     x2 = x^2
 
@@ -20,6 +24,15 @@ function _σR2(ks, pk, dlogk, R)
     integ = @. pk * wk^2 * ks^3
     # OPT: proper integration instead?
     return sum(integ)*dlogk/(2*pi^2)
+end
+
+mutable struct Settings
+    cosmo_type::DataType
+    nz::Int
+    nz_pk::Int
+    nk::Int
+    tk_mode::String
+    Pk_mode::String
 end
 
 struct CosmoPar{T}
@@ -44,10 +57,12 @@ CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
 end
 
 struct Cosmology
+    settings::Settings
     cosmo::CosmoPar
     # Power spectrum
     ks::Array
     pk0::Array
+    logk
     dlogk
     # Redshift and background
     zs::Array
@@ -60,14 +75,19 @@ struct Cosmology
     Pk::AbstractInterpolation
 end
 
-Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(cpar::CosmoPar, settings::Settings) = begin
+    # Load settings
+    cosmo_type = settings.cosmo_type
+    nk = settings.nk
+    nz_pk = settings.nz_pk
+    nz = settings.nz
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
-    if tk_mode== "EisHu"
+    if settings.tk_mode== "EisHu"
         tk = TkEisHu(cpar, ks./ cpar.h)
-    elseif tk_mode== "BBKS"
+    elseif settings.tk_mode== "BBKS"
         tk = TkBBKS(cpar, ks)
     else
         print("Transfer function not implemented")
@@ -75,20 +95,24 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="lin
     pk0 = @. ks^cpar.n_s * tk
     σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
     norm = cpar.σ8^2 / σ8_2_here
-    pk0[:] = pk0 .* norm
+    pk0 *= norm
     # OPT: interpolation method
     pki = LinearInterpolation(logk, log.(pk0), extrapolation_bc=Line())
 
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / cpar.h
-    chis = [quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
-            for zz in zs]
+    chis = zeros(cosmo_type, nz)
+    for i in 1:nz
+        zz = zs[i]
+        chis[i] = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
+    end
     # OPT: tolerances, interpolation method
     chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
     zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
     chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
+
 
     # ODE solution for growth factor
     z_ini = 1000.0
@@ -112,27 +136,29 @@ Cosmology(cpar::CosmoPar; nk=256, nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="lin
     zs_pk = range(0., stop=3., length=nz_pk)
     Dzs = Dzi(zs_pk)
 
-    if Pk_mode == "linear"
+    if settings.Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
         Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
-    elseif Pk_mode == "Halofit"
-        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs)
+    elseif settings.Pk_mode == "Halofit"
+        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs, cosmo_type)
     else 
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
         Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(cpar, ks, pk0, dlogk,
+    Cosmology(settings, cpar, ks, pk0, logk, dlogk,
               collect(zs), chii, zi, chis[end],
               chi_LSS, Dzi, pki, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=256,
-          nz=256, nz_pk=50, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=500,
+          nz=500, nz_pk=100, tk_mode="BBKS", Pk_mode="linear") = begin
+    cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    Cosmology(cpar, nk=nk, nz=nz, nz_pk=nz_pk, tk_mode=tk_mode, Pk_mode=Pk_mode)
+    settings = Settings(cosmo_type, nz, nz_pk, nk, tk_mode, Pk_mode)
+    Cosmology(cpar, settings)
 end
 
 Cosmology() = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
@@ -218,6 +244,14 @@ function _dgrowth!(dd, d, cosmo::CosmoPar, a)
 end
 
 # Functions we will actually export
+function chi_to_z(cosmo::Cosmology, chi)
+    closest_chi, idx = findmin(abs(chi-cosmo.chis))
+    if closest_chi >= chi
+        idx += -1
+    end
+
+    return z
+end
 Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
 Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)

@@ -8,6 +8,7 @@ halofit:
 =#
 
 function get_σ2(lks, ks, pks, R, kind)
+    nlks = length(lks)
     k3 = ks .^ 3
     x2 = @. (ks*R)^2
     if kind == 2
@@ -18,38 +19,40 @@ function get_σ2(lks, ks, pks, R, kind)
         pre = 1
     end
     integrand = @. k3 * pre * exp(-x2) * pks
-    return trapz(lks, integrand)/(2*pi^2)
+    integral = sum(@.(0.5*(integrand[2:nlks]+integrand[1:nlks-1])*(lks[2:nlks]-lks[1:nlks-1])))/(2*pi^2)
+    #trapz(lks, integrand)/(2*pi^2)
+    return integral
 end
 
-function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs)
+function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
     nk = length(k)
     nz = length(z)
     logk = log.(k)
 
     Dz2s = Dzs .^ 2
     # OPT: hard-coded range and number of points
-    lR0 = log(0.1)
+    lR0 = log(0.01)
     lR1 = log(10.0)
-    lRs = range(lR0, stop=lR1, length=64)
-    lσ2s = log.([get_σ2(logk, k, PkLz0, exp(lR), 0) for lR in lRs])
-    lσ2i = CubicSplineInterpolation(lRs, lσ2s)
-    rsigs = [get_rsigma(lσ2i, Dz2s[i], lR0, lR1) for i in range(1, stop=nz)]
-
-    onederiv_ints = [get_σ2(logk, k, PkLz0, rsigs[i], 2) * Dz2s[i] for i in range(1, stop=nz)]
-    twoderiv_ints = [get_σ2(logk, k, PkLz0, rsigs[i], 4) * Dz2s[i] for i in range(1, stop=nz)]
-    neffs = @. 2*onederiv_ints - 3.0
-    Cs = @. 4*(twoderiv_ints + onederiv_ints^2)
-
-    # Interpolate linearily over a
-    pk_NLs = [power_spectrum_nonlin(cosmo, PkLz0 .* Dz2s[i], k, z[i], rsigs[i], neffs[i], Cs[i])
-              for i in range(1, stop=nz)]
-    pk_NLs = transpose(reduce(vcat,transpose.(pk_NLs)))
-    # TODO: I don't know why this is 2x slower than the above
-    #pk_NLs = zeros(Real, nk, nz)
-    #for i in 1:nz
-    #    pk_NLs[:, i] = power_spectrum_nonlin(cosmo, PkLz0 .* Dz2s[i],
-    #                                         k, z[i], rsigs[i], neffs[i], Cs[i])
-    #end
+    lRs = range(lR0, stop=lR1, length=100)
+    σ2s = zeros(cosmo_type, length(lRs))
+    for i in 1:length(lRs)
+        lR = lRs[i]
+        σ2s[i] = get_σ2(logk, k, PkLz0, exp(lR), 0)
+    end
+    lσ2s = log.(σ2s)
+    # When s8<0.6 lσ2i interpolation fails --> Extrapolation needed
+    lσ2i = CubicSplineInterpolation(lRs, lσ2s, extrapolation_bc=Line())
+    pk_NLs = zeros(cosmo_type, nk, nz)
+    for i in 1:nz
+        Dz2 =  Dz2s[i]
+        rsig =  get_rsigma(lσ2i, Dz2, lR0, lR1)
+        onederiv_int = get_σ2(logk, k, PkLz0, rsig, 2) * Dz2
+        twoderiv_int = get_σ2(logk, k, PkLz0, rsig, 4) * Dz2
+        neff = 2*onederiv_int - 3.0
+        C = 4*(twoderiv_int + onederiv_int^2)
+        pk_NLs[1:nk, i] = power_spectrum_nonlin(cosmo, PkLz0 .* Dz2, k, z[i], rsig, neff, C)
+    end
+    
     pk_NL = LinearInterpolation((logk, z), log.(pk_NLs))
 
     return pk_NL

@@ -1,0 +1,37 @@
+import pyccl as ccl
+import numpy as np
+
+cosmo1 = ccl.CosmologyVanillaLCDM(transfer_function='bbks', matter_power_spectrum='linear', Omega_g=0, Omega_k=0)
+cosmo2 = ccl.CosmologyVanillaLCDM(transfer_function='eisenstein_hu', matter_power_spectrum='linear', Omega_g=0, Omega_k=0)
+cosmo3 = ccl.CosmologyVanillaLCDM(transfer_function='eisenstein_hu', matter_power_spectrum='halofit', Omega_g=0, Omega_k=0)
+z_bg_test = np.array([0.1, 0.5, 1.0, 3.0])
+print("Dist: ", ccl.comoving_radial_distance(cosmo1, 1./(1+z_bg_test)))
+print("Growth: ", ccl.growth_factor(cosmo1, 1./(1+z_bg_test)))
+ks_test = np.array([0.001, 0.01, 0.1, 1.0, 10.0])
+print("Pk0-1: ", ccl.linear_matter_power(cosmo1, ks_test, 1.))
+print("Pk0-2: ", ccl.linear_matter_power(cosmo2, ks_test, 1.))
+
+z = np.linspace(0., 2., 1024)
+wz = np.exp(-0.5*((z-0.5)/0.05)**2)
+tg = ccl.NumberCountsTracer(cosmo3, False, dndz=(z, wz), bias=(z, 2.*np.ones_like(z)))
+ts = ccl.WeakLensingTracer(cosmo3, dndz=(z, wz))
+tk = ccl.CMBLensingTracer(cosmo3, z_source=1100)
+ls_test = np.array([10, 30, 100, 300])
+cls_gg = ccl.angular_cl(cosmo3, tg, tg, ls_test)
+cls_gs = ccl.angular_cl(cosmo3, tg, ts, ls_test)
+cls_ss = ccl.angular_cl(cosmo3, ts, ts, ls_test)
+cls_gk = ccl.angular_cl(cosmo3, tg, tk, ls_test)
+cls_sk = ccl.angular_cl(cosmo3, ts, tk, ls_test)
+print("Cls_gg: ", cls_gg)
+print("Cls_gs: ", cls_gs)
+print("Cls_ss: ", cls_ss)
+print("Cls_gk: ", cls_gk)
+print("Cls_sk: ", cls_sk)
+
+
+z = np.linspace(0., 2., 1024)
+wz = np.exp(-0.5*((z-0.5)/0.05)**2)
+t = ccl.NumberCountsTracer(cosmo2, False, dndz=(z, wz), bias=(z, 2.*np.ones_like(z)))
+ls_test = np.array([10, 30, 100, 300])
+cls = ccl.angular_cl(cosmo2, t, t, ls_test)
+print("Cls: ", cls)

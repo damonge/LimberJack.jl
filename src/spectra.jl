@@ -1,8 +1,8 @@
-
 function Cℓintegrand(cosmo::Cosmology,
                      t1::Tracer,
                      t2::Tracer,
-                     logk::Float64, ℓ::Int64)
+                     logk,
+                     ℓ)
     k = exp(logk)
     chi = (ℓ+0.5)/k
     if chi > cosmo.chi_max
@@ -15,11 +15,26 @@ function Cℓintegrand(cosmo::Cosmology,
     k*w1*w2*pk
 end
 
-function angularCℓ(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓ)
+function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     # OPT: we are not optimizing the limits of integration
-    Cℓ = quadgk(lk -> Cℓintegrand(cosmo, t1, t2, lk, ℓ),
-                log(10^-4), log(10^2), rtol=1E-5)[1]/(ℓ+0.5)
-    fℓ1 = get_Fℓ(t1, ℓ)
-    fℓ2 = get_Fℓ(t2, ℓ)
-    return Cℓ * fℓ1 * fℓ2
+    cosmo_type = cosmo.settings.cosmo_type
+    logks = cosmo.logk
+    dlogk = cosmo.dlogk
+    res = length(logks)
+    Cℓs = zeros(cosmo_type, length(ℓs))
+    for i in 1:length(ℓs)
+        ℓ = ℓs[i]
+        integrand = zeros(cosmo_type, length(logks))
+        for j in 1:length(logks)
+            logk = logks[j]
+            integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
+        end
+        #integrand = [Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5) for logk in logks]
+        #Cℓ = sum(0.5 .* (integrand[1:res-1] .+ integrand[2:res]) .* dlogk)
+        Cℓ = trapz(logks, integrand)
+        fℓ1 = get_Fℓ(t1, ℓ)
+        fℓ2 = get_Fℓ(t2, ℓ)
+        Cℓs[i] = Cℓ * fℓ1 * fℓ2
+    end
+    return Cℓs
 end
