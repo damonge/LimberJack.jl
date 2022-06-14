@@ -7,8 +7,6 @@ ccl = pyimport("pyccl")
 np = pyimport("numpy")
 
 @testset "All tests" begin
-   
-"""
     
     @testset "CreateCosmo" begin
         cosmo = Cosmology()
@@ -345,8 +343,6 @@ np = pyimport("numpy")
         @test all(@. (abs(Cl_ss_autodiff/Cl_ss_anal-1) < 1E-2))
         @test all(@. (abs(Cl_sk_autodiff/Cl_sk_anal-1) < 1E-2))
     end
-    
-""" 
 
     @testset "Nuisances" begin
         cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu", 
@@ -357,22 +353,21 @@ np = pyimport("numpy")
         z = Vector(range(0., stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg_b = NumberCountsTracer(cosmo, z, nz; bias=2.0)
-        ts_m = WeakLensingTracer(cosmo, z, nz) #WeakLensingTracer(cosmo, z, nz; mbias=0.2)
-        ts_IA = WeakLensingTracer(cosmo, z, nz; IA_params=[0.3, 0.1])
+        ts_m = WeakLensingTracer(cosmo, z, nz; mbias=1.0)
+        ts_IA = WeakLensingTracer(cosmo, z, nz; IA_params=[0.1, 0.1])
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg_b = angularCℓs(cosmo, tg_b, tg_b, ℓs)
         Cℓ_ss_m = angularCℓs(cosmo, ts_m, ts_m, ℓs)
         Cℓ_ss_IA = angularCℓs(cosmo, ts_IA, ts_IA, ℓs)
-        IA_corr = @.( 0.3*((1 + z)/1.62)^0.1 * (0.0134 * cosmo.cosmo.Ωm / cosmo.Dz(z)))
+        IA_corr = @.(0.1*((1 + z)/1.62)^0.1 * (0.0134*cosmo.cosmo.Ωm/cosmo.Dz(z)))
         tg_b_bm = ccl.NumberCountsTracer(cosmo_bm, false, dndz=(z, nz), bias=(z, 2.0 .* np.ones_like(z)))
         ts_m_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz))
         ts_IA_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz), ia_bias=(z, IA_corr))
         Cℓ_gg_b_bm = ccl.angular_cl(cosmo_bm, tg_b_bm, tg_b_bm, ℓs)
-        Cℓ_ss_m_bm = ccl.angular_cl(cosmo_bm, ts_m_bm, ts_m_bm, ℓs)
+        Cℓ_ss_m_bm = (1.0 + 1.0).^2 .* ccl.angular_cl(cosmo_bm, ts_m_bm, ts_m_bm, ℓs)
         Cℓ_ss_IA_bm = ccl.angular_cl(cosmo_bm, ts_IA_bm, ts_IA_bm, ℓs)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg_b/Cℓ_gg_b_bm-1.0) < 5E-3))
-        println(@.(abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0)))
         @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 1E-2))
         println(@.(abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0)))
         @test all(@. (abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0) < 1E-2))
@@ -458,12 +453,9 @@ np = pyimport("numpy")
         IA_alpha_anal = (IA_alpha(0.1+d)-IA_alpha(0.1-d))/2d
 
         @test all(@. (abs(b_autodiff/b_anal-1) < 1E-2))
-        println(@.(abs(dz_autodiff/dz_anal-1)))
         @test all(@. (abs(dz_autodiff/dz_anal-1) < 1E-2))
         @test all(@. (abs(mb_autodiff/mb_anal-1) < 1E-2))
-        println(@.(abs(IA_A_autodiff/IA_A_anal-1)))
         @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 1E-2))
-        println(@.(abs(IA_alpha_autodiff/IA_alpha_anal-1)))
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 1E-2))
     end
     
