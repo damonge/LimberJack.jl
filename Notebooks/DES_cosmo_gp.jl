@@ -50,7 +50,8 @@ data_vector = files["cls"]
                                      Pk_mode="Halofit", 
                                      custom_Dz=gp)
     
-    theory = Theory(cosmology, nuisances, Cls_meta, files).cls
+    theory = Theory(cosmology, Cls_meta, files;
+                    Nuisances=nuisances).cls
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
