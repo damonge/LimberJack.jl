@@ -13,6 +13,8 @@ Cls_meta = cls_meta(files)
 cov_tot = files["cov"]
 data_vector = files["cls"]
 
+sqexp_cov_fn(D, mu, phi) = @.(mu * exp(-D^2 / (2*phi))) + 0.005 * LinearAlgebra.I
+
 @model function model(data_vector; cov_tot=cov_tot)
     Ωm ~ Uniform(0.1, 0.6)
     Ωb ~ Uniform(0.03, 0.07)
