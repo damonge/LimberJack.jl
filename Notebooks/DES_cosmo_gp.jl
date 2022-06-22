@@ -4,6 +4,7 @@ using CSV
 using NPZ
 using FITSIO
 using Dates
+using Distances
 
 println(Threads.nthreads())
 
