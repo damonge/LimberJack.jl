@@ -15,19 +15,10 @@ np = pyimport("numpy")
     
     @testset "BMHz" begin
         cosmo = Cosmology()
-        cosmo_class = ccl.boltzmann.classy.Class()
-        params = Dict("h"=>  0.67,
-                      "Omega_cdm"=>  0.25,
-                      "Omega_b"=>  0.05,
-                      "Omega_Lambda"=>  0.6999068724497256,
-                      "sigma8"=>  0.81)
-        cosmo_class.set(params)
-        cosmo_class.compute()
-        
         c = 299792458.0
         ztest = [0.1, 0.5, 1.0, 3.0]
         H = cosmo.cosmo.h*100*Ez(cosmo, ztest)
-        H_bm = [cosmo_class.Hubble(z)*c/1000 for z in ztest]
+        H_bm = @. 67*sqrt(0.3 * (1+ztest)^3 + (1-0.3-0.69991) * (1+ztest)^4 + 0.69991)
         @test all(@. (abs(H/H_bm-1.0) < 0.0005))
     end
 
@@ -373,7 +364,6 @@ np = pyimport("numpy")
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg_b/Cℓ_gg_b_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 1E-2))
-        println(@.(abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0)))
         @test all(@. (abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0) < 1E-2))
     end
 
