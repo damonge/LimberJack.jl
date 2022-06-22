@@ -61,9 +61,34 @@ data_vector = files["cls"]
                      "A_IA" => A_IA,
                      "alpha_IA" => alpha_IA)
     
+    N = 100
+    latent_x = Vector(0:0.3:3)
+    x = zeros(100, 1)
+    x[:, 1] = Vector(range(0., stop=3., length=N))
+    latent_N = length(latent_x)
+    total_N = N + latent_N
+    total_x = [x; latent_x]
+    # Distance matrix.
+    D = pairwise(Distances.Euclidean(), total_x, dims=1)
+    
+    # Set up GP
+    K = cov_fn(D, mu, phi)
+    Koo = K[(N+1):end, (N+1):end] # GP-GP cov
+    Knn = K[1:N, 1:N]             # Data-Data cov
+    Kno = K[1:N, (N+1):end]       # Data-GP cov
+    
+    latent_Dz = fid_cosmo.Dz(vec(latent_x))
+    #rand(MvNormal(zeros(gp_N), 0.1*ones(gp_N)))
+    latent_gp = latent_Dz .+ cholesky(Koo).U' * v
+    # Conditional 
+    Koo_inv = inv(Koo)            
+    C = Kno * Koo_inv
+    gp = C * latent_gp
+    
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="EisHu",
-                                     Pk_mode="Halofit")
+                                     Pk_mode="Halofit", 
+                                     custom_Dz=gp)
     
     theory = Theory(cosmology, nuisances, Cls_meta, files).cls
     data_vector ~ MvNormal(theory, cov_tot)
@@ -76,7 +101,7 @@ adaptation = 1000
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_good_priors_", "TAP", TAP)
+folname = string("DES_full_gp_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
