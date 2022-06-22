@@ -33,6 +33,7 @@ mutable struct Settings
     nk::Int
     tk_mode::String
     Pk_mode::String
+    custom_Dz
 end
 
 struct CosmoPar{T}
@@ -134,7 +135,13 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
 
     # OPT: separate zs for Pk and background
     zs_pk = range(0., stop=3., length=nz_pk)
-    Dzs = Dzi(zs_pk)
+    
+    custom_Dz = settings.custom_Dz
+    if custom_Dz == nothing
+        Dzs = Dzi(zs_pk)
+    else
+        Dzs = custom_Dz
+    end
 
     if settings.Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0]
@@ -153,11 +160,12 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
               chi_LSS, Dzi, pki, Pk)
 end
 
-Cosmology(Ωm, Ωb, h, n_s, σ8; θCMB=2.725/2.7, nk=500,
-          nz=500, nz_pk=100, tk_mode="BBKS", Pk_mode="linear") = begin
+Cosmology(Ωm, Ωb, h, n_s, σ8; 
+          θCMB=2.725/2.7, nk=500, nz=500, nz_pk=100,
+          tk_mode="BBKS", Pk_mode="linear", custom_Dz=nothing) = begin
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    settings = Settings(cosmo_type, nz, nz_pk, nk, tk_mode, Pk_mode)
+    settings = Settings(cosmo_type, nz, nz_pk, nk, tk_mode, Pk_mode, custom_Dz)
     Cosmology(cpar, settings)
 end
 
