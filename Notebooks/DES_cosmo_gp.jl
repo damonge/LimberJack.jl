@@ -35,7 +35,7 @@ sqexp_cov_fn(D, mu, phi) = @.(mu * exp(-D^2 / (2*phi))) + 0.005 * LinearAlgebra.
     D = pairwise(Distances.Euclidean(), total_x, dims=1)
     
     # Set up GP
-    K = cov_fn(D, mu, phi)
+    K = sqexp_cov_fn(D, mu, phi)
     Koo = K[(N+1):end, (N+1):end] # GP-GP cov
     Knn = K[1:N, 1:N]             # Data-Data cov
     Kno = K[1:N, (N+1):end]       # Data-GP cov
