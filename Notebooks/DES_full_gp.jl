@@ -5,6 +5,7 @@ using NPZ
 using FITSIO
 using Dates
 using Distances
+using LinearAlgebra
 
 println(Threads.nthreads())
 
