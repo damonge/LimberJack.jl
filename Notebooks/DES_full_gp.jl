@@ -13,9 +13,12 @@ Cls_meta = cls_meta(files)
 cov_tot = files["cov"]
 data_vector = files["cls"]
 
-sqexp_cov_fn(D, mu, phi) = @.(mu * exp(-D^2 / (2*phi))) + 0.005 * LinearAlgebra.I
+sqexp_cov_fn(D, eta, l) = @.(eta * exp(-D^2 / (2*l))) + 0.005 * LinearAlgebra.I
 
 @model function model(data_vector; cov_tot=cov_tot)
+    eta ~ Uniform(0.0, 0.5)
+    l ~ Uniform(0.1, 3)
+    
     Ωm ~ Uniform(0.1, 0.9)
     Ωb ~ Uniform(0.03, 0.07)
     h ~ Uniform(0.55, 0.91)
@@ -75,7 +78,7 @@ sqexp_cov_fn(D, mu, phi) = @.(mu * exp(-D^2 / (2*phi))) + 0.005 * LinearAlgebra.
     D = pairwise(Distances.Euclidean(), total_x, dims=1)
     
     # Set up GP
-    K = sqexp_cov_fn(D, mu, phi)
+    K = sqexp_cov_fn(D, eta, l)
     Koo = K[(N+1):end, (N+1):end] # GP-GP cov
     Knn = K[1:N, 1:N]             # Data-Data cov
     Kno = K[1:N, (N+1):end]       # Data-GP cov
