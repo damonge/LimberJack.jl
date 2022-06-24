@@ -46,7 +46,7 @@ fid_cosmo = Cosmology()
     Kno = K[1:N, (N+1):end]       # Data-GP cov
     
     latent_Dz = fid_cosmo.Dz(vec(latent_x))
-    #rand(MvNormal(zeros(gp_N), 0.1*ones(gp_N)))
+    v ~ MvNormal(zeros(latent_N), ones(latent_N))
     latent_gp = latent_Dz .+ cholesky(Koo).U' * v
     # Conditional 
     Koo_inv = inv(Koo)            
