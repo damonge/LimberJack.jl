@@ -14,9 +14,10 @@ Cls_meta = cls_meta(files)
 cov_tot = files["cov"]
 data_vector = files["cls"]
 
-sqexp_cov_fn(D, mu, phi) = @.(mu * exp(-D^2 / (2*phi))) + 0.005 * LinearAlgebra.I
+sqexp_cov_fn(D, mu, phi) = @.(mu * exp(-D^2 / (2*phi))) + 0.005 * I
+fid_cosmo = Cosmology()
 
-@model function model(data_vector; cov_tot=cov_tot)
+@model function model(data_vector; cov_tot=cov_tot, fid_cosmo=fid_cosmo)
     eta ~ Uniform(0.0, 0.5)
     l ~ Uniform(0.1, 3)
     
@@ -52,10 +53,10 @@ sqexp_cov_fn(D, mu, phi) = @.(mu * exp(-D^2 / (2*phi))) + 0.005 * LinearAlgebra.
     C = Kno * Koo_inv
     gp = C * latent_gp
     
-    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
-                                     tk_mode="EisHu",
-                                     Pk_mode="Halofit", 
-                                     custom_Dz=gp)
+    cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
+                          tk_mode="EisHu",
+                          Pk_mode="Halofit", 
+                          custom_Dz=gp)
     
     theory = Theory(cosmology, Cls_meta, files;
                     Nuisances=nuisances).cls
