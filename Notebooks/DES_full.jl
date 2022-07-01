@@ -70,37 +70,33 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-iterations = 5000
+cycles = 10
+iterations = 500
 TAP = 0.60
 adaptation = 1000
 #nchains = Threads.nthreads()
 
-# Start sampling.
-folpath = "../chains"
-folname = string("DES_full_good_priors_", "TAP", TAP)
-folname = joinpath(folpath, folname)
-
-if isdir(folname)
-    println("Removed folder")
-    rm(folname)
-end
-
-mkdir(folname)
-println("Created new folder")
 
 new_chain = sample(model(data_vector), NUTS(adaptation, TAP), 
                    iterations, progress=true; save_state=true)
 
-#new_chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCThreads(),
-#                   iterations, nchains, progress=true; save_state=true,
-#                   resume_from=past_chain)
+# Start sampling.
+folpath = "../chains"
+folname = string("DES_full_", "TAP", TAP)
+folname = joinpath(folpath, folname)
 
-summary = describe(new_chain)[1]
-fname_summary = string("summary", now(), ".csv")
-CSV.write(joinpath(folname, fname_summary), summary)
+mkdir(folname)
+println("Created new folder")
 
-fname_jls = string("chain.jls")
-write(joinpath(folname, fname_jls), new_chain)
-    
-fname_csv = string("chain_", now(), ".csv")
-CSV.write(joinpath(folname, fname_csv), new_chain)
+for i in 1:cycles
+    if i == 1
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+                       iterations, progress=true; save_state=true)
+    else
+        old_chain = read(joinpath(folname, string("chain_", i-1, ".jls")), Chains)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+                       iterations, progress=true; save_state=true,
+                       resume_from=old_chain)
+    end 
+    write(joinpath(folname, string("chain_", i,".jls")), chain)
+end
