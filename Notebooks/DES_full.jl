@@ -82,7 +82,7 @@ new_chain = sample(model(data_vector), NUTS(adaptation, TAP),
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_", "TAP", TAP)
+folname = string("DES_full_good_priors_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
 mkdir(folname)

@@ -22,7 +22,7 @@ x = Vector(range(0., stop=3., length=N))
                       latent_x=latent_x, x=x)
     eta ~ Uniform(0.0, 0.5)
     l ~ Uniform(0.1, 3)
-    latent_N = length(length_x)
+    latent_N = length(latent_x)
     v ~ MvNormal(zeros(latent_N), ones(latent_N))
     
     Ωm ~ Uniform(0.1, 0.9)
