@@ -1,64 +1,49 @@
-function x_transformation(point, x_arr)
-    """Pre-whiten the input parameters.
-
-    Args:
-        point (torch.tensor): the input parameters.
-
-    Returns:
-        torch.tensor: the pre-whitened parameters.
-    """
-
-    N, M = size(x_arr)
-    cov_train = cov(x_arr)
-    chol_train = cholesky(cov_train).U'
-    mean_train = mean(x_arr, dims=1)
-    # calculate the transformed training points
-    transformed = inv(chol_train) * (point .- mean_train)'
-
-    return transformed
+struct emulator
+    alphas
+    hypers
+    training_cosmos
+    training_lin_Pks
+    training_karr
+    inv_chol_cosmos
+    mean_cosmos
+    mean_log_Pks
+    std_log_Pks
 end
 
-function y_transformation(point, y_arr)
-    """Transform the outputs.
-
-    Args:
-        yvalues (np.ndarray): the values to be transformed
-
-    Returns:
-        np.ndarray: the transformed outputs
-    """
-    ylog = log.(y_arr)
-    ymean = mean(ylog, dims=1)
-    ystd = std(ylog, dims=1)
-    return ((point .- ymean) ./ ystd)'
-end
-
-function inv_y_transformation(point, ylog)
-    """Transform the outputs.
-
-    Args:
-        yvalues (np.ndarray): the values to be transformed
-
-    Returns:
-        np.ndarray: the transformed outputs
-    """
+function emulator()
+    training_cosmos = npzread("../emulator_files/xinputs.npz")["arr_0"]
+    training_lin_Pks = npzread("../emulator_files/yinputs.npz")["arr_0"]
+    training_karr = npzread("../emulator_files/k_arr.npz")["arr_0"]
+    hypers = npzread("../emulator_files/hypers.npz")["arr_0"]
+    alphas = npzread("../emulator_files/alphas.npz")["arr_0"]
     
-    ymean = mean(ylog, dims=1)
-    ystd = std(ylog, dims=1)
-    return @.(exp(ylog * ystd + ymean))
+    cov_cosmos = cov(training_cosmos)
+    chol_cosmos = cholesky(cov_cosmos).U'
+    inv_chol_cosmos = inv(chol_cosmos)
+    mean_cosmos = mean(training_cosmos, dims=1)
+    
+    log_Pks = log.(training_lin_Pks)
+    mean_log_Pks = mean(log_Pks, dims=1)
+    std_log_Pks = std(log_Pks, dims=1)
+    return emulator(alphas, hypers, 
+             training_cosmos, training_lin_Pks, training_karr,
+             inv_chol_cosmos, mean_cosmos,
+             mean_log_Pks, std_log_Pks)
+end
+
+function x_transformation(emulator::emulator, point)
+    return emulator.inv_chol_cosmos * (point .- emulator.mean_cosmos)'
+end
+
+function y_transformation(emulator::emulator, point)
+    return ((point .- emulator.mean_log_Pks) ./ emulator.std_log_Pks)'
+end
+
+function inv_y_transformation(emulator::emulator, point)
+    return @.(exp(point * emulator.std_log_Pks + emulator.mean_log_Pks))
 end
 
 function get_kernel(arr1, arr2, hyper)
-    """Compute the kernel matrix between the sets of training cosmoligical parameters
-       and the desired set of cosmological parameters.
-    Args:
-        x1 (np.ndarray): [N x d] tensor of points.
-        x2 (np.ndarray): [M x d] tensor of points.
-        hyper (np.ndarray): [d+1] tensor of hyperparameters.
-    Returns:
-        np.ndarray: a tensor of size [N x M] containing the kernel matrix.
-    """
-    
     arr1_w = @.(arr1/exp(hyper[2:6]))
     arr2_w = @.(arr2/exp(hyper[2:6]))
     
@@ -74,16 +59,22 @@ function get_kernel(arr1, arr2, hyper)
     return kernel
 end
 
-function get_Pk(params_input, x_input, y_input, alphas)
-    params = x_transformation(params_input)
-    x_train = x_transformation(x_input)
-    y_train = x_transformation(y_input)
+function get_emulated_log_pk0(emulator::emulator, cosmo::CosmoPar)
+    params_t = x_transformation(params)
+    x_t = x_transformation(emulator, emulator.training_cosmos)
+    y_t = x_transformation(emulator, emulator.trainin_lin_Pks)
     
-    preds = []
-    for i in 1:40
-        kernel = get_kernel(xtrain, param, hyper[i, :])
-        mean = dot(vec(kernel), vec(alphas[i,:]))
-        push!(preds, mean)
+    nk = length(emulator.training_karr)
+    pk0s_t = zeros(eltype(cosmo), nk)
+    for i in 1:nk
+        kernel = get_kernel(x_t, params_t, emulator.hypers[i, :])
+        pk0s_t[i] = dot(vec(kernel), vec(emulator.alphas[i,:]))
     end
-    return vec(inv_y_transformation(preds, y_train))
+    pk0s = vec(inv_y_transformation(emulator, pk0s_t))
+    log_pk0s = log.(pk0s)
+    log_karr = log.(emulator.training_karr)
+    pki = LinearInterpolation(log_karr, log_pk0s, extrapolation_bc=Line())
+    return pki
 end
+
+function reparametrize()
