@@ -2,7 +2,9 @@ struct Emulator
     alphas
     hypers
     training_cosmos
-    training_lin_Pks
+    training_Pks
+    trans_cosmos
+    trans_Pks
     training_karr
     inv_chol_cosmos
     mean_cosmos
@@ -11,22 +13,22 @@ struct Emulator
 end
 
 Emulator() = begin
-    training_cosmos = npzread("../emulator_files/xinputs.npz")["arr_0"]
-    training_lin_Pks = npzread("../emulator_files/yinputs.npz")["arr_0"]
-    training_karr = npzread("../emulator_files/k_arr.npz")["arr_0"]
-    hypers = npzread("../emulator_files/hypers.npz")["arr_0"]
-    alphas = npzread("../emulator_files/alphas.npz")["arr_0"]
-    
-    cov_cosmos = cov(training_cosmos)
-    chol_cosmos = cholesky(cov_cosmos).U'
-    inv_chol_cosmos = inv(chol_cosmos)
-    mean_cosmos = mean(training_cosmos, dims=1)
-    
-    log_Pks = log.(training_lin_Pks)
-    mean_log_Pks = mean(log_Pks, dims=1)
-    std_log_Pks = std(log_Pks, dims=1)
+    files = npzread("../emulator/files.npz")
+    training_cosmos = files["training_cosmos"]
+    training_Pks = files["training_Pks"]
+    trans_cosmos = files["trans_cosmos"]
+    trans_Pks = files["trans_Pks"]
+    training_karr = files["training_karr"]
+    hypers = files["hypers"]
+    alphas = files["alphas"]
+    inv_chol_cosmos = files["inv_chol_cosmos"]
+    mean_cosmos = files["mean_cosmos"]
+    mean_log_Pks = files["mean_log_Pks"]
+    std_log_Pks = files["std_log_Pks"]
+    #Note: transpose python arrays
     Emulator(alphas, hypers, 
-             training_cosmos, training_lin_Pks, training_karr,
+             training_cosmos, training_Pks, 
+             trans_cosmos', trans_Pks', training_karr,
              inv_chol_cosmos, mean_cosmos,
              mean_log_Pks, std_log_Pks)
 end
@@ -40,7 +42,7 @@ function y_transformation(emulator::Emulator, point)
 end
 
 function inv_y_transformation(emulator::Emulator, point)
-    return exp.(emulator.std_log_Pks .* point' .+ emulator.mean_log_Pks)
+    return exp.(emulator.std_log_Pks .* point .+ emulator.mean_log_Pks)
 end
 
 function get_kernel(arr1, arr2, hyper)
@@ -49,13 +51,11 @@ function get_kernel(arr1, arr2, hyper)
     
     # compute the pairwise distance
     term1 = sum(arr1_w.^2, dims=1)
-    term2 = 2 * arr1_w' * arr2_w
-    term3 = sum(arr2_w.^2, dims=1)'
-    dist = term1 - term2' .+ term3
-
+    term2 = 2 * (arr1_w' * arr2_w)'
+    term3 = sum(arr2_w.^2, dims=1)
+    dist = @.(term1-term2+term3)
     # compute the kernel
-    kernel = @.(exp(hyper[1]) * exp(-0.5 * dist))
-
+    kernel = @.(exp(hyper[1])*exp(-0.5*dist))
     return kernel
 end
 
@@ -63,8 +63,8 @@ function get_emulated_log_pk0(cosmo::CosmoPar)
     emulator = Emulator()
     cosmotype, params = reparametrize(cosmo) 
     params_t = x_transformation(emulator, params')
-    x_t = x_transformation(emulator, emulator.training_cosmos)
-    y_t = y_transformation(emulator, emulator.training_lin_Pks)
+    x_t = emulator.trans_cosmos
+    y_t = emulator.trans_Pks
     
     nk = length(emulator.training_karr)
     pk0s_t = zeros(cosmotype, nk)
