@@ -1,4 +1,4 @@
-struct emulator
+struct Emulator
     alphas
     hypers
     training_cosmos
@@ -10,7 +10,7 @@ struct emulator
     std_log_Pks
 end
 
-function emulator()
+function Emulator()
     training_cosmos = npzread("../emulator_files/xinputs.npz")["arr_0"]
     training_lin_Pks = npzread("../emulator_files/yinputs.npz")["arr_0"]
     training_karr = npzread("../emulator_files/k_arr.npz")["arr_0"]
@@ -25,7 +25,7 @@ function emulator()
     log_Pks = log.(training_lin_Pks)
     mean_log_Pks = mean(log_Pks, dims=1)
     std_log_Pks = std(log_Pks, dims=1)
-    return emulator(alphas, hypers, 
+    return Emulator(alphas, hypers, 
              training_cosmos, training_lin_Pks, training_karr,
              inv_chol_cosmos, mean_cosmos,
              mean_log_Pks, std_log_Pks)
@@ -59,22 +59,28 @@ function get_kernel(arr1, arr2, hyper)
     return kernel
 end
 
-function get_emulated_log_pk0(emulator::emulator, cosmo::CosmoPar)
+function get_emulated_log_pk0(cosmo::CosmoPar)
+    emulator = Emulator()
+    cosmotype, params = reparametrize(cosmo) 
     params_t = x_transformation(params)
     x_t = x_transformation(emulator, emulator.training_cosmos)
     y_t = x_transformation(emulator, emulator.trainin_lin_Pks)
     
     nk = length(emulator.training_karr)
-    pk0s_t = zeros(eltype(cosmo), nk)
+    pk0s_t = zeros(cosmotype, nk)
     for i in 1:nk
         kernel = get_kernel(x_t, params_t, emulator.hypers[i, :])
         pk0s_t[i] = dot(vec(kernel), vec(emulator.alphas[i,:]))
     end
     pk0s = vec(inv_y_transformation(emulator, pk0s_t))
-    log_pk0s = log.(pk0s)
-    log_karr = log.(emulator.training_karr)
-    pki = LinearInterpolation(log_karr, log_pk0s, extrapolation_bc=Line())
-    return pki
+    return emulator.training_karr, pk0s
 end
 
-function reparametrize()
+function reparametrize(cosmo::CosmoPar)
+    Ωc = cosmo.Ωm - cosmo.Ωb 
+    wc = Ωc*cosmo.h^2
+    wb = Ωb*cosmo.h^2
+    params = [wc, wb, 2.7, cosmo.ns, cosmo.h]
+    cosmotype = eltype(params)
+    return cosmotype, params
+end
