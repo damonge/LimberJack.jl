@@ -1,10 +1,7 @@
 struct Emulator
     alphas
     hypers
-    training_cosmos
-    training_Pks
     trans_cosmos
-    trans_Pks
     training_karr
     inv_chol_cosmos
     mean_cosmos
@@ -14,10 +11,7 @@ end
 
 Emulator() = begin
     files = npzread("../emulator/files.npz")
-    training_cosmos = files["training_cosmos"]
-    training_Pks = files["training_Pks"]
     trans_cosmos = files["trans_cosmos"]
-    trans_Pks = files["trans_Pks"]
     training_karr = files["training_karr"]
     hypers = files["hypers"]
     alphas = files["alphas"]
@@ -27,8 +21,7 @@ Emulator() = begin
     std_log_Pks = files["std_log_Pks"]
     #Note: transpose python arrays
     Emulator(alphas, hypers, 
-             training_cosmos, training_Pks, 
-             trans_cosmos', trans_Pks', training_karr,
+             trans_cosmos', training_karr,
              inv_chol_cosmos, mean_cosmos,
              mean_log_Pks, std_log_Pks)
 end
@@ -63,13 +56,11 @@ function get_emulated_log_pk0(cosmo::CosmoPar)
     emulator = Emulator()
     cosmotype, params = reparametrize(cosmo) 
     params_t = x_transformation(emulator, params')
-    x_t = emulator.trans_cosmos
-    y_t = emulator.trans_Pks
     
     nk = length(emulator.training_karr)
     pk0s_t = zeros(cosmotype, nk)
     for i in 1:nk
-        kernel = get_kernel(x_t, params_t, emulator.hypers[i, :])
+        kernel = get_kernel(emulator.trans_cosmos, params_t, emulator.hypers[i, :])
         pk0s_t[i] = dot(vec(kernel), vec(emulator.alphas[i,:]))
     end
     pk0s = vec(inv_y_transformation(emulator, pk0s_t))
