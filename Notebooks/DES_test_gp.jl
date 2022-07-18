@@ -5,6 +5,7 @@ using NPZ
 using FITSIO
 using Dates
 using GaussianProcess
+using Random
 
 println(Threads.nthreads())
 
@@ -65,7 +66,7 @@ adaptation = 1000
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_cosmo_gp_", "TAP", TAP)
+folname = string("DES_test_gp_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
 mkdir(folname)
