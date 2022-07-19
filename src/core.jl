@@ -86,20 +86,26 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
-    if settings.tk_mode== "EisHu"
+    if settings.tk_mode == "emulator"
+        ks_emul, pk0_emul = get_emulated_log_pk0(cpar)
+        pki_emul = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
+                                       extrapolation_bc=Line())
+        pk0 = exp.(pki_emul(logk))
+    elseif settings.tk_mode == "EisHu"
         tk = TkEisHu(cpar, ks./ cpar.h)
-    elseif settings.tk_mode== "BBKS"
+        pk0 = @. ks^cpar.n_s * tk
+    elseif settings.tk_mode == "BBKS"
         tk = TkBBKS(cpar, ks)
-    else
+        pk0 = @. ks^cpar.n_s * tk
+     else
         print("Transfer function not implemented")
     end
-    pk0 = @. ks^cpar.n_s * tk
+    #Renormalize Pk
     σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
     norm = cpar.σ8^2 / σ8_2_here
     pk0 *= norm
     # OPT: interpolation method
     pki = LinearInterpolation(logk, log.(pk0), extrapolation_bc=Line())
-
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / cpar.h
