@@ -21,12 +21,14 @@ using Turing
     h = 0.67
     s8 = 0.811
     ns = 0.96
+    nuisances = Dict()
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = Theory(cosmology, nuisances, Cls_meta, files)
+    theory = Theory(cosmology, Cls_meta, files;
+                    Nuisances=nuisances).cls
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
