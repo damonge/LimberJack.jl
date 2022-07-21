@@ -53,11 +53,6 @@ cycles = 10
 iterations = 500
 TAP = 0.60
 adaptation = 1000
-#nchains = Threads.nthreads()
-
-
-new_chain = sample(model(data_vector), NUTS(adaptation, TAP), 
-                   iterations, progress=true; save_state=true)
 
 # Start sampling.
 folpath = "../chains"
@@ -78,4 +73,6 @@ for i in 1:cycles
                        resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
+    CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
+    CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
 end
