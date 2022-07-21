@@ -50,13 +50,13 @@ end
 mkdir(folname)
 println("Created new folder")
 
-for i in 1:cycles
+@everywhere for i in 1:cycles
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=0.03), MCMCDistributed(),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=0.03), #MCMCThrea(),
                        iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("worker_", myid(), "_chain_", i,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=0.03), MCMCDistributed(),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=0.03), #MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
