@@ -43,6 +43,9 @@ folpath = "../chains"
 folname = string("Test_distributed_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
+if isdir(folname):
+    rm(folname, recursive=true)
+    
 mkdir(folname)
 println("Created new folder")
 
@@ -51,12 +54,12 @@ for i in 1:cycles
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=0.03), MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true)
     else
-        old_chain = read(joinpath(folname, string("chain_", i-1, ".jls")), Chains)
+        old_chain = read(joinpath(folname, string("worker_", myid(), "_chain_", i,".jls")), Chains)
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=0.03), MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
-    write(joinpath(folname, string("chain_", i,".jls")), chain)
-    CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
-    CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
+    write(joinpath(folname, string("worker_", myid(), "_chain_", i,".jls")), chain)
+    CSV.write(joinpath(folname, string("worker_", myid(), "_chain_", i,".csv")), chain)
+    CSV.write(joinpath(folname, string("worker_", myid(), "_summary_", i,".csv")), describe(chain)[1])
 end
