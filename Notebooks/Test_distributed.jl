@@ -32,11 +32,10 @@ using Turing
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-nchains = nprocs()
-cycles = 10
-iterations = 500
-TAP = 0.60
-adaptation = 1000
+@everywhere cycles = 10
+@everywhere iterations = 500
+@everywhere TAP = 0.60
+@everywhere adaptation = 1000
 
 # Start sampling.
 folpath = "../chains"
@@ -53,11 +52,11 @@ println("Created new folder")
 @everywhere for i in 1:cycles
     if i == 1
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=0.03), #MCMCThrea(),
-                       iterations, nchains, progress=true; save_state=true)
+                       iterations, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("worker_", myid(), "_chain_", i,".jls")), Chains)
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=0.03), #MCMCDistributed(),
-                       iterations, nchains, progress=true; save_state=true,
+                       iterations, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
     write(joinpath(folname, string("worker_", myid(), "_chain_", i,".jls")), chain)
