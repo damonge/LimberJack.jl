@@ -7,6 +7,7 @@ using Distributed
 @everywhere using NPZ
 @everywhere using FITSIO
 @everywhere using Random
+@everywhere using DataFrames
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
@@ -20,17 +21,18 @@ using Distributed
 @everywhere latent_x = Vector(0:0.3:3)
 @everywhere x = Vector(range(0., stop=3., length=N))
 
-@everywhere struct Determin{T<:Any} <: ContinuousUnivariateDistribution
-  val::T
+@everywhere function generated_quantities(model::DynamicPPL.Model, chain::MCMCChains.Chains)
+   varinfo = DynamicPPL.VarInfo(model)
+   iters = Iterators.product(1:size(chain, 1), 1:size(chain, 3))
+   return map(iters) do (sample_idx, chain_idx)
+       DynamicPPL.setval!(varinfo, chain, sample_idx, chain_idx)
+       model(varinfo)
+   end
 end
-
-@everywhere Distributions.rand(rng::AbstractRNG, d::Determin) = d.val
-@everywhere Distributions.logpdf(d::Determin, x::T) where T<:Real = zero(x)
-@everywhere Bijectors.bijector(d::Determin) = Identity{0}()
 
 @everywhere @model function model(data_vector; cov_tot=cov_tot, fid_cosmo=fid_cosmo,
                       latent_x=latent_x, x=x)
-    eta = 0.03
+    eta = 0.05
     l = 1
     latent_N = length(latent_x)
     v ~ MvNormal(zeros(latent_N), ones(latent_N))
@@ -48,7 +50,6 @@ end
     latent_gp = latent_GP(mu, v, K)
     gp = conditional(latent_x, x, latent_gp, sqexp_cov_fn;
                       eta=eta, l=l)
-    gp_val ~ Determin(gp)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="EisHu",
@@ -58,6 +59,7 @@ end
     theory = Theory(cosmology, Cls_meta, files;
                     Nuisances=nuisances).cls
     data_vector ~ MvNormal(theory, cov_tot)
+    return(gp=gp, theory=theory)
 end;
 
 cycles = 3
@@ -95,4 +97,12 @@ for i in 1:cycles
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
     CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
+    derived = generated_quantities(model(data_vector), chain)
+    gps = vec([row.gp for row in derived])
+    cls = vec([row.theory for row in derived])
+    CSV.write(joinpath(folname, string("gps_", i,".csv")), 
+              DataFrame(gps, :auto), header = false)
+    CSV.write(joinpath(folname, string("cls_", i,".csv")), 
+              DataFrame(cls, :auto), header = false)
+    
 end
