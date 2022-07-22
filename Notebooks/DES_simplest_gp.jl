@@ -2,9 +2,11 @@ using Distributed
 
 @everywhere using Turing
 @everywhere using LimberJack
+@everywhere using GaussianProcess
 @everywhere using CSV
 @everywhere using NPZ
 @everywhere using FITSIO
+@everywhere using Random
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 

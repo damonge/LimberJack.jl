@@ -39,7 +39,7 @@ nchains = nprocs()
 
 # Start sampling.
 folpath = "../chains"
-folname = string("Test_distributed_", "TAP", TAP)
+folname = string("Test_distributed2_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
