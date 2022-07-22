@@ -30,16 +30,17 @@ using Distributed
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-@everywhere cycles = 10
-@everywhere iterations = 500
-@everywhere TAP = 0.60
-@everywhere adaptation = 1000
-@everywhere init_ϵ = 0.03
+cycles = 3
+iterations = 500
+TAP = 0.60
+adaptation = 1000
+init_ϵ=0.03
+nchains = nprocs()
 
 # Start sampling.
-@everywhere folpath = "../chains"
-@everywhere folname = string("Test_distributed_", "TAP", TAP)
-@everywhere folname = joinpath(folpath, folname)
+folpath = "../chains"
+folname = string("Test_distributed_", "TAP", TAP)
+folname = joinpath(folpath, folname)
 
 if isdir(folname)
     rm(folname, recursive=true)
@@ -48,17 +49,17 @@ end
 mkdir(folname)
 println("Created new folder")
 
-@everywhere for i in 1:cycles
+for i in 1:cycles
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ),
-                       iterations, progress=true; save_state=true)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true)
     else
-        old_chain = read(joinpath(folname, string("worker_", myid(), "_chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), 
-                       iterations, progress=true; save_state=true,
+        old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
-    write(joinpath(folname, string("worker_", myid(), "_chain_", i,".jls")), chain)
-    CSV.write(joinpath(folname, string("worker_", myid(), "_chain_", i,".csv")), chain)
-    CSV.write(joinpath(folname, string("worker_", myid(), "_summary_", i,".csv")), describe(chain)[1])
+    write(joinpath(folname, string("chain_", i,".jls")), chain)
+    CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
+    CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
 end
