@@ -38,9 +38,9 @@ end;
 @everywhere adaptation = 1000
 
 # Start sampling.
-folpath = "../chains"
-folname = string("Test_distributed_", "TAP", TAP)
-folname = joinpath(folpath, folname)
+@everywhere folpath = "../chains"
+@everywhere folname = string("Test_distributed_", "TAP", TAP)
+@everywhere folname = joinpath(folpath, folname)
 
 if isdir(folname)
     rm(folname, recursive=true)
