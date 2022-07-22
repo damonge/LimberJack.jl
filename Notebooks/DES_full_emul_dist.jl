@@ -89,7 +89,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_simplest_gp_", "TAP", TAP)
+folname = string("DES_full_emul_dist_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
 mkdir(folname)
@@ -100,7 +100,7 @@ for i in 1:cycles
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
-        old_chain = read(joinpath(folname, string("chain_", i-1,".jls"))), Chains)
+        old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
