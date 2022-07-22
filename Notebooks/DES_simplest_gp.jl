@@ -67,12 +67,12 @@ adaptation = 1000
 init_ϵ = 0.03
 nchains = nprocs()
 println("sampling settings: ")
-println("cycles")
-println("iterations")
-println("TAP")
-println("adaptation")
-println("init_ϵ")
-println("nchains")
+println("cycles ", cycles)
+println("iterations ", iterations)
+println("TAP ", TAP)
+println("adaptation ", adaptation)
+println("init_ϵ ", init_ϵ)
+println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"

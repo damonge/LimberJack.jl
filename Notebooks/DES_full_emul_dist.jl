@@ -80,12 +80,12 @@ adaptation = 1000
 init_ϵ = 0.03
 nchains = nprocs()
 println("sampling settings: ")
-println("cycles")
-println("iterations")
-println("TAP")
-println("adaptation")
-println("init_ϵ")
-println("nchains")
+println("cycles ", cycles)
+println("iterations ", iterations)
+println("TAP ", TAP)
+println("adaptation ", adaptation)
+println("init_ϵ ", init_ϵ)
+println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
@@ -100,7 +100,7 @@ for i in 1:cycles
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
-        old_chain = read(joinpath(folname, string("chain_", i,".jls")), Chains)
+        old_chain = read(joinpath(folname, string("chain_", i-1,".jls"))), Chains)
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
