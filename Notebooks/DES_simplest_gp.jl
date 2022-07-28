@@ -32,18 +32,46 @@ end
 
 @everywhere @model function model(data_vector; cov_tot=cov_tot, fid_cosmo=fid_cosmo,
                       latent_x=latent_x, x=x)
+    
+    pars = [4.426868e-02,     2.093138e-01,     8.963611e-01,     8.495440e-01,
+            1.343888e+00,    1.639047e+00,      1.597174e+00,     1.944583e+00,     2.007245e+00,
+           -4.679383e-03,   -2.839996e-03,      1.771571e-03,     1.197051e-03,    -5.199799e-03,
+            2.389208e-01,   -6.435288e-01, 
+            1.802722e-03,   -5.508994e-03,     1.952514e-02,    -1.117726e-03,
+           -1.744083e-02,    6.777779e-03,    -1.097939e-03,    -4.912315e-03,
+            8.536883e-01,    2.535825e-01];
+
+    nuisances = Dict("b0" => pars[5],
+                     "b1" => pars[6],
+                     "b2" => pars[7],
+                     "b3" => pars[8],
+                     "b4" => pars[9],
+                     "dz_g0" => pars[10],
+                     "dz_g1" => pars[11],
+                     "dz_g2" => pars[12],
+                     "dz_g3" => pars[13],
+                     "dz_g4" => pars[14],
+                     "dz_k0" => pars[21],
+                     "dz_k1" => pars[22],
+                     "dz_k2" => pars[23],
+                     "dz_k3" => pars[24],
+                     "m0" => pars[17],
+                     "m1" => pars[18],
+                     "m2" => pars[19],
+                     "m3" => pars[20],
+                     "A_IA" => pars[15],
+                     "alpha_IA" => pars[16])
+
     eta = 0.05
     l = 1
     latent_N = length(latent_x)
     v ~ MvNormal(zeros(latent_N), ones(latent_N))
     
     Ωm ~ Uniform(0.1, 0.6)
-    Ωb = 0.05
-    h = 0.67
-    s8 = 0.811
-    ns = 0.96 
-    
-    nuisances = Dict()
+    Ωb = pars[1]
+    h = pars[4]
+    ns = pars[3]
+    s8 = pars[25]
     
     mu = fid_cosmo.Dz(vec(latent_x))
     K = sqexp_cov_fn(latent_x; eta=eta, l=l)
@@ -78,7 +106,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_simplest_gp_", "TAP", TAP)
+folname = string("DES_gp_nuisances_", "TAP", TAP)
 folname = joinpath(folpath, folname)
 
 mkdir(folname)
