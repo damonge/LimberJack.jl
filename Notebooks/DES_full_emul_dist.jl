@@ -77,7 +77,7 @@ cycles = 3
 iterations = 500
 TAP = 0.60
 adaptation = 1000
-init_ϵ = 0.03
+init_ϵ = 0.005
 nchains = nprocs()
 println("sampling settings: ")
 println("cycles ", cycles)
