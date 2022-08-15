@@ -73,8 +73,9 @@ using Distributed
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-cycles = 3
-iterations = 500
+cycles = 6
+steps = 10
+iterations = 250
 TAP = 0.60
 adaptation = 1000
 init_ϵ = 0.005
@@ -89,7 +90,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_emul_dist_", "TAP", TAP)
+folname = string("DES_full_emul_", "ϵ", init_ϵ)
 folname = joinpath(folpath, folname)
 
 mkdir(folname)
@@ -97,11 +98,11 @@ println(string("Created new folder ", folname))
 
 for i in 1:cycles
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), 
+        chain = sample(model(data_vector), HMC(init_ϵ, steps), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), 
+        chain = sample(model(data_vector), HMC(init_ϵ, steps), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
