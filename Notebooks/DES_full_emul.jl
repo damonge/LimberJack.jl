@@ -1,18 +1,20 @@
-using Turing
-using LimberJack
-using CSV
-using NPZ
-using FITSIO
-using Dates
+using Distributed
 
-println(Threads.nthreads())
+@everywhere using Turing
+@everywhere using LimberJack
+@everywhere using CSV
+@everywhere using NPZ
+@everywhere using FITSIO
 
-files = npzread("../data/DESY1_cls/Cls_meta.npz")
-Cls_meta = cls_meta(files)
-cov_tot = files["cov"]
-data_vector = files["cls"]
+@everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@model function model(data_vector; cov_tot=cov_tot)
+@everywhere files = npzread("../data/DESY1_cls/Cls_meta.npz")
+@everywhere Cls_meta = cls_meta(files)
+@everywhere cov_tot = files["cov"]
+@everywhere data_vector = files["cls"]
+
+
+@everywhere @model function model(data_vector; cov_tot=cov_tot)
     #KiDS priors
     Ωm ~ Uniform(0.1, 0.9)
     Ωb ~ Uniform(0.028, 0.065)
@@ -71,27 +73,37 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-cycles = 10
-iterations = 500
+cycles = 6
+steps = 10
+iterations = 250
 TAP = 0.60
 adaptation = 1000
+init_ϵ = 0.005
+nchains = nprocs()
+println("sampling settings: ")
+println("cycles ", cycles)
+println("iterations ", iterations)
+println("TAP ", TAP)
+println("adaptation ", adaptation)
+println("init_ϵ ", init_ϵ)
+println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_emul_KiDS_", "TAP", TAP)
+folname = string("DES_full_emul_", "ϵ", init_ϵ)
 folname = joinpath(folpath, folname)
 
 mkdir(folname)
-println("Created new folder")
+println(string("Created new folder ", folname))
 
 for i in 1:cycles
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
-                       iterations, progress=true; save_state=true)
+        chain = sample(model(data_vector), HMC(init_ϵ, steps), 
+                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
-        old_chain = read(joinpath(folname, string("chain_", i-1, ".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
-                       iterations, progress=true; save_state=true,
+        old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
+        chain = sample(model(data_vector), HMC(init_ϵ, steps), 
+                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
