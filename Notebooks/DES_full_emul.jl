@@ -94,8 +94,8 @@ folname = string("DES_full_emul_", "ϵ", init_ϵ)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
-    files = readdir(folname)
-    last_chain = last([file for file in files if occursin("chain", file)])
+    fol_files = readdir(folname)
+    last_chain = last([file for file in fol_files if occursin("chain", file)])
     last_n = parse(Int, last_chain[7])
     println("Restarting chain")
 else
