@@ -80,8 +80,16 @@ folpath = "../chains"
 folname = string("DES_cosmo_emul_", "ϵ", init_ϵ)
 folname = joinpath(folpath, folname)
 
-mkdir(folname)
-println(string("Created new folder ", folname))
+if isdir(folname)
+    files = readdir(run)
+    last_chain = last([file for file in files if occursin("chain", file)])
+    last_n = parse(Int, last_chain[7])
+    println("Restarting chain")
+else
+    mkdir(folname)
+    println(string("Created new folder ", folname))
+    last_n = 0
+end
 
 for i in 1:cycles
     if i == 1
