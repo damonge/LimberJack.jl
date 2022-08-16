@@ -93,10 +93,18 @@ folpath = "../chains"
 folname = string("DES_full_emul_", "ϵ", init_ϵ)
 folname = joinpath(folpath, folname)
 
-mkdir(folname)
-println(string("Created new folder ", folname))
+if isdir(folname)
+    files = readdir(run)
+    last_chain = last([file for file in files if occursin("chain", file)])
+    last_n = parse(Int, last_chain[7])
+    println("Restarting chain")
+else
+    mkdir(folname)
+    println(string("Created new folder ", folname))
+    last_n = 0
+end
 
-for i in 1:cycles
+for i in (1+last_n):(last_n+cycles)
     if i == 1
         chain = sample(model(data_vector), HMC(init_ϵ, steps), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
