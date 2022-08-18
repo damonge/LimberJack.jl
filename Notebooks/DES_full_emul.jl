@@ -16,11 +16,11 @@ using Distributed
 
 @everywhere @model function model(data_vector; cov_tot=cov_tot)
     #KiDS priors
-    Ωm ~ Uniform(0.1, 0.9)
+    Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
     h ~ Uniform(0.64, 0.82)
-    s8 ~ Uniform(0.6, 1.0)
-    ns ~ Uniform(0.70, 1.30)
+    s8 ~ Uniform(0.6, 0.9)
+    ns ~ Uniform(0.84, 1.1)
     
     b0 ~ Uniform(0.8, 3.0)
     b1 ~ Uniform(0.8, 3.0)
@@ -90,7 +90,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_emul_", "ϵ", init_ϵ)
+folname = string("DES_full_emul_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -105,13 +105,13 @@ else
 end
 
 for i in (1+last_n):(last_n+cycles)
-    if i == 1
-        chain = sample(model(data_vector), HMC(init_ϵ, steps), 
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
+        if i == 1
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+                       iterations, progress=true; save_state=true)
     else
-        old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), HMC(init_ϵ, steps), 
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
+        old_chain = read(joinpath(folname, string("chain_", i-1, ".jls")), Chains)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+                       iterations, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)

@@ -1,23 +1,26 @@
-using Turing
-using LimberJack
-using CSV
-using NPZ
-using FITSIO
-using Dates
+using Distributed
 
-println(Threads.nthreads())
+@everywhere using Turing
+@everywhere using LimberJack
+@everywhere using CSV
+@everywhere using NPZ
+@everywhere using FITSIO
 
-files = npzread("../data/DESY1_cls/Cls_meta.npz")
-Cls_meta = cls_meta(files)
-cov_tot = files["cov"]
-data_vector = files["cls"]
+@everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@model function model(data_vector; cov_tot=cov_tot)
-    Ωm ~ Uniform(0.1, 0.9)
-    Ωb ~ Uniform(0.03, 0.07)
-    h ~ Uniform(0.55, 0.91)
-    s8 ~ Uniform(0.6, 1.0)
-    ns ~ Uniform(0.87, 1.07)
+@everywhere files = npzread("../data/DESY1_cls/Cls_meta.npz")
+@everywhere Cls_meta = cls_meta(files)
+@everywhere cov_tot = files["cov"]
+@everywhere data_vector = files["cls"]
+
+
+@everywhere @model function model(data_vector; cov_tot=cov_tot)
+    #KiDS priors
+    Ωm ~ Uniform(0.2, 0.6)
+    Ωb ~ Uniform(0.028, 0.065)
+    h ~ Uniform(0.64, 0.82)
+    s8 ~ Uniform(0.6, 0.9)
+    ns ~ Uniform(0.84, 1.1)
     
     b0 ~ Uniform(0.8, 3.0)
     b1 ~ Uniform(0.8, 3.0)
@@ -70,26 +73,39 @@ data_vector = files["cls"]
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
-cycles = 10
-iterations = 500
+cycles = 6
+steps = 10
+iterations = 250
 TAP = 0.60
 adaptation = 1000
-#nchains = Threads.nthreads()
-
-
-new_chain = sample(model(data_vector), NUTS(adaptation, TAP), 
-                   iterations, progress=true; save_state=true)
+init_ϵ = 0.005
+nchains = nprocs()
+println("sampling settings: ")
+println("cycles ", cycles)
+println("iterations ", iterations)
+println("TAP ", TAP)
+println("adaptation ", adaptation)
+println("init_ϵ ", init_ϵ)
+println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_good_priors_", "TAP", TAP)
+folname = string("DES_full_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
-mkdir(folname)
-println("Created new folder")
+if isdir(folname)
+    fol_files = readdir(folname)
+    last_chain = last([file for file in fol_files if occursin("chain", file)])
+    last_n = parse(Int, last_chain[7])
+    println("Restarting chain")
+else
+    mkdir(folname)
+    println(string("Created new folder ", folname))
+    last_n = 0
+end
 
-for i in 1:cycles
-    if i == 1
+for i in (1+last_n):(last_n+cycles)
+        if i == 1
         chain = sample(model(data_vector), NUTS(adaptation, TAP), 
                        iterations, progress=true; save_state=true)
     else
@@ -99,4 +115,6 @@ for i in 1:cycles
                        resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
+    CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
+    CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
 end
