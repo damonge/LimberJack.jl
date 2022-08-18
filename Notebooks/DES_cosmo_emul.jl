@@ -91,7 +91,7 @@ else
     last_n = 0
 end
 
-for i in 1:cycles
+for i in (1+last_n):(last_n+cycles)
     if i == 1
         chain = sample(model(data_vector), HMC(init_ϵ, steps), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
