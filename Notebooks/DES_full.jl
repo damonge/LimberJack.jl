@@ -78,7 +78,7 @@ steps = 10
 iterations = 250
 TAP = 0.60
 adaptation = 1000
-init_ϵ = 0.005
+init_ϵ = 0.1
 nchains = nprocs()
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -105,15 +105,15 @@ else
 end
 
 for i in (1+last_n):(last_n+cycles)
-        if i == 1
+    if i == 1
         chain = sample(model(data_vector), NUTS(adaptation, TAP), 
-                       iterations, progress=true; save_state=true)
+                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
-        old_chain = read(joinpath(folname, string("chain_", i-1, ".jls")), Chains)
+        old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
         chain = sample(model(data_vector), NUTS(adaptation, TAP), 
-                       iterations, progress=true; save_state=true,
+                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
-    end 
+    end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
     CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
