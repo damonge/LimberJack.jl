@@ -36,8 +36,8 @@ end
     Ωm ~ Uniform(0.1, 0.9)
     Ωb ~ Uniform(0.03, 0.07)
     h ~ Uniform(0.55, 0.91)
-    s8 ~ Uniform(0.6, 1.0)
     ns ~ Uniform(0.87, 1.07)
+    s8 = 0.811
     
     b0 ~ Uniform(0.8, 3.0)
     b1 ~ Uniform(0.8, 3.0)
