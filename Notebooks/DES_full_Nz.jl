@@ -13,19 +13,28 @@ using Distributed
 @everywhere cov_tot = files["cov"]
 @everywhere data_vector = files["cls"]
 
-@everywhere  zs_g0, nz_g0 = get_nzs(files, 1, 0)
-@everywhere  zs_g1, nz_g1 = get_nzs(files, 1, 1)
-@everywhere  zs_g2, nz_g2 = get_nzs(files, 1, 2)
-@everywhere  zs_g3, nz_g3 = get_nzs(files, 1, 3)
-@everywhere  zs_g4, nz_g4 = get_nzs(files, 1, 4)
-@everywhere  zs_k0, nz_k0 = get_nzs(files, 2, 0)
-@everywhere  zs_k1, nz_k1 = get_nzs(files, 2, 1)
-@everywhere  zs_k2, nz_k2 = get_nzs(files, 2, 2)
-@everywhere  zs_k3, nz_k3 = get_nzs(files, 2, 3)
+@everywhere zs_g0, nz_g0 = get_nzs(files, 1, 0)
+@everywhere zs_g1, nz_g1 = get_nzs(files, 1, 1)
+@everywhere zs_g2, nz_g2 = get_nzs(files, 1, 2)
+@everywhere zs_g3, nz_g3 = get_nzs(files, 1, 3)
+@everywhere zs_g4, nz_g4 = get_nzs(files, 1, 4)
+@everywhere zs_k0, nz_k0 = get_nzs(files, 2, 0)
+@everywhere zs_k1, nz_k1 = get_nzs(files, 2, 1)
+@everywhere zs_k2, nz_k2 = get_nzs(files, 2, 2)
+@everywhere zs_k3, nz_k3 = get_nzs(files, 2, 3)
+
+@everywhere cov_g0 = get_nzs(files, 1, 0)
+@everywhere cov_g1 = get_nzs(files, 1, 1)
+@everywhere cov_g2 = get_nzs(files, 1, 2)
+@everywhere cov_g3 = get_nzs(files, 1, 3)
+@everywhere cov_g4 = get_nzs(files, 1, 4)
+@everywhere cov_k0 = get_nzs(files, 2, 0)
+@everywhere cov_k1 = get_nzs(files, 2, 1)
+@everywhere cov_k2 = get_nzs(files, 2, 2)
+@everywhere cov_k3 = get_nzs(files, 2, 3)
 
 
 @everywhere @model function model(data_vector; cov_tot=cov_tot)
-    #KiDS priors
     Ωm ~ Uniform(0.1, 0.9)
     Ωb ~ Uniform(0.03, 0.07)
     h ~ Uniform(0.55, 0.91)
