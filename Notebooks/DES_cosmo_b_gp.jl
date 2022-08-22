@@ -111,7 +111,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_cosmo_b_gp_", "TAP", TAP)
+folname = string("DES_cosmo_b_gp_nos8_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 mkdir(folname)
@@ -119,11 +119,11 @@ println(string("Created new folder ", folname))
 
 for i in 1:cycles
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ ), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
