@@ -13,28 +13,51 @@ using Distributed
 @everywhere cov_tot = files["cov"]
 @everywhere data_vector = files["cls"]
 
-@everywhere zs_g0, nz_g0 = get_nzs(files, 1, 0)
-@everywhere zs_g1, nz_g1 = get_nzs(files, 1, 1)
-@everywhere zs_g2, nz_g2 = get_nzs(files, 1, 2)
-@everywhere zs_g3, nz_g3 = get_nzs(files, 1, 3)
-@everywhere zs_g4, nz_g4 = get_nzs(files, 1, 4)
-@everywhere zs_k0, nz_k0 = get_nzs(files, 2, 0)
-@everywhere zs_k1, nz_k1 = get_nzs(files, 2, 1)
-@everywhere zs_k2, nz_k2 = get_nzs(files, 2, 2)
-@everywhere zs_k3, nz_k3 = get_nzs(files, 2, 3)
+@everywhere  zs_g0, nz_g0 = get_nzs(files, 1, 0)
+@everywhere  zs_g1, nz_g1 = get_nzs(files, 1, 1)
+@everywhere  zs_g2, nz_g2 = get_nzs(files, 1, 2)
+@everywhere  zs_g3, nz_g3 = get_nzs(files, 1, 3)
+@everywhere  zs_g4, nz_g4 = get_nzs(files, 1, 4)
+@everywhere  zs_k0, nz_k0 = get_nzs(files, 2, 0)
+@everywhere  zs_k1, nz_k1 = get_nzs(files, 2, 1)
+@everywhere  zs_k2, nz_k2 = get_nzs(files, 2, 2)
+@everywhere  zs_k3, nz_k3 = get_nzs(files, 2, 3)
 
-@everywhere cov_g0 = get_nzs(files, 1, 0)
-@everywhere cov_g1 = get_nzs(files, 1, 1)
-@everywhere cov_g2 = get_nzs(files, 1, 2)
-@everywhere cov_g3 = get_nzs(files, 1, 3)
-@everywhere cov_g4 = get_nzs(files, 1, 4)
-@everywhere cov_k0 = get_nzs(files, 2, 0)
-@everywhere cov_k1 = get_nzs(files, 2, 1)
-@everywhere cov_k2 = get_nzs(files, 2, 2)
-@everywhere cov_k3 = get_nzs(files, 2, 3)
+@everywhere zs_int_g0 = range(0.01, stop=0.5, length=50)
+@everywhere zs_int_g1 = range(0.10, stop=0.6, length=50)
+@everywhere zs_int_g2 = range(0.30, stop=0.8, length=50)
+@everywhere zs_int_g3 = range(0.40, stop=1.0, length=50)
+@everywhere zs_int_g4 = range(0.60, stop=1.1, length=50)
 
+@everywhere zs_int_k0 = range(0.01, stop=1.0, length=50)
+@everywhere zs_int_k1 = range(0.01, stop=1.3, length=50)
+@everywhere zs_int_k2 = range(0.01, stop=1.7, length=50)
+@everywhere zs_int_k3 = range(0.01, stop=2.0, length=50)
+
+@everywhere nz_int_g0 = LinearInterpolation(zs_g0, nz_g0, extrapolation_bc=0)(zs_int_g0)
+@everywhere nz_int_g1 = LinearInterpolation(zs_g1, nz_g1, extrapolation_bc=0)(zs_int_g1)
+@everywhere nz_int_g2 = LinearInterpolation(zs_g2, nz_g2, extrapolation_bc=0)(zs_int_g2)
+@everywhere nz_int_g3 = LinearInterpolation(zs_g3, nz_g3, extrapolation_bc=0)(zs_int_g3)
+@everywhere nz_int_g4 = LinearInterpolation(zs_g4, nz_g4, extrapolation_bc=0)(zs_int_g4)
+
+@everywhere nz_int_k0 = LinearInterpolation(zs_k0, nz_k0, extrapolation_bc=0)(zs_int_k0)
+@everywhere nz_int_k1 = LinearInterpolation(zs_k1, nz_k1, extrapolation_bc=0)(zs_int_k1)
+@everywhere nz_int_k2 = LinearInterpolation(zs_k2, nz_k2, extrapolation_bc=0)(zs_int_k2)
+@everywhere nz_int_k3 = LinearInterpolation(zs_k3, nz_k3, extrapolation_bc=0)(zs_int_k3)
+
+@everywhere cov_g0 = @. (0.2 * nz_int_g0 + 0.1)^2
+@everywhere cov_g1 = @. (0.2 * nz_int_g1 + 0.1)^2
+@everywhere cov_g2 = @. (0.2 * nz_int_g2 + 0.1)^2
+@everywhere cov_g3 = @. (0.2 * nz_int_g3 + 0.1)^2
+@everywhere cov_g4 = @. (0.2 * nz_int_g4 + 0.1)^2
+
+@everywhere cov_k0 = @. (0.2 * nz_int_k0 + 0.1)^2
+@everywhere cov_k1 = @. (0.2 * nz_int_k1 + 0.1)^2
+@everywhere cov_k2 = @. (0.2 * nz_int_k2 + 0.1)^2
+@everywhere cov_k3 = @. (0.2 * nz_int_k3 + 0.1)^2
 
 @everywhere @model function model(data_vector; cov_tot=cov_tot)
+    #KiDS priors
     Ωm ~ Uniform(0.1, 0.9)
     Ωb ~ Uniform(0.03, 0.07)
     h ~ Uniform(0.55, 0.91)
@@ -46,15 +69,15 @@ using Distributed
     b2 ~ Uniform(0.8, 3.0)
     b3 ~ Uniform(0.8, 3.0)
     b4 ~ Uniform(0.8, 3.0)
-    nz_g0 ~ MvNormal(nz_g0, cov_g0)
-    nz_g1 ~ MvNormal(nz_g1, cov_g1)
-    nz_g2 ~ MvNormal(nz_g2, cov_g2)
-    nz_g3 ~ MvNormal(nz_g3, cov_g3)
-    nz_g4 ~ MvNormal(nz_g4, cov_g4)
-    nz_k0 ~ MvNormal(nz_k0, cov_k0)
-    nz_k1 ~ MvNormal(nz_k1, cov_k1)
-    nz_k2 ~ MvNormal(nz_k2, cov_k2)
-    nz_k3 ~ MvNormal(nz_k3, cov_k3)
+    Nz_g0 ~ MvNormal(nz_int_g0, cov_g0)
+    Nz_g1 ~ MvNormal(nz_int_g1, cov_g1)
+    Nz_g2 ~ MvNormal(nz_int_g2, cov_g2)
+    Nz_g3 ~ MvNormal(nz_int_g3, cov_g3)
+    Nz_g4 ~ MvNormal(nz_int_g4, cov_g4)
+    Nz_k0 ~ MvNormal(nz_int_k0, cov_k0)
+    Nz_k1 ~ MvNormal(nz_int_k1, cov_k1)
+    Nz_k2 ~ MvNormal(nz_int_k2, cov_k2)
+    Nz_k3 ~ MvNormal(nz_int_k3, cov_k3)
     mb0 ~ Normal(0.012, 0.023)
     mb1 ~ Normal(0.012, 0.023)
     mb2 ~ Normal(0.012, 0.023)
@@ -67,15 +90,15 @@ using Distributed
                      "b2" => b2,
                      "b3" => b3,
                      "b4" => b4,
-                     "nz_g0" => nz_g0,
-                     "nz_g1" => nz_g1,
-                     "nz_g2" => nz_g2,
-                     "nz_g3" => nz_g3,
-                     "nz_g4" => nz_g4,
-                     "nz_k0" => nz_k0,
-                     "nz_k1" => nz_k1,
-                     "nz_k2" => nz_k2,
-                     "nz_k3" => nz_k3,
+                     "nz_g0" => Nz_g0,
+                     "nz_g1" => Nz_g1,
+                     "nz_g2" => Nz_g2,
+                     "nz_g3" => Nz_g3,
+                     "nz_g4" => Nz_g4,
+                     "nz_k0" => Nz_k0,
+                     "nz_k1" => Nz_k1,
+                     "nz_k2" => Nz_k2,
+                     "nz_k3" => Nz_k3,
                      "mb0" => mb0,
                      "mb1" => mb1,
                      "mb2" => mb2,
