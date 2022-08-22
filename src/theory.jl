@@ -20,8 +20,7 @@ function get_nzs(files, tracer_type, bin)
     nzs = files[string("nz_", tracer_type, bin)]
     zs = vec(nzs[1:1, :])
     nz = vec(nzs[2:2, :])
-    cov = vec(nzs[3:3, :])
-    return zs, nz, cov
+    return zs, nz
 end      
 
 Theory(cosmology::Cosmology, cls_meta, files;
@@ -40,7 +39,7 @@ Theory(cosmology::Cosmology, cls_meta, files;
         tracer = cls_meta.tracers[i]
         tracer_type = tracer[1]
         bin = tracer[2]
-        zs_mean, nz_mean, cov = get_nzs(files, tracer_type, bin)
+        zs_mean, nz_mean = get_nzs(files, tracer_type, bin)
         if tracer_type == 1
             b = get(Nuisances, string("b", bin), 1.0)
             nz = get(Nuisances, string("nz_g", bin), nz_mean)

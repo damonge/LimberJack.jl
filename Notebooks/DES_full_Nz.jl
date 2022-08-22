@@ -13,15 +13,15 @@ using Distributed
 @everywhere cov_tot = files["cov"]
 @everywhere data_vector = files["cls"]
 
-@everywhere  zs_g0, nz_g0, cov_g0 = get_nzs(files, 1, 0)
-@everywhere  zs_g1, nz_g1, cov_g1 = get_nzs(files, 1, 1)
-@everywhere  zs_g2, nz_g2, cov_g2 = get_nzs(files, 1, 2)
-@everywhere  zs_g3, nz_g3, cov_g3 = get_nzs(files, 1, 3)
-@everywhere  zs_g4, nz_g4, cov_g4 = get_nzs(files, 1, 4)
-@everywhere  zs_k0, nz_k0, cov_k0 = get_nzs(files, 2, 0)
-@everywhere  zs_k1, nz_k1, cov_k1 = get_nzs(files, 2, 1)
-@everywhere  zs_k2, nz_k2, cov_k2 = get_nzs(files, 2, 2)
-@everywhere  zs_k3, nz_k3, cov_k3 = get_nzs(files, 2, 3)
+@everywhere  zs_g0, nz_g0 = get_nzs(files, 1, 0)
+@everywhere  zs_g1, nz_g1 = get_nzs(files, 1, 1)
+@everywhere  zs_g2, nz_g2 = get_nzs(files, 1, 2)
+@everywhere  zs_g3, nz_g3 = get_nzs(files, 1, 3)
+@everywhere  zs_g4, nz_g4 = get_nzs(files, 1, 4)
+@everywhere  zs_k0, nz_k0 = get_nzs(files, 2, 0)
+@everywhere  zs_k1, nz_k1 = get_nzs(files, 2, 1)
+@everywhere  zs_k2, nz_k2 = get_nzs(files, 2, 2)
+@everywhere  zs_k3, nz_k3 = get_nzs(files, 2, 3)
 
 
 @everywhere @model function model(data_vector; cov_tot=cov_tot)
@@ -37,15 +37,15 @@ using Distributed
     b2 ~ Uniform(0.8, 3.0)
     b3 ~ Uniform(0.8, 3.0)
     b4 ~ Uniform(0.8, 3.0)
-    Nz_g0 ~ MvNormal(nz_g0, cov_g0)
-    Nz_g1 ~ MvNormal(nz_g1, cov_g1)
-    Nz_g2 ~ MvNormal(nz_g2, cov_g2)
-    Nz_g3 ~ MvNormal(nz_g3, cov_g3)
-    Nz_g4 ~ MvNormal(nz_g4, cov_g4)
-    Nz_k0 ~ MvNormal(nz_k0, cov_k0)
-    Nz_k1 ~ MvNormal(nz_k1, cov_k1)
-    Nz_k2 ~ MvNormal(nz_k2, cov_k2)
-    Nz_k3 ~ MvNormal(nz_k3, cov_k3)
+    nz_g0 ~ MvNormal(nz_g0, cov_g0)
+    nz_g1 ~ MvNormal(nz_g1, cov_g1)
+    nz_g2 ~ MvNormal(nz_g2, cov_g2)
+    nz_g3 ~ MvNormal(nz_g3, cov_g3)
+    nz_g4 ~ MvNormal(nz_g4, cov_g4)
+    nz_k0 ~ MvNormal(nz_k0, cov_k0)
+    nz_k1 ~ MvNormal(nz_k1, cov_k1)
+    nz_k2 ~ MvNormal(nz_k2, cov_k2)
+    nz_k3 ~ MvNormal(nz_k3, cov_k3)
     mb0 ~ Normal(0.012, 0.023)
     mb1 ~ Normal(0.012, 0.023)
     mb2 ~ Normal(0.012, 0.023)
@@ -58,15 +58,15 @@ using Distributed
                      "b2" => b2,
                      "b3" => b3,
                      "b4" => b4,
-                     "Nz_g0" => Nz_g0,
-                     "Nz_g1" => Nz_g1,
-                     "Nz_g2" => Nz_g2,
-                     "Nz_g3" => Nz_g3,
-                     "Nz_g4" => Nz_g4,
-                     "Nz_k0" => Nz_k0,
-                     "Nz_k1" => Nz_k1,
-                     "Nz_k2" => Nz_k2,
-                     "Nz_k3" => Nz_k3,
+                     "nz_g0" => nz_g0,
+                     "nz_g1" => nz_g1,
+                     "nz_g2" => nz_g2,
+                     "nz_g3" => nz_g3,
+                     "nz_g4" => nz_g4,
+                     "nz_k0" => nz_k0,
+                     "nz_k1" => nz_k1,
+                     "nz_k2" => nz_k2,
+                     "nz_k3" => nz_k3,
                      "mb0" => mb0,
                      "mb1" => mb1,
                      "mb2" => mb2,

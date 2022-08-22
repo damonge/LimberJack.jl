@@ -53,10 +53,10 @@ end
     dz_k1 ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
     dz_k2 ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
     dz_k3 ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
-    m0 ~ Normal(0.012, 0.023)
-    m1 ~ Normal(0.012, 0.023)
-    m2 ~ Normal(0.012, 0.023)
-    m3 ~ Normal(0.012, 0.023)
+    mb0 ~ Normal(0.012, 0.023)
+    mb1 ~ Normal(0.012, 0.023)
+    mb2 ~ Normal(0.012, 0.023)
+    mb3 ~ Normal(0.012, 0.023)
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
 
@@ -74,10 +74,10 @@ end
                      "dz_k1" => dz_k1,
                      "dz_k2" => dz_k2,
                      "dz_k3" => dz_k3,
-                     "m0" => m0,
-                     "m1" => m1,
-                     "m2" => m2,
-                     "m3" => m3,
+                     "mb0" => mb0,
+                     "mb1" => mb1,
+                     "mb2" => mb2,
+                     "mb3" => mb3,
                      "A_IA" => A_IA,
                      "alpha_IA" => alpha_IA)
 
