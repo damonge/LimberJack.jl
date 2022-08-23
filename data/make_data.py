@@ -7,9 +7,9 @@ def get_type(name):
         return 'e'
     else:
         return '0'
-    
+
 s = sacc.Sacc().load_fits("DESY1_cls/cls_covG_new.fits")
-fname = "DESY1_cls/gcgc_gcwl_wlwl"
+fname = "DESY1_cls/wlwl"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
@@ -40,12 +40,12 @@ w, v = np.linalg.eigh(cov)
 cov = np.dot(v, np.dot(np.diag(np.fabs(w)), v.T))
 cov = np.tril(cov) + np.triu(cov.T, 1)
 inv_cov = np.linalg.inv(cov)
-        
+
 pairs_id = []
 pairs_coded = []
 for pair, l in zip(pairs, ls):
     t1, t2 = pair
-    typ1 = tracer_code[t1[:5]] 
+    typ1 = tracer_code[t1[:5]]
     bin1 = int(t1[-1])
     typ2 = tracer_code[t2[:5]]
     bin2 = int(t2[-1])
@@ -59,11 +59,10 @@ for pair, l in zip(pairs, ls):
 lengths = [len(l) for l in ls]
 lengths = np.concatenate([[0], lengths])
 idx  = np.cumsum(lengths)
-nz_path = "../data/DESY1_cls/fiducial_nzs/"
 
 dict_save = {'tracers': tracers, 'pairs': pairs_coded, 'pairs_ids': pairs_id,
-             'cls': cls, 'cov': cov, 'inv_cov': inv_cov, 'idx': idx, 'nz_path': nz_path}
-    
+             'cls': cls, 'cov': cov, 'inv_cov': inv_cov, 'idx': idx}
+
 for pair, l in zip(pairs, ls):
     t1, t2 = pair
     bin1 = int(t1[-1])

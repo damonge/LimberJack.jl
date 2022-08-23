@@ -1,32 +1,18 @@
-struct cls_meta{T<:AbstractVector}
-    tracers::T
-    pairs::T
-    pairs_ids::T
-end
-
-cls_meta(file) = begin
-    tracers = [c[:] for c in eachrow(file["tracers"])]
-    pairs = [c[:] for c in eachrow(file["pairs"])]
-    pairs_ids = [c[:] for c in eachrow(file["pairs_ids"])]
-    cls_meta(tracers, pairs, pairs_ids)
-end
-
-struct Theory
-    tracers
-    cls
-end
-
-function get_nzs(files, tracer_type, bin)
-    fpath = files.nz_path
-    nzs = npzread(string(fpath, "nz_", tracer_type, bin))
+function get_nzs(nz_path, tracer_type, bin)
+    nzs = npzread(string(nz_path, "nz_", tracer_type, bin))
     zs = nzs["z"]
     nz = nzs["nz"]
     cov = get(nzs, "cov", zeros(length(zs)))
     return zs, nz, cov
 end      
 
-Theory(cosmology::Cosmology, cls_meta, files;
-       Nuisances=Dict()) = begin
+function Theory(cosmology::Cosmology, files;
+                nz_path="../data/DESY1_cls/nzs_fiducial",
+                Nuisances=Dict())
+    
+    tracers = Vector{eltype(files["tracers"])}[eachrow(files["tracers"])...]
+    pairs = Vector{eltype(files["pairs"])}[eachrow(files["pairs"])...]
+    pairs_ids = Vector{eltype(files["pairs_ids"])}[eachrow(files["pairs_ids"])...]
     
     nui_type = valtype(Nuisances)
     if !(nui_type <: Float64) & (nui_type != Any)
@@ -35,13 +21,13 @@ Theory(cosmology::Cosmology, cls_meta, files;
         end
     end
     
-    ntracers = length(cls_meta.tracers)
+    ntracers = length(tracers)
     tracers = []
     for i in 1:ntracers
-        tracer = cls_meta.tracers[i]
+        tracer = tracers[i]
         tracer_type = tracer[1]
         bin = tracer[2]
-        zs_mean, nz_mean, cov = get_nzs(files, tracer_type, bin)
+        zs_mean, nz_mean, cov = get_nzs(nz_path, tracer_type, bin)
         if tracer_type == 1
             b = get(Nuisances, string("b", bin), 1.0)
             nz = get(Nuisances, string("nz_g", bin), nz_mean)
@@ -68,19 +54,19 @@ Theory(cosmology::Cosmology, cls_meta, files;
         
     end
     
-    npairs = length(cls_meta.pairs)
+    npairs = length(pairs)
     idx = files["idx"]
     total_len = last(idx)
     cls = zeros(cosmology.settings.cosmo_type, total_len)
     @inbounds Threads.@threads for i in 1:npairs
-        pair = cls_meta.pairs[i]
-        ids = cls_meta.pairs_ids[i]
+        pair = pairs[i]
+        ids = pairs_ids[i]
         ls = files[string("ls_", pair[1], pair[2], pair[3], pair[4])]
         tracer1 = tracers[ids[1]]
         tracer2 = tracers[ids[2]]
         cls[idx[i]+1:idx[i+1]] = angularCℓs(cosmology, tracer1, tracer2, ls)
     end
     
-    Theory(tracers, cls)
+    return cls
     
 end

@@ -111,7 +111,7 @@ using Distributed
                                      Pk_mode="Halofit")
     
     theory = Theory(cosmology, Cls_meta, files;
-                    Nuisances=nuisances).cls
+                    Nuisances=nuisances)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
