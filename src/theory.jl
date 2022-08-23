@@ -17,10 +17,12 @@ struct Theory
 end
 
 function get_nzs(files, tracer_type, bin)
-    nzs = files[string("nz_", tracer_type, bin)]
-    zs = vec(nzs[1:1, :])
-    nz = vec(nzs[2:2, :])
-    return zs, nz
+    fpath = files.nz_path
+    nzs = npzread(string(fpath, "nz_", tracer_type, bin))
+    zs = nzs["z"]
+    nz = nzs["nz"]
+    cov = get(nzs, "cov", zeros(length(zs)))
+    return zs, nz, cov
 end      
 
 Theory(cosmology::Cosmology, cls_meta, files;
@@ -39,7 +41,7 @@ Theory(cosmology::Cosmology, cls_meta, files;
         tracer = cls_meta.tracers[i]
         tracer_type = tracer[1]
         bin = tracer[2]
-        zs_mean, nz_mean = get_nzs(files, tracer_type, bin)
+        zs_mean, nz_mean, cov = get_nzs(files, tracer_type, bin)
         if tracer_type == 1
             b = get(Nuisances, string("b", bin), 1.0)
             nz = get(Nuisances, string("nz_g", bin), nz_mean)
