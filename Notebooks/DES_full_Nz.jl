@@ -18,6 +18,11 @@ using Distributed
 @everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, 2, 2)
 @everywhere zs_k3, nz_k3, cov_k3 = get_nzs(nz_path, 2, 3)
 
+@everywhere cov_k0 = Diagonal(cov_k0)
+@everywhere cov_k1 = Diagonal(cov_k1)
+@everywhere cov_k2 = Diagonal(cov_k2)
+@everywhere cov_k3 = Diagonal(cov_k3)
+
 @everywhere @model function model(data_vector; cov_tot=cov_tot, nz_path=nz_path)
     #KiDS priors
     Ωm ~ Uniform(0.1, 0.9)
