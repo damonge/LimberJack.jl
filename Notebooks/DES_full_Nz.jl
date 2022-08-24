@@ -5,6 +5,7 @@ using Distributed
 @everywhere using CSV
 @everywhere using NPZ
 @everywhere using FITSIO
+@everywhere using LinearAlgebra
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
