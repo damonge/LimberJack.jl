@@ -1,18 +1,18 @@
 function get_nzs(nz_path, tracer_type, bin)
-    nzs = npzread(string(nz_path, "nz_", tracer_type, bin))
+    nzs = npzread(string(nz_path, "nz_", tracer_type, bin, ".npz"))
     zs = nzs["z"]
-    nz = nzs["nz"]
+    nz = nzs["dndz"]
     cov = get(nzs, "cov", zeros(length(zs)))
     return zs, nz, cov
 end      
 
 function Theory(cosmology::Cosmology, files;
-                nz_path="../data/DESY1_cls/nzs_fiducial",
+                nz_path="../data/DESY1_cls/fiducial_nzs/",
                 Nuisances=Dict())
     
-    tracers = Vector{eltype(files["tracers"])}[eachrow(files["tracers"])...]
-    pairs = Vector{eltype(files["pairs"])}[eachrow(files["pairs"])...]
-    pairs_ids = Vector{eltype(files["pairs_ids"])}[eachrow(files["pairs_ids"])...]
+    tracers_names = [eachrow(files["tracers"])...]
+    pairs = [eachrow(files["pairs"])...]
+    pairs_ids = [eachrow(files["pairs_ids"])...]
     
     nui_type = valtype(Nuisances)
     if !(nui_type <: Float64) & (nui_type != Any)
@@ -21,10 +21,10 @@ function Theory(cosmology::Cosmology, files;
         end
     end
     
-    ntracers = length(tracers)
+    ntracers = length(tracers_names)
     tracers = []
     for i in 1:ntracers
-        tracer = tracers[i]
+        tracer = tracers_names[i]
         tracer_type = tracer[1]
         bin = tracer[2]
         zs_mean, nz_mean, cov = get_nzs(nz_path, tracer_type, bin)

@@ -8,5 +8,7 @@ for n, t in s.tracers.items():
     if n.startswith('DES'):
         tracer = tracer_code[n[:5]]
         binn = n[-1]
-        np.savez(f'nz_{tracer}{binn}'+'.npz', {'z': t.z, 'nz': t.nz})
+        np.savez(f'nz_{tracer}{binn}'+'.npz',
+                 z=np.array(t.z),
+                 dndz=np.array(t.nz))
         

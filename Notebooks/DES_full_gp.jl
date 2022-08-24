@@ -11,8 +11,7 @@ using Distributed
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere files = npzread("../data/DESY1_cls/Cls_meta.npz")
-@everywhere Cls_meta = cls_meta(files)
+@everywhere files = npzread("../data/DESY1_cls/gcgc_gcwl_wlwl.npz")
 @everywhere cov_tot = files["cov"]
 @everywhere data_vector = files["cls"]
 
@@ -31,7 +30,8 @@ using Distributed
 end
 
 @everywhere @model function model(data_vector; cov_tot=cov_tot, fid_cosmo=fid_cosmo,
-                      latent_x=latent_x, x=x)
+                                  latent_x=latent_x, x=x,
+                                  nz_path="../data/DESY1_cls/fiducial_nzs/")
     
     Ωm ~ Uniform(0.1, 0.9)
     Ωb ~ Uniform(0.03, 0.07)
@@ -97,8 +97,10 @@ end
                                      Pk_mode="Halofit", 
                                      custom_Dz=gp)
     
-    theory = Theory(cosmology, Cls_meta, files;
-                    Nuisances=nuisances).cls
+    theory = Theory(cosmology, files;
+                    Nuisances=nuisances,
+                    nz_path=nz_path)
+    
     data_vector ~ MvNormal(theory, cov_tot)
     return(gp=gp, theory=theory)
 end;
