@@ -1,7 +1,8 @@
 using Distributed
 
 @everywhere using Turing
-@everywhere Turing.setadbackend(:zygote)
+@everywhere using ReverseDiff
+@everywhere Turing.setadbackend(:reversediff)
 @everywhere using LimberJack
 @everywhere using CSV
 @everywhere using NPZ
