@@ -84,7 +84,7 @@ end
     eta = 0.05
     l = 1
     latent_N = length(latent_x)
-    v ~ MvNormal(zeros(latent_N), ones(latent_N))
+    v ~ filldist(truncated(Normal(0, 1), -3, 3), latent_N)
     
     mu = fid_cosmo.Dz(vec(latent_x))
     K = sqexp_cov_fn(latent_x; eta=eta, l=l)

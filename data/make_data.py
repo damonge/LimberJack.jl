@@ -13,15 +13,27 @@ fname = "DESY1_cls/wlwl"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
+#Apply scale cuts 
+indices = []
+for cl in config['order']:
+    t1, t2 = cl['tracers']
+    lmin, lmax = cl['ell_cuts']
+    cl_name = 'cl_%s%s' % (get_type(t1), get_type(t2))
+    ind = s.indices(cl_name, (t1, t2),
+                    ell__gt=lmin, ell__lt=lmax)
+    indices += list(ind)
+s.keep_indices(indices)
+
 cls = []
 ls = []
 indices = []
 pairs = []
 for cl in config['order']:
     t1, t2 = cl['tracers']
-    lmin, lmax = cl['ell_cuts']
     cl_name = 'cl_%s%s' % (get_type(t1), get_type(t2))
-    l, c_ell, ind = s.get_ell_cl(cl_name, t1, t2, return_cov=False, return_ind=True)
+    l, c_ell, ind = s.get_ell_cl(cl_name, t1, t2,
+                                 return_cov=False,
+                                 return_ind=True)
     indices += list(ind)
     cls += list(c_ell)
     ls.append(l)
@@ -35,6 +47,7 @@ for tracer in np.unique(pairs).flatten():
 
 indices = np.array(indices)
 cls = np.array(cls)
+print(len(indices))
 cov = s.covariance.dense[indices][:, indices]
 w, v = np.linalg.eigh(cov)
 cov = np.dot(v, np.dot(np.diag(np.fabs(w)), v.T))
