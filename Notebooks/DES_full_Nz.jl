@@ -1,8 +1,6 @@
 using Distributed
 
 @everywhere using Turing
-@everywhere using ReverseDiff
-@everywhere Turing.setadbackend(:reversediff)
 @everywhere using LimberJack
 @everywhere using CSV
 @everywhere using NPZ
@@ -84,7 +82,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_wlwl_Nzs2_", "TAP_", TAP)
+folname = string("DES_wlwl_Nzs_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
