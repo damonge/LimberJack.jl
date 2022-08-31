@@ -8,7 +8,7 @@ export Theory, get_nzs
 export get_emulated_log_pk0, Emulator
 
 using Interpolations, OrdinaryDiffEq, ForwardDiff 
-using LinearAlgebra, Statistics, PyCall, Trapz, QuadGK, NPZ
+using LinearAlgebra, Statistics, Trapz, QuadGK, NPZ
 
 include("core.jl")
 include("tracers.jl")
