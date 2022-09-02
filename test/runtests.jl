@@ -4,11 +4,11 @@ using ForwardDiff
 using PyCall
 using Conda
 
-if !haskey(Conda._installed_packages_dict(),"pyccl")
-    Conda.add("pyccl",channel="conda-forge")
-end
+#if !haskey(Conda._installed_packages_dict(),"pyccl")
+#    Conda.add("pyccl",channel="conda-forge")
+#end
 
-ccl = pyimport("pyccl")
+ccl = pyimport_conda("pyccl", "pyccl") #pyimport("pyccl")
 np = pyimport("numpy")
 
 @testset "All tests" begin
