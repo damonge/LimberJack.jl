@@ -1,7 +1,8 @@
 using Test
 using LimberJack
 using ForwardDiff
-using PyCall 
+using PyCall
+using Conda
 
 if !haskey(Conda._installed_packages_dict(),"pyccl")
     Conda.add("pyccl",channel="conda-forge")
