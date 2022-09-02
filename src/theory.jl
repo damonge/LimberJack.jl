@@ -32,7 +32,7 @@ function Theory(cosmology::Cosmology, files;
             b = get(Nuisances, string("b", bin), 1.0)
             nz = get(Nuisances, string("nz_g", bin), nz_mean)
             dzi = get(Nuisances, string("dz_g", bin), 0.0)
-            zs = zs_mean .- dzi
+            zs = zs_mean .+ dzi  # Opposite sign in KiDS
             sel = zs .> 0.
             tracer = NumberCountsTracer(cosmology, zs[sel], nz[sel];
                                         b=b)
@@ -42,7 +42,7 @@ function Theory(cosmology::Cosmology, files;
                          get(Nuisances, "alpha_IA", 0.0)]
             nz = get(Nuisances, string("nz_k", bin), nz_mean)
             dzi = get(Nuisances, string("dz_k", bin), 0.0)
-            zs = zs_mean .- dzi
+            zs = zs_mean .+ dzi  # Opposite sign in KiDS
             sel = zs .> 0.
             tracer = WeakLensingTracer(cosmology, zs[sel], nz[sel];
                                        mb=mb, IA_params=IA_params)
