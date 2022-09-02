@@ -3,6 +3,10 @@ using LimberJack
 using ForwardDiff
 using PyCall 
 
+if !haskey(Conda._installed_packages_dict(),"pyccl")
+    Conda.add("pyccl",channel="conda-forge")
+end
+
 ccl = pyimport("pyccl")
 np = pyimport("numpy")
 
