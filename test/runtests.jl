@@ -5,8 +5,6 @@ using PythonCall
 using CondaPkg
 
 CondaPkg.add("pyccl")
-
-classy = pyimport("classy")
 ccl = pyimport("pyccl")
 np = pyimport("numpy")
 
@@ -62,7 +60,7 @@ np = pyimport("numpy")
                                                   Omega_g=0, Omega_k=0)
         cosmo_emul = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                                nk=500, tk_mode="emulator")
-        cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class",
+        cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb",
                                                  matter_power_spectrum="linear",
                                                  Omega_g=0, Omega_k=0)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
@@ -99,7 +97,7 @@ np = pyimport("numpy")
         cosmo_EisHu_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
                                             matter_power_spectrum="halofit",
                                             Omega_g=0, Omega_k=0)
-        cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class",
+        cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb",
                                             matter_power_spectrum="halofit",
                                             Omega_g=0, Omega_k=0)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
@@ -180,7 +178,7 @@ np = pyimport("numpy")
     end
 
     @testset "emul_Cℓs" begin
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class", 
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb", 
                                             matter_power_spectrum="linear",
                                             Omega_g=0, Omega_k=0)
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
@@ -264,7 +262,7 @@ np = pyimport("numpy")
     end
 
     @testset "emul_Halo_Cℓs" begin
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class", 
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb", 
                                             matter_power_spectrum="halofit",
                                             Omega_g=0, Omega_k=0)
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
@@ -477,7 +475,7 @@ np = pyimport("numpy")
         z = Vector(range(0., stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg_b = NumberCountsTracer(cosmo, z, nz; b=2.0)
-        ts_m = WeakLensingTracer(cosmo, z, nz; mb=1.0, IA_params=[0.0, 0.0])
+        ts_m = WeakLensingTracer(cosmo, z, nz; mb=2.0, IA_params=[0.0, 0.0])
         ts_IA = WeakLensingTracer(cosmo, z, nz; mb=2.0, IA_params=[0.1, 0.1])
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg_b = angularCℓs(cosmo, tg_b, tg_b, ℓs)
