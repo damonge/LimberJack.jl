@@ -6,6 +6,7 @@ using CondaPkg
 
 CondaPkg.add("pyccl")
 
+classy = pyimport("classy")
 ccl = pyimport("pyccl")
 np = pyimport("numpy")
 
@@ -147,7 +148,7 @@ np = pyimport("numpy")
         ts = WeakLensingTracer(cosmo, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo)
+        tk = CMBLensingTracer(cosmo; b=1)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
@@ -191,7 +192,7 @@ np = pyimport("numpy")
         ts = WeakLensingTracer(cosmo, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo)
+        tk = CMBLensingTracer(cosmo; b=1)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
@@ -233,7 +234,7 @@ np = pyimport("numpy")
         ts = WeakLensingTracer(cosmo, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo)
+        tk = CMBLensingTracer(cosmo; b=1)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
@@ -274,7 +275,7 @@ np = pyimport("numpy")
         ts = WeakLensingTracer(cosmo, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo)
+        tk = CMBLensingTracer(cosmo; b=1)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
@@ -385,6 +386,7 @@ np = pyimport("numpy")
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
 
+"""
     @testset "IsemulHalofitDiff" begin
 
         zs = 0.02:0.02:1.0
@@ -399,14 +401,15 @@ np = pyimport("numpy")
         end
 
         Ωm0 = 0.3
-        dΩm = 0.000S5
+        dΩm = 0.0005
 
         Halofit_autodiff = ForwardDiff.derivative(Halofit, Ωm0)
         Halofit_anal = (Halofit(Ωm0+dΩm)-Halofit(Ωm0-dΩm))/2dΩm
 
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 0.5))
     end
-    
+"""
+
     @testset "AreClsDiff" begin
         
         function Cl_gg(p::T)::Array{T,1} where T<:Real
@@ -444,7 +447,7 @@ np = pyimport("numpy")
             ts = WeakLensingTracer(cosmo, z, nz;
                                    mb=0.0,
                                    IA_params=[0.0, 0.0])
-            tk = CMBLensingTracer(cosmo)
+            tk = CMBLensingTracer(cosmo; b=1)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
@@ -474,8 +477,8 @@ np = pyimport("numpy")
         z = Vector(range(0., stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg_b = NumberCountsTracer(cosmo, z, nz; b=2.0)
-        ts_m = WeakLensingTracer(cosmo, z, nz; mb=1.0)
-        ts_IA = WeakLensingTracer(cosmo, z, nz; IA_params=[0.1, 0.1])
+        ts_m = WeakLensingTracer(cosmo, z, nz; mb=1.0, IA_params=[0.0, 0.0])
+        ts_IA = WeakLensingTracer(cosmo, z, nz; mb=2.0, IA_params=[0.1, 0.1])
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg_b = angularCℓs(cosmo, tg_b, tg_b, ℓs)
         Cℓ_ss_m = angularCℓs(cosmo, ts_m, ts_m, ℓs)
@@ -513,7 +516,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = Vector(range(0., stop=2., length=256)) .- p
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
-            tg = NumberCountsTracer(cosmo, z, nz)
+            tg = NumberCountsTracer(cosmo, z, nz; b=1)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
@@ -525,9 +528,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz;
-                                   mb=p,
-                                   IA_params=[0.0, 0.0])
+            ts = WeakLensingTracer(cosmo, z, nz; mb=p, IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_sk
@@ -539,8 +540,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz;
-                                   IA_params=[p, 0.1])
+            ts = WeakLensingTracer(cosmo, z, nz; mb=2, IA_params=[p, 0.1])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
@@ -552,8 +552,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz;
-                                   IA_params=[0.3, p])
+            ts = WeakLensingTracer(cosmo, z, nz; mb=2, IA_params=[0.3, p])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
