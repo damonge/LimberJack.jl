@@ -352,7 +352,6 @@ np = pyimport("numpy")
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
 
-"""
     @testset "IsemulHalofitDiff" begin
 
         zs = 0.02:0.02:1.0
@@ -374,7 +373,6 @@ np = pyimport("numpy")
 
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 0.5))
     end
-"""
     
     @testset "AreClsDiff" begin
         
@@ -547,6 +545,5 @@ np = pyimport("numpy")
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 1E-2))
     end
 
-end
-
 """
+end
