@@ -148,7 +148,7 @@ np = pyimport("numpy")
         ts = WeakLensingTracer(cosmo, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo; b=1)
+        tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
@@ -192,7 +192,7 @@ np = pyimport("numpy")
         ts = WeakLensingTracer(cosmo, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo; b=1)
+        tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
@@ -234,7 +234,7 @@ np = pyimport("numpy")
         ts = WeakLensingTracer(cosmo, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo; b=1)
+        tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
@@ -275,7 +275,7 @@ np = pyimport("numpy")
         ts = WeakLensingTracer(cosmo, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo; b=1)
+        tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
@@ -447,7 +447,7 @@ np = pyimport("numpy")
             ts = WeakLensingTracer(cosmo, z, nz;
                                    mb=0.0,
                                    IA_params=[0.0, 0.0])
-            tk = CMBLensingTracer(cosmo; b=1)
+            tk = CMBLensingTracer(cosmo)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
@@ -487,9 +487,14 @@ np = pyimport("numpy")
         tg_b_bm = ccl.NumberCountsTracer(cosmo_bm, false, dndz=(z, nz), bias=(z, 2.0 .* np.ones_like(z)))
         ts_m_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz))
         ts_IA_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz), ia_bias=(z, IA_corr))
+        
         Cℓ_gg_b_bm = ccl.angular_cl(cosmo_bm, tg_b_bm, tg_b_bm, ℓs)
         Cℓ_ss_m_bm = (1.0 + 1.0).^2 .* ccl.angular_cl(cosmo_bm, ts_m_bm, ts_m_bm, ℓs)
         Cℓ_ss_IA_bm = ccl.angular_cl(cosmo_bm, ts_IA_bm, ts_IA_bm, ℓs)
+        Cℓ_gg_b_bm = pyconvert(Vector, Cℓ_gg_b_bm)
+        Cℓ_ss_m_bm = pyconvert(Vector, Cℓ_ss_m_bm)
+        Cℓ_ss_IA_bm = pyconvert(Vector, Cℓ_ss_IA_bm)
+        
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg_b/Cℓ_gg_b_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 1E-2))
@@ -534,7 +539,7 @@ np = pyimport("numpy")
             return Cℓ_sk
         end
         
-        function IA_A(p::T)::Array{T1,} where T<:Real
+        function IA_A(p::T)::Array{T,1} where T<:Real
             cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
                                          tk_mode="EisHu", Pk_mode="Halofit")
             cosmo.settings.cosmo_type = typeof(p)
