@@ -4,12 +4,12 @@ struct NumberCountsTracer <: Tracer
     warr
     chis
     wint::AbstractInterpolation
-    bias
+    b
     lpre::Int
 end
 
-NumberCountsTracer(cosmo::Cosmology, z_n, nz;
-                   bias=1.0) = begin
+NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
+                   #bias=1.0) = begin
 
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
     
@@ -25,19 +25,19 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz;
     w_arr = @. (nz_w*hz/nz_norm)
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
     
-    NumberCountsTracer(w_arr, chi, wint, bias, 0)
+    NumberCountsTracer(w_arr, chi, wint, kwargs[:b], 0)
 end
 
 struct WeakLensingTracer <: Tracer
     warr
     chis
     wint::AbstractInterpolation
-    bias
+    b
     lpre::Int
 end
 
-WeakLensingTracer(cosmo::Cosmology, z_n, nz;
-                  mbias=0.0, IA_params=[0.0, 0.0]) = begin
+WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
+                  #mbias=0.0, IA_params=[0.0, 0.0]) = begin
     
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
     
@@ -66,9 +66,9 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
     w_arr = @. w_arr * chi * lens_prefac * (1+z_w) / nz_norm
     
-    if IA_params != [0.0, 0.0]
+    if kwargs[:IA_params] != [0.0, 0.0]
         hz = Hmpc(cosmo, z_w)
-        As = get_IA(cosmo, z_w, IA_params)
+        As = get_IA(cosmo, z_w, kwargs[:IA_params])
         corr =  @. As * (nz_w * hz / nz_norm)
         w_arr = @. w_arr - corr
     end
@@ -77,13 +77,13 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz;
     # Fix first element
     chi[1] = 0.0
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
-    bias = mbias+1.0 
-    WeakLensingTracer(w_arr, chi, wint, bias , 2)
+    b = kwargs[:mb]+1.0 
+    WeakLensingTracer(w_arr, chi, wint, b, 2)
 end
 
 struct CMBLensingTracer <: Tracer
     wint::AbstractInterpolation
-    bias::Float64
+    b
     lpre::Int
 end
 

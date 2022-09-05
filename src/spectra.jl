@@ -9,8 +9,8 @@ function Cℓintegrand(cosmo::Cosmology,
         return 0
     end
     z = cosmo.z_of_chi(chi)
-    w1 = t1.wint(chi)*t1.bias
-    w2 = t2.wint(chi)*t2.bias
+    w1 = t1.wint(chi)*t1.b
+    w2 = t2.wint(chi)*t2.b
     pk = nonlin_Pk(cosmo, k, z)
     k*w1*w2*pk
 end

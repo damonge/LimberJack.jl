@@ -1,8 +1,10 @@
 using Test
 using LimberJack
 using ForwardDiff
-using PyCall 
+using PythonCall
+using CondaPkg
 
+CondaPkg.add("pyccl")
 ccl = pyimport("pyccl")
 np = pyimport("numpy")
 
@@ -15,19 +17,10 @@ np = pyimport("numpy")
     
     @testset "BMHz" begin
         cosmo = Cosmology()
-        cosmo_class = ccl.boltzmann.classy.Class()
-        params = Dict("h"=>  0.67,
-                      "Omega_cdm"=>  0.25,
-                      "Omega_b"=>  0.05,
-                      "Omega_Lambda"=>  0.6999068724497256,
-                      "sigma8"=>  0.81)
-        cosmo_class.set(params)
-        cosmo_class.compute()
-        
         c = 299792458.0
         ztest = [0.1, 0.5, 1.0, 3.0]
         H = cosmo.cosmo.h*100*Ez(cosmo, ztest)
-        H_bm = [cosmo_class.Hubble(z)*c/1000 for z in ztest]
+        H_bm = @. 67*sqrt(0.3 * (1+ztest)^3 + (1-0.3-0.69991) * (1+ztest)^4 + 0.69991)
         @test all(@. (abs(H/H_bm-1.0) < 0.0005))
     end
 
@@ -38,8 +31,8 @@ np = pyimport("numpy")
                                             Omega_g=0, Omega_k=0)
         ztest = [0.1, 0.5, 1.0, 3.0]
         chi = comoving_radial_distance(cosmo, ztest)
-        chi_bm = ccl.comoving_radial_distance(cosmo_bm,
-                                              1 ./ (1 .+ ztest)) 
+        chi_bm = ccl.comoving_radial_distance(cosmo_bm,  1 ./ (1 .+ ztest))
+        chi_bm = pyconvert(Vector, chi_bm)
         @test all(@. (abs(chi/chi_bm-1.0) < 0.0005))
     end
 
@@ -51,7 +44,7 @@ np = pyimport("numpy")
         ztest = [0.1, 0.5, 1.0, 3.0]
         Dz = growth_factor(cosmo, ztest)
         Dz_bm = ccl.growth_factor(cosmo_bm, 1 ./ (1 .+ ztest))
-        # It'd be best if this was < 1E-4...
+        Dz_bm = pyconvert(Vector, Dz_bm)
         @test all(@. (abs(Dz/Dz_bm-1.0) < 0.0005))
     end
 
@@ -67,16 +60,21 @@ np = pyimport("numpy")
                                                   Omega_g=0, Omega_k=0)
         cosmo_emul = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                                nk=500, tk_mode="emulator")
-        cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class",
+        cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb",
                                                  matter_power_spectrum="linear",
                                                  Omega_g=0, Omega_k=0)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
         pk_emul = nonlin_Pk(cosmo_emul, ks, 0.0)
+        
         pk_BBKS_bm = ccl.linear_matter_power(cosmo_BBKS_bm, ks, 1.)
         pk_EisHu_bm = ccl.linear_matter_power(cosmo_EisHu_bm, ks, 1.)
         pk_emul_bm = ccl.linear_matter_power(cosmo_emul_bm, ks, 1.)
+
+        pk_BBKS_bm = pyconvert(Vector, pk_BBKS_bm)
+        pk_EisHu_bm = pyconvert(Vector, pk_EisHu_bm)
+        pk_emul_bm = pyconvert(Vector, pk_emul_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) <  0.0005))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.0005))
@@ -99,7 +97,7 @@ np = pyimport("numpy")
         cosmo_EisHu_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
                                             matter_power_spectrum="halofit",
                                             Omega_g=0, Omega_k=0)
-        cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class",
+        cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb",
                                             matter_power_spectrum="halofit",
                                             Omega_g=0, Omega_k=0)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
@@ -109,6 +107,10 @@ np = pyimport("numpy")
         pk_BBKS_bm = ccl.nonlin_matter_power(cosmo_BBKS_bm, ks, 1.)
         pk_EisHu_bm = ccl.nonlin_matter_power(cosmo_EisHu_bm, ks, 1.)
         pk_emul_bm = ccl.nonlin_matter_power(cosmo_emul_bm, ks, 1.)
+        
+        pk_BBKS_bm = pyconvert(Vector, pk_BBKS_bm)
+        pk_EisHu_bm = pyconvert(Vector, pk_EisHu_bm)
+        pk_emul_bm = pyconvert(Vector, pk_emul_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) < 0.05))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) < 1E-3))
@@ -122,7 +124,7 @@ np = pyimport("numpy")
         nz = Vector(p_of_z(z))
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nz=512)
-        t = NumberCountsTracer(cosmo, z, nz, bias=1.0)
+        t = NumberCountsTracer(cosmo, z, nz, b=1.0)
 
         wz1 = t.wint(cosmo.chi(0.5))
         hz = Hmpc(cosmo, 0.5)
@@ -140,17 +142,18 @@ np = pyimport("numpy")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
 
-        tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
-                               mbias=0.0,
+                               mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
-        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
+        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
-        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs) 
-        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs) 
-        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs) 
+        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
+        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs)
+        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
+
         tg_bm = ccl.NumberCountsTracer(cosmo_bm, false, dndz=(z, nz), bias=(z, 1 .* np.ones_like(z)))
         ts_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz))
         tk_bm = ccl.CMBLensingTracer(cosmo_bm, z_source=1100)
@@ -159,6 +162,12 @@ np = pyimport("numpy")
         Cℓ_ss_bm = ccl.angular_cl(cosmo_bm, ts_bm, ts_bm, ℓs)
         Cℓ_gk_bm = ccl.angular_cl(cosmo_bm, tg_bm, tk_bm, ℓs)
         Cℓ_sk_bm = ccl.angular_cl(cosmo_bm, ts_bm, tk_bm, ℓs)
+        
+        Cℓ_gg_bm = pyconvert(Vector, Cℓ_gg_bm)
+        Cℓ_gs_bm = pyconvert(Vector, Cℓ_gs_bm)
+        Cℓ_ss_bm = pyconvert(Vector, Cℓ_ss_bm)
+        Cℓ_gk_bm = pyconvert(Vector, Cℓ_gk_bm)
+        Cℓ_sk_bm = pyconvert(Vector, Cℓ_sk_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-3))
@@ -169,7 +178,7 @@ np = pyimport("numpy")
     end
 
     @testset "emul_Cℓs" begin
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class", 
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb", 
                                             matter_power_spectrum="linear",
                                             Omega_g=0, Omega_k=0)
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
@@ -177,9 +186,9 @@ np = pyimport("numpy")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
 
-        tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
-                               mbias=0.0,
+                               mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -196,6 +205,12 @@ np = pyimport("numpy")
         Cℓ_ss_bm = ccl.angular_cl(cosmo_bm, ts_bm, ts_bm, ℓs)
         Cℓ_gk_bm = ccl.angular_cl(cosmo_bm, tg_bm, tk_bm, ℓs)
         Cℓ_sk_bm = ccl.angular_cl(cosmo_bm, ts_bm, tk_bm, ℓs)
+
+        Cℓ_gg_bm = pyconvert(Vector, Cℓ_gg_bm)
+        Cℓ_gs_bm = pyconvert(Vector, Cℓ_gs_bm)
+        Cℓ_ss_bm = pyconvert(Vector, Cℓ_ss_bm)
+        Cℓ_gk_bm = pyconvert(Vector, Cℓ_gk_bm)
+        Cℓ_sk_bm = pyconvert(Vector, Cℓ_sk_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
@@ -213,9 +228,9 @@ np = pyimport("numpy")
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
-                               mbias=0.0,
+                               mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -232,6 +247,12 @@ np = pyimport("numpy")
         Cℓ_ss_bm = ccl.angular_cl(cosmo_bm, ts_bm, ts_bm, ℓs)
         Cℓ_gk_bm = ccl.angular_cl(cosmo_bm, tg_bm, tk_bm, ℓs)
         Cℓ_sk_bm = ccl.angular_cl(cosmo_bm, ts_bm, tk_bm, ℓs)
+        
+        Cℓ_gg_bm = pyconvert(Vector, Cℓ_gg_bm)
+        Cℓ_gs_bm = pyconvert(Vector, Cℓ_gs_bm)
+        Cℓ_ss_bm = pyconvert(Vector, Cℓ_ss_bm)
+        Cℓ_gk_bm = pyconvert(Vector, Cℓ_gk_bm)
+        Cℓ_sk_bm = pyconvert(Vector, Cℓ_sk_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-3))
@@ -241,16 +262,16 @@ np = pyimport("numpy")
     end
 
     @testset "emul_Halo_Cℓs" begin
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class", 
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb", 
                                             matter_power_spectrum="halofit",
                                             Omega_g=0, Omega_k=0)
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           tk_mode="emulator", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
-                               mbias=0.0,
+                               mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -267,6 +288,12 @@ np = pyimport("numpy")
         Cℓ_ss_bm = ccl.angular_cl(cosmo_bm, ts_bm, ts_bm, ℓs)
         Cℓ_gk_bm = ccl.angular_cl(cosmo_bm, tg_bm, tk_bm, ℓs)
         Cℓ_sk_bm = ccl.angular_cl(cosmo_bm, ts_bm, tk_bm, ℓs)
+        
+        Cℓ_gg_bm = pyconvert(Vector, Cℓ_gg_bm)
+        Cℓ_gs_bm = pyconvert(Vector, Cℓ_gs_bm)
+        Cℓ_ss_bm = pyconvert(Vector, Cℓ_ss_bm)
+        Cℓ_gk_bm = pyconvert(Vector, Cℓ_gk_bm)
+        Cℓ_sk_bm = pyconvert(Vector, Cℓ_sk_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
@@ -274,7 +301,7 @@ np = pyimport("numpy")
         @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.05))
     end
-    
+
     @testset "IsBaseDiff" begin
         zs = 0.02:0.02:1.0
 
@@ -372,7 +399,7 @@ np = pyimport("numpy")
         end
 
         Ωm0 = 0.3
-        dΩm = 0.000S5
+        dΩm = 0.0005
 
         Halofit_autodiff = ForwardDiff.derivative(Halofit, Ωm0)
         Halofit_anal = (Halofit(Ωm0+dΩm)-Halofit(Ωm0-dΩm))/2dΩm
@@ -380,7 +407,7 @@ np = pyimport("numpy")
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 0.5))
     end
 """
-    
+
     @testset "AreClsDiff" begin
         
         function Cl_gg(p::T)::Array{T,1} where T<:Real
@@ -389,7 +416,7 @@ np = pyimport("numpy")
                                          tk_mode="EisHu", Pk_mode="Halofit")
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
-            tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+            tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
@@ -402,7 +429,7 @@ np = pyimport("numpy")
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             ts = WeakLensingTracer(cosmo, z, nz;
-                                   mbias=0.0,
+                                   mb=0.0,
                                    IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
@@ -416,7 +443,7 @@ np = pyimport("numpy")
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             ts = WeakLensingTracer(cosmo, z, nz;
-                                   mbias=0.0,
+                                   mb=0.0,
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
             ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -447,9 +474,9 @@ np = pyimport("numpy")
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg_b = NumberCountsTracer(cosmo, z, nz; bias=2.0)
-        ts_m = WeakLensingTracer(cosmo, z, nz; mbias=1.0)
-        ts_IA = WeakLensingTracer(cosmo, z, nz; IA_params=[0.1, 0.1])
+        tg_b = NumberCountsTracer(cosmo, z, nz; b=2.0)
+        ts_m = WeakLensingTracer(cosmo, z, nz; mb=1.0, IA_params=[0.0, 0.0])
+        ts_IA = WeakLensingTracer(cosmo, z, nz; mb=0.0, IA_params=[0.1, 0.1])
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg_b = angularCℓs(cosmo, tg_b, tg_b, ℓs)
         Cℓ_ss_m = angularCℓs(cosmo, ts_m, ts_m, ℓs)
@@ -458,13 +485,19 @@ np = pyimport("numpy")
         tg_b_bm = ccl.NumberCountsTracer(cosmo_bm, false, dndz=(z, nz), bias=(z, 2.0 .* np.ones_like(z)))
         ts_m_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz))
         ts_IA_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz), ia_bias=(z, IA_corr))
+        
         Cℓ_gg_b_bm = ccl.angular_cl(cosmo_bm, tg_b_bm, tg_b_bm, ℓs)
-        Cℓ_ss_m_bm = (1.0 + 1.0).^2 .* ccl.angular_cl(cosmo_bm, ts_m_bm, ts_m_bm, ℓs)
+        Cℓ_ss_m_bm = ccl.angular_cl(cosmo_bm, ts_m_bm, ts_m_bm, ℓs)
         Cℓ_ss_IA_bm = ccl.angular_cl(cosmo_bm, ts_IA_bm, ts_IA_bm, ℓs)
+
+        Cℓ_gg_b_bm = pyconvert(Vector, Cℓ_gg_b_bm)
+        Cℓ_ss_m_bm = pyconvert(Vector, Cℓ_ss_m_bm)
+        Cℓ_ss_m_bm = (1.0 + 1.0).^2  .* Cℓ_ss_m_bm
+        Cℓ_ss_IA_bm = pyconvert(Vector, Cℓ_ss_IA_bm)
+        
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg_b/Cℓ_gg_b_bm-1.0) < 5E-3))
-        @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 1E-2))
-        println(@.(abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0)))
+        @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 5E-2))
         @test all(@. (abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0) < 1E-2))
     end
 
@@ -476,7 +509,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
-            tg = NumberCountsTracer(cosmo, z, nz; bias=p)
+            tg = NumberCountsTracer(cosmo, z, nz; b=p)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
@@ -488,7 +521,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = Vector(range(0., stop=2., length=256)) .- p
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
-            tg = NumberCountsTracer(cosmo, z, nz)
+            tg = NumberCountsTracer(cosmo, z, nz; b=1)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
@@ -500,9 +533,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz;
-                                   mbias=p,
-                                   IA_params=[0.0, 0.0])
+            ts = WeakLensingTracer(cosmo, z, nz; mb=p, IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_sk
@@ -514,8 +545,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz;
-                                   IA_params=[p, 0.1])
+            ts = WeakLensingTracer(cosmo, z, nz; mb=2, IA_params=[p, 0.1])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
@@ -527,8 +557,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz;
-                                   IA_params=[0.3, p])
+            ts = WeakLensingTracer(cosmo, z, nz; mb=2, IA_params=[0.3, p])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
@@ -552,5 +581,4 @@ np = pyimport("numpy")
         @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 1E-2))
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 1E-2))
     end
-
 end
