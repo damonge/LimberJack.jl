@@ -162,6 +162,7 @@ np = pyimport("numpy")
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 3E-3))
     end
 
+"""
     @testset "emul_Cℓs" begin
         cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class", 
                                             matter_power_spectrum="linear",
@@ -547,3 +548,5 @@ np = pyimport("numpy")
     end
 
 end
+
+"""

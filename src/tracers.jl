@@ -83,7 +83,6 @@ end
 
 struct CMBLensingTracer <: Tracer
     wint::AbstractInterpolation
-    bias::Float64
     lpre::Int
 end
 
@@ -99,7 +98,7 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
 
     # Interpolate
     wint = LinearInterpolation(chis, w_arr, extrapolation_bc=0)
-    CMBLensingTracer(wint, 1.0, 1)
+    CMBLensingTracer(wint, 1)
 end
 
 function get_IA(cosmo::Cosmology, zs, IA_params)
