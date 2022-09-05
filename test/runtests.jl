@@ -1,14 +1,12 @@
 using Test
 using LimberJack
 using ForwardDiff
-using PyCall
-using Conda
+using PythonCall
+using CondaPkg
 
-#if !haskey(Conda._installed_packages_dict(),"pyccl")
-#    Conda.add("pyccl",channel="conda-forge")
-#end
+CondaPkg.add("pyccl")
 
-ccl = pyimport_conda("pyccl", "pyccl") #pyimport("pyccl")
+ccl = pyimport("pyccl")
 np = pyimport("numpy")
 
 @testset "All tests" begin
