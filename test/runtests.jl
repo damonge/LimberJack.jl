@@ -475,7 +475,7 @@ np = pyimport("numpy")
         z = Vector(range(0., stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg_b = NumberCountsTracer(cosmo, z, nz; b=2.0)
-        ts_m = WeakLensingTracer(cosmo, z, nz; mb=0.0, IA_params=[0.0, 0.0])
+        ts_m = WeakLensingTracer(cosmo, z, nz; mb=1.0, IA_params=[0.0, 0.0])
         ts_IA = WeakLensingTracer(cosmo, z, nz; mb=0.0, IA_params=[0.1, 0.1])
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg_b = angularCℓs(cosmo, tg_b, tg_b, ℓs)
@@ -497,7 +497,7 @@ np = pyimport("numpy")
         
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg_b/Cℓ_gg_b_bm-1.0) < 5E-3))
-        @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 1E-2))
+        @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 5E-2))
         @test all(@. (abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0) < 1E-2))
     end
 
