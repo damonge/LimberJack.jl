@@ -487,11 +487,12 @@ np = pyimport("numpy")
         ts_IA_bm = ccl.WeakLensingTracer(cosmo_bm, dndz=(z, nz), ia_bias=(z, IA_corr))
         
         Cℓ_gg_b_bm = ccl.angular_cl(cosmo_bm, tg_b_bm, tg_b_bm, ℓs)
-        Cℓ_ss_m_bm = (1.0 + 1.0).^2 .* ccl.angular_cl(cosmo_bm, ts_m_bm, ts_m_bm, ℓs)
+        Cℓ_ss_m_bm = ccl.angular_cl(cosmo_bm, ts_m_bm, ts_m_bm, ℓs)
         Cℓ_ss_IA_bm = ccl.angular_cl(cosmo_bm, ts_IA_bm, ts_IA_bm, ℓs)
 
         Cℓ_gg_b_bm = pyconvert(Vector, Cℓ_gg_b_bm)
         Cℓ_ss_m_bm = pyconvert(Vector, Cℓ_ss_m_bm)
+        Cℓ_ss_m_bm = (1.0 + 1.0).^2  .* Cℓ_ss_m_bm
         Cℓ_ss_IA_bm = pyconvert(Vector, Cℓ_ss_IA_bm)
         
         # It'd be best if this was < 1E-4...
