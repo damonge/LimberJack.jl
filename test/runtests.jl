@@ -116,7 +116,7 @@ np = pyimport("numpy")
         nz = Vector(p_of_z(z))
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nz=512)
-        t = NumberCountsTracer(cosmo, z, nz, bias=1.0)
+        t = NumberCountsTracer(cosmo, z, nz, b=1.0)
 
         wz1 = t.wint(cosmo.chi(0.5))
         hz = Hmpc(cosmo, 0.5)
@@ -134,9 +134,9 @@ np = pyimport("numpy")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
 
-        tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
-                               mbias=0.0,
+                               mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -171,9 +171,9 @@ np = pyimport("numpy")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
 
-        tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
-                               mbias=0.0,
+                               mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -207,9 +207,9 @@ np = pyimport("numpy")
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
-                               mbias=0.0,
+                               mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -242,9 +242,9 @@ np = pyimport("numpy")
                           tk_mode="emulator", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo, z, nz;
-                               mbias=0.0,
+                               mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -383,7 +383,7 @@ np = pyimport("numpy")
                                          tk_mode="EisHu", Pk_mode="Halofit")
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
-            tg = NumberCountsTracer(cosmo, z, nz; bias=1.0)
+            tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
@@ -396,7 +396,7 @@ np = pyimport("numpy")
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             ts = WeakLensingTracer(cosmo, z, nz;
-                                   mbias=0.0,
+                                   mb=0.0,
                                    IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
@@ -410,7 +410,7 @@ np = pyimport("numpy")
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             ts = WeakLensingTracer(cosmo, z, nz;
-                                   mbias=0.0,
+                                   mb=0.0,
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
             ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -441,8 +441,8 @@ np = pyimport("numpy")
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg_b = NumberCountsTracer(cosmo, z, nz; bias=2.0)
-        ts_m = WeakLensingTracer(cosmo, z, nz; mbias=1.0)
+        tg_b = NumberCountsTracer(cosmo, z, nz; b=2.0)
+        ts_m = WeakLensingTracer(cosmo, z, nz; mb=1.0)
         ts_IA = WeakLensingTracer(cosmo, z, nz; IA_params=[0.1, 0.1])
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg_b = angularCℓs(cosmo, tg_b, tg_b, ℓs)
@@ -469,7 +469,7 @@ np = pyimport("numpy")
             cosmo.settings.cosmo_type = typeof(p)
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
-            tg = NumberCountsTracer(cosmo, z, nz; bias=p)
+            tg = NumberCountsTracer(cosmo, z, nz; b=p)
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
@@ -494,14 +494,14 @@ np = pyimport("numpy")
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             ts = WeakLensingTracer(cosmo, z, nz;
-                                   mbias=p,
+                                   mb=p,
                                    IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_sk
         end
         
-        function IA_A(p::T)::Array{T,1} where T<:Real
+        function IA_A(p::T)::Array{T1,} where T<:Real
             cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
                                          tk_mode="EisHu", Pk_mode="Halofit")
             cosmo.settings.cosmo_type = typeof(p)
