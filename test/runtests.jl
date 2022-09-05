@@ -303,7 +303,6 @@ np = pyimport("numpy")
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.05))
     end
 
-"""
     @testset "IsBaseDiff" begin
         zs = 0.02:0.02:1.0
 
@@ -578,6 +577,4 @@ np = pyimport("numpy")
         @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 1E-2))
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 1E-2))
     end
-
-"""
 end
