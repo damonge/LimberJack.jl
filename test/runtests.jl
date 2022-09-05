@@ -178,7 +178,6 @@ np = pyimport("numpy")
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 3E-3))
     end
 
-"""
     @testset "emul_Cℓs" begin
         cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_class", 
                                             matter_power_spectrum="linear",
@@ -207,6 +206,12 @@ np = pyimport("numpy")
         Cℓ_ss_bm = ccl.angular_cl(cosmo_bm, ts_bm, ts_bm, ℓs)
         Cℓ_gk_bm = ccl.angular_cl(cosmo_bm, tg_bm, tk_bm, ℓs)
         Cℓ_sk_bm = ccl.angular_cl(cosmo_bm, ts_bm, tk_bm, ℓs)
+
+        Cℓ_gg_bm = pyconvert(Vector, Cℓ_gg_bm)
+        Cℓ_gs_bm = pyconvert(Vector, Cℓ_gs_bm)
+        Cℓ_ss_bm = pyconvert(Vector, Cℓ_ss_bm)
+        Cℓ_gk_bm = pyconvert(Vector, Cℓ_gk_bm)
+        Cℓ_sk_bm = pyconvert(Vector, Cℓ_sk_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
@@ -243,6 +248,12 @@ np = pyimport("numpy")
         Cℓ_ss_bm = ccl.angular_cl(cosmo_bm, ts_bm, ts_bm, ℓs)
         Cℓ_gk_bm = ccl.angular_cl(cosmo_bm, tg_bm, tk_bm, ℓs)
         Cℓ_sk_bm = ccl.angular_cl(cosmo_bm, ts_bm, tk_bm, ℓs)
+        
+        Cℓ_gg_bm = pyconvert(Vector, Cℓ_gg_bm)
+        Cℓ_gs_bm = pyconvert(Vector, Cℓ_gs_bm)
+        Cℓ_ss_bm = pyconvert(Vector, Cℓ_ss_bm)
+        Cℓ_gk_bm = pyconvert(Vector, Cℓ_gk_bm)
+        Cℓ_sk_bm = pyconvert(Vector, Cℓ_sk_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 5E-3))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 5E-3))
@@ -278,6 +289,12 @@ np = pyimport("numpy")
         Cℓ_ss_bm = ccl.angular_cl(cosmo_bm, ts_bm, ts_bm, ℓs)
         Cℓ_gk_bm = ccl.angular_cl(cosmo_bm, tg_bm, tk_bm, ℓs)
         Cℓ_sk_bm = ccl.angular_cl(cosmo_bm, ts_bm, tk_bm, ℓs)
+        
+        Cℓ_gg_bm = pyconvert(Vector, Cℓ_gg_bm)
+        Cℓ_gs_bm = pyconvert(Vector, Cℓ_gs_bm)
+        Cℓ_ss_bm = pyconvert(Vector, Cℓ_ss_bm)
+        Cℓ_gk_bm = pyconvert(Vector, Cℓ_gk_bm)
+        Cℓ_sk_bm = pyconvert(Vector, Cℓ_sk_bm)
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
@@ -285,7 +302,8 @@ np = pyimport("numpy")
         @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.05))
     end
-    
+
+"""
     @testset "IsBaseDiff" begin
         zs = 0.02:0.02:1.0
 
