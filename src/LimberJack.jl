@@ -1,9 +1,9 @@
 module LimberJack
 
 export Settings, CosmoPar, Cosmology, Ez, Hmpc, comoving_radial_distance, growth_factor
-export get_emulated_log_pk0,
 export Emulator, get_emulated_log_pk0
-export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer, get_Fℓ
+export get_PKnonlin
+export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer
 export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
 export Theory, get_nzs
 
@@ -16,7 +16,5 @@ include("halofit.jl")
 include("tracers.jl")
 include("spectra.jl")
 include("theory.jl")
-
-
 
 end

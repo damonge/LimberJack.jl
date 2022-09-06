@@ -21,7 +21,6 @@ struct NumberCountsTracer <: Tracer
     chis
     wint::AbstractInterpolation
     b
-    lpre::Int
 end
 
 """
@@ -57,7 +56,7 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     w_arr = @. (nz_w*hz/nz_norm)
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
     
-    NumberCountsTracer(w_arr, chi, wint, kwargs[:b], 0)
+    NumberCountsTracer(w_arr, chi, wint, kwargs[:b])
 end
 
 """
@@ -70,7 +69,6 @@ Arguments:
 - `chis::Vector{Dual}` : comoving distances array of the radial kernel.
 - `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
 - `b::Dual`: matter-galaxy bias.
-- `lpre::Int` : prefactor mark.
 
 Returns:
 - `WeakLensingTracer::WeakLensingTracer` : Weak lensing tracer structure.
@@ -81,7 +79,6 @@ struct WeakLensingTracer <: Tracer
     chis
     wint::AbstractInterpolation
     b
-    lpre::Int
 end
 
 """
@@ -144,7 +141,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     chi[1] = 0.0
     wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
     b = kwargs[:mb]+1.0 
-    WeakLensingTracer(w_arr, chi, wint, b, 2)
+    WeakLensingTracer(w_arr, chi, wint, b)
 end
 
 """
@@ -167,7 +164,6 @@ struct CMBLensingTracer <: Tracer
     warr
     chis
     wint::AbstractInterpolation
-    lpre::Int
 end
 
 """
@@ -198,7 +194,7 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
 
     # Interpolate
     wint = LinearInterpolation(chis, w_arr, extrapolation_bc=0)
-    CMBLensingTracer(w_arr, chis, wint, 1)
+    CMBLensingTracer(w_arr, chis, wint)
 end
 
 """
@@ -220,28 +216,4 @@ function get_IA(cosmo::Cosmology, zs, IA_params)
     A_IA = IA_params[1]
     alpha_IA = IA_params[2]
     return @. A_IA*((1 + zs)/1.62)^alpha_IA * (0.0134 * cosmo.cosmo.Ωm / cosmo.Dz(zs))
-end
-
-"""
-    get_Fℓ(t::Tracer, ℓ::Real)
-
-CMB lensing tracer structure. 
-
-Arguments:
-
-- `t::Tracer` : cosmology structure.
-- `ℓ::Vector{Real}` : multipole array.
-
-Returns:
-- `prefactor::Vector{Real}` : angular power spectrum pre-factor.
-
-"""
-function get_Fℓ(t::Tracer, ℓ::Real)
-    if t.lpre == 2
-        return @. sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2
-    elseif t.lpre == 1
-        return @. (ℓ+1)*ℓ/(ℓ+0.5)^2
-    else
-        return 1
-    end
 end

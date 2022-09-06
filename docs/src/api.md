@@ -13,6 +13,17 @@ LimberJack.lin_Pk
 LimberJack.nonlin_Pk
 ```
 
+## Emulator
+```@docs
+LimberJack.Emulator
+LimberJack.get_emulated_log_pk0
+```
+
+## Halofit
+```@docs
+LimberJack.get_PKnonlin
+```
+
 ## Spectra
 ```@docs
 LimberJack.angularCℓs
