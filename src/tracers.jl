@@ -1,6 +1,22 @@
 abstract type Tracer end
 
+"""
+    NumberCountsTracer(warr, chis, wint, b, lpre)
 
+Number counts tracer structure. 
+
+Arguments:
+
+- `warr::Vector{Dual}` : radial kernel array. 
+- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
+- `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
+- `b::Dual`: matter-galaxy bias.
+- `lpre::Int` : prefactor mark.
+
+Returns:
+- `NumberCountsTracer::NumberCountsTracer` : Number counts tracer structure.
+
+"""
 struct NumberCountsTracer <: Tracer
     warr
     chis
@@ -9,6 +25,24 @@ struct NumberCountsTracer <: Tracer
     lpre::Int
 end
 
+"""
+    NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...)
+
+Number counts tracer structure constructor. 
+
+Arguments:
+
+- `cosmo::Cosmology` : cosmology structure. 
+- `z_n::Vector{Dual}` : redshift array.
+- `nz::Interpolation` : distribution of sources over redshift.
+
+Kwargs:
+- `b::Dual = 1` : matter-galaxy bias. 
+ 
+Returns:
+- `NumberCountsTracer::NumberCountsTracer` : Number counts tracer structure.
+
+"""
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
 
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
@@ -28,6 +62,23 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     NumberCountsTracer(w_arr, chi, wint, kwargs[:b], 0)
 end
 
+"""
+    WeakLensingTracer(warr, chis, wint, b, lpre)
+
+Weak lensing tracer structure. 
+
+Arguments:
+
+- `warr::Vector{Dual}` : radial kernel array. 
+- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
+- `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
+- `b::Dual`: matter-galaxy bias.
+- `lpre::Int` : prefactor mark.
+
+Returns:
+- `WeakLensingTracer::WeakLensingTracer` : Weak lensing tracer structure.
+
+"""
 struct WeakLensingTracer <: Tracer
     warr
     chis
@@ -36,6 +87,25 @@ struct WeakLensingTracer <: Tracer
     lpre::Int
 end
 
+"""
+    WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...)
+
+Weak lensing tracer structure constructor. 
+
+Arguments:
+
+- `cosmo::Cosmology` : cosmology structure. 
+- `z_n::Vector{Dual}` : redshift array.
+- `nz::Interpolation` : distribution of sources over redshift.
+
+Kwargs:
+- `mb::Dual = 1` : multiplicative bias. 
+- `IA_params::Vector{Dual} = [A_IA, alpha_IA]`: instrinsic aligment parameters.
+ 
+Returns:
+- `WeakLensingTracer::WeakLensingTracer` : Weak lensing tracer structure.
+
+"""
 WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
@@ -80,11 +150,45 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     WeakLensingTracer(w_arr, chi, wint, b, 2)
 end
 
+"""
+    CMBLensingTracer(warr, chis, wint, lpre)
+
+CMB lensing tracer structure. 
+
+Arguments:
+
+- `warr::Vector{Dual}` : radial kernel array. 
+- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
+- `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
+- `lpre::Int` : prefactor mark.
+
+Returns:
+- `CMBLensingTracer::CMBLensingTracer` : CMB lensing tracer structure.
+
+"""
 struct CMBLensingTracer <: Tracer
+    warr
+    chis
     wint::AbstractInterpolation
     lpre::Int
 end
 
+"""
+    CMBLensingTracer(cosmo::Cosmology; nchi=100)
+
+CMB lensing tracer structure. 
+
+Arguments:
+
+- `cosmo::Cosmology` : cosmology structure.
+
+Kwargs:
+- `nchi::Int = 100` : number of nodes in the comoving distance array. 
+
+Returns:
+- `CMBLensingTracer::CMBLensingTracer` : CMB lensing tracer structure.
+
+"""
 CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     # chi array
     chis = range(0.0, stop=cosmo.chi_max, length=nchi)
@@ -97,15 +201,44 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
 
     # Interpolate
     wint = LinearInterpolation(chis, w_arr, extrapolation_bc=0)
-    CMBLensingTracer(wint, 1)
+    CMBLensingTracer(w_arr, chis, wint, 1)
 end
 
+"""
+    get_IA(cosmo::Cosmology, zs, IA_params)
+
+CMB lensing tracer structure. 
+
+Arguments:
+
+- `cosmo::Cosmology` : cosmology structure.
+- `zs::Vector{Dual}` : redshift array.
+- `IA_params::Vector{Dual}` : Intrinsic aligment parameters.
+
+Returns:
+- `IA_corr::Vector{Dual}` : Intrinsic aligment correction to radial kernel.
+
+"""
 function get_IA(cosmo::Cosmology, zs, IA_params)
     A_IA = IA_params[1]
     alpha_IA = IA_params[2]
     return @. A_IA*((1 + zs)/1.62)^alpha_IA * (0.0134 * cosmo.cosmo.Ωm / cosmo.Dz(zs))
 end
 
+"""
+    get_Fℓ(t::Tracer, ℓ::Real)
+
+CMB lensing tracer structure. 
+
+Arguments:
+
+- `t::Tracer` : cosmology structure.
+- `ℓ::Vector{Real}` : multipole array.
+
+Returns:
+- `prefactor::Vector{Real}` : angular power spectrum pre-factor.
+
+"""
 function get_Fℓ(t::Tracer, ℓ::Real)
     if t.lpre == 2
         return @. sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2
