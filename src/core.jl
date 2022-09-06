@@ -90,7 +90,6 @@ end
 Cosmology parameters structure constructor.  
 
 Arguments:
-
 - `Ωm::Dual` : cosmological matter density. 
 - `Ωb::Dual` : cosmological baryonic density.
 - `h::Dual` : reduced Hubble parameter.
@@ -99,7 +98,6 @@ Arguments:
 - `θCMB::Dual` : CMB temperature.
 
 Returns:
-
 - `CosmoPar` : cosmology parameters structure.
 
 """
@@ -121,7 +119,6 @@ end
 Base cosmology structure.  
 
 Arguments:
-
 - `Settings::MutableStructure` : cosmology constructure settings. 
 - `CosmoPar::Structure` : cosmological parameters.
 - `ks::Dual` : scales array.
@@ -138,7 +135,6 @@ Arguments:
 - `Pk::Dual` : matter power spectrum.
 
 Returns:
-
 - `CosmoPar` : cosmology parameters structure.
 
 """
@@ -174,7 +170,6 @@ expansion history.
 
 Depending on the choice of transfer function in the settings, \
 the primordial power spectrum is calculated using: 
-
 - `tk_mode = "BBKS"` : the BBKS fitting formula (https://ui.adsabs.harvard.edu/abs/1986ApJ...304...15B)
 - `tk_mode = "EisHu"` : the Eisenstein & Hu formula (arXiv:astro-ph/9710252)
 - `tk_mode = "emulator"` : the Mootoovaloo et al 2021 emulator (arXiv:2105.02256v2)
@@ -185,12 +180,10 @@ Otherwise, provided custom growth factor is used.
 
 Depending on the choice of power spectrum mode in the settings, \
 the matter power spectrum is either: 
-
 - `Pk_mode = "linear"` : the linear matter power spectrum.
 - `Pk_mode = "halofit"` : the Halofit non-linear matter power spectrum (arXiv:astro-ph/0207664).
 
 Arguments:
-
 - `Settings::MutableStructure` : cosmology constructure settings. 
 - `CosmoPar::Structure` : cosmological parameters.
 
@@ -379,12 +372,10 @@ end
 Computes the primordial power spectrum using the Einsentein & Hu formula (arXiv:astro-ph/9710252).  
 
 Arguments:
-
 - `cosmo::CosmoPar` : cosmological parameters structure
 - `k::Vector{Dual}` : scales array
 
 Returns:
-
 - `Tk::Vector{Dual}` : transfer function.
 
 """
@@ -458,12 +449,10 @@ end
 Given a `Cosmology` instance, converts from comoving distance to redshift.  
 
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure
 - `chi::Dual` : comoving distance
 
 Returns:
-
 - `z::Dual` : redshift
 
 """
@@ -482,12 +471,10 @@ end
 Given a `Cosmology` instance, it returns the expansion rate (H(z)/H0). 
 
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure
 - `z::Dual` : redshift
 
 Returns:
-
 - `Ez::Dual` : expansion rate 
 
 """
@@ -499,12 +486,10 @@ Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
 Given a `Cosmology` instance, it returns the expansion history (H(z)) in Mpc. 
 
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure
 - `z::Dual` : redshift
 
 Returns:
-
 - `Hmpc::Dual` : expansion rate 
 
 """
@@ -516,12 +501,10 @@ Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
 Given a `Cosmology` instance, it returns the comoving radial distance. 
 
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure
 - `z::Dual` : redshift
 
 Returns:
-
 - `Chi::Dual` : comoving radial distance
 
 """
@@ -533,12 +516,10 @@ comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 Given a `Cosmology` instance, it returns the growth factor (D(z) = log(δ)). 
 
 Arguments:
-
 - `cosmo::Cosmology` : cosmological structure
 - `z::Dual` : redshift
 
 Returns:
-
 - `Chi::Dual` : comoving radial distance
 
 """
@@ -551,13 +532,11 @@ Given a `Cosmology` instance, it returns the non-linear matter power spectrum (P
 using the Halofit fitting formula (arXiv:astro-ph/0207664). 
 
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure
 - `k::Dual` : scale
 - `z::Dual` : redshift
 
 Returns:
-
 - `Pk::Dual` : non-linear matter power spectrum
 
 """
@@ -569,14 +548,13 @@ end
     lin_Pk(cosmo::Cosmology, k, z)
 
 Given a `Cosmology` instance, it returns the linear matter power spectrum (P(k,z))
-Arguments:
 
+Arguments:
 - `cosmo::Cosmology` : cosmology structure
 - `k::Dual` : scale
 - `z::Dual` : redshift
 
 Returns:
-
 - `Pk::Dual` : linear matter power spectrum
 
 """

@@ -7,7 +7,7 @@ halofit:
 - Date: 2022-02-19
 =#
 
-function get_σ2(lks, ks, pks, R, kind)
+function _get_σ2(lks, ks, pks, R, kind)
     nlks = length(lks)
     k3 = ks .^ 3
     x2 = @. (ks*R)^2
@@ -24,6 +24,23 @@ function get_σ2(lks, ks, pks, R, kind)
     return integral
 end
 
+"""
+    get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
+
+Uses the Halofit (arXiv:astro-ph/0207664) model to calculate the non-linear matter power spectrum.
+
+Arguments:
+- `CosmoPar::Stucture` : cosmological paramters structure
+- `z::Vector{Dual}` : array of redshifts
+- `k::Vector{Dual}` : array of k-scales
+- `PkLz0::Interpolator` : log primordial power spectrum interpolator as a function of log k-scale
+- `Dzs::Vector{Dual}` : growth factor evaluated at redshift array
+- `cosmo_type::Type` : type of cosmological parameters
+
+Returns:
+- `pk_NL(logk, z)::Interpolator` : non-linear matter spectrum as a function of log k-scale and redshift
+
+"""
 function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
     nk = length(k)
     nz = length(z)
@@ -37,7 +54,7 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
     σ2s = zeros(cosmo_type, length(lRs))
     for i in 1:length(lRs)
         lR = lRs[i]
-        σ2s[i] = get_σ2(logk, k, PkLz0, exp(lR), 0)
+        σ2s[i] = _get_σ2(logk, k, PkLz0, exp(lR), 0)
     end
     lσ2s = log.(σ2s)
     # When s8<0.6 lσ2i interpolation fails --> Extrapolation needed
@@ -45,12 +62,12 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
     pk_NLs = zeros(cosmo_type, nk, nz)
     for i in 1:nz
         Dz2 =  Dz2s[i]
-        rsig =  get_rsigma(lσ2i, Dz2, lR0, lR1)
-        onederiv_int = get_σ2(logk, k, PkLz0, rsig, 2) * Dz2
-        twoderiv_int = get_σ2(logk, k, PkLz0, rsig, 4) * Dz2
+        rsig =  _get_rsigma(lσ2i, Dz2, lR0, lR1)
+        onederiv_int = _get_σ2(logk, k, PkLz0, rsig, 2) * Dz2
+        twoderiv_int = _get_σ2(logk, k, PkLz0, rsig, 4) * Dz2
         neff = 2*onederiv_int - 3.0
         C = 4*(twoderiv_int + onederiv_int^2)
-        pk_NLs[1:nk, i] = power_spectrum_nonlin(cosmo, PkLz0 .* Dz2, k, z[i], rsig, neff, C)
+        pk_NLs[1:nk, i] = _power_spectrum_nonlin(cosmo, PkLz0 .* Dz2, k, z[i], rsig, neff, C)
     end
     
     pk_NL = LinearInterpolation((logk, z), log.(pk_NLs))
@@ -58,7 +75,7 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
     return pk_NL
 end 
 
-function secant(f, x0, x1, tol)
+function _secant(f, x0, x1, tol)
     # TODO: fail modes
     x_nm1 = x0
     x_nm2 = x1
@@ -74,13 +91,13 @@ function secant(f, x0, x1, tol)
     return 0.5*(x_nm2+x_nm1)
 end
 
-function get_rsigma(lσ2i, Dz2, lRmin, lRmax)
+function _get_rsigma(lσ2i, Dz2, lRmin, lRmax)
     lDz2 = log(Dz2)
-    lRsigma = secant(lR -> lσ2i(lR)+lDz2, lRmin, lRmax, 1E-4)
+    lRsigma = _secant(lR -> lσ2i(lR)+lDz2, lRmin, lRmax, 1E-4)
     return exp(lRsigma)
 end
 
-function power_spectrum_nonlin(cpar::CosmoPar, PkL, k, z, rsig, neff, C)
+function _power_spectrum_nonlin(cpar::CosmoPar, PkL, k, z, rsig, neff, C)
     # DAM: note that below I've commented out anything to do with
     # neutrinos or non-Lambda dark energy.
     opz = 1.0+z

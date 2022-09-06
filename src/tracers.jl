@@ -6,7 +6,6 @@ abstract type Tracer end
 Number counts tracer structure. 
 
 Arguments:
-
 - `warr::Vector{Dual}` : radial kernel array. 
 - `chis::Vector{Dual}` : comoving distances array of the radial kernel.
 - `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
@@ -31,7 +30,6 @@ end
 Number counts tracer structure constructor. 
 
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure. 
 - `z_n::Vector{Dual}` : redshift array.
 - `nz::Interpolation` : distribution of sources over redshift.
@@ -66,7 +64,6 @@ end
     WeakLensingTracer(warr, chis, wint, b, lpre)
 
 Weak lensing tracer structure. 
-
 Arguments:
 
 - `warr::Vector{Dual}` : radial kernel array. 
