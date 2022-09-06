@@ -1,8 +1,9 @@
 # make.jl
-using Documenter, GaussianProcess
+using Documenter, LimberJack
 
 makedocs(sitename = "LimberJack.jl",
-         modules = [GaussianProcess],
+         modules = [LimberJack],
          pages = ["Home" => "index.md",
                   "API" => "api.md"])
          
+deploydocs(repo = "github.com/Damonge/LimberJack.jl")

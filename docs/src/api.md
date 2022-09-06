@@ -1,7 +1,6 @@
 # LimberJack.jl
 
 ## Core
-
 ```@docs
 LimberJack.Settings
 LimberJack.CosmoPar
@@ -14,16 +13,24 @@ LimberJack.lin_Pk
 LimberJack.nonlin_Pk
 ```
 
-## Spectra
+## Emulator
+```@docs
+LimberJack.Emulator
+LimberJack.get_emulated_log_pk0
+```
 
+## Halofit
+```@docs
+LimberJack.get_PKnonlin
+```
+
+## Spectra
 ```@docs
 LimberJack.angularCℓs
 LimberJack.angularCℓ
-LimberJack.CMBLensingTracer
 ```
 
 ## Tracers
-
 ```@docs
 LimberJack.NumberCountsTracer
 LimberJack.WeakLensingTracer

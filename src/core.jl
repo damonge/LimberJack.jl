@@ -1,11 +1,7 @@
 # c/(100 km/s/Mpc) in Mpc
 const CLIGHT_HMPC = 2997.92458
 
-macro Name(arg)
-   string(arg)
-end
-
-function w_tophat(x::Real)
+function _w_tophat(x::Real)
     x2 = x^2
 
     if x < 0.1
@@ -20,12 +16,32 @@ end
 
 function _σR2(ks, pk, dlogk, R)
     x = ks .* R
-    wk = w_tophat.(x)
+    wk = _w_tophat.(x)
     integ = @. pk * wk^2 * ks^3
     # OPT: proper integration instead?
     return sum(integ)*dlogk/(2*pi^2)
 end
 
+"""
+    Settings(cosmo_type, nz, nz_pk, nk, tk_mode, pk_mode, custom_Dz)
+
+Cosmology constructor settings structure. 
+
+Arguments:
+
+- `cosmo_type::Type` : type of cosmological parameters. 
+- `nz::Int` : number of nodes in the general redshift array.
+- `nz_pk::Int` : number of nodes in the redshift array used for matter power spectrum.
+- `nk::Int`: number of nodes in the matter power spectrum.
+- `tk_mode::String` : choice of transfer function.
+- `Pk_mode::String` : choice of matter power spectrum.
+- `custom_Dz::Any` : custom growth factor.
+
+Returns:
+
+- `Settings` : cosmology settings.
+
+"""
 mutable struct Settings
     cosmo_type::DataType
     nz::Int
@@ -36,6 +52,27 @@ mutable struct Settings
     custom_Dz
 end
 
+"""
+    CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
+
+Cosmology parameters structure.  
+
+Arguments:
+
+- `Ωm::Dual` : cosmological matter density. 
+- `Ωb::Dual` : cosmological baryonic density.
+- `h::Dual` : reduced Hubble parameter.
+- `n_s::Dual` : spectral index.
+- `σ8::Dual`: variance of the matter density field in a sphere of 8 Mpc.
+- `θCMB::Dual` : CMB temperature.
+- `Ωr::Dual` : cosmological radiation density.
+- `ΩΛ::Dual` : cosmological dark energy density.
+
+Returns:
+
+- `CosmoPar` : cosmology parameters structure.
+
+"""
 struct CosmoPar{T}
     Ωm::T
     Ωb::T
@@ -47,6 +84,23 @@ struct CosmoPar{T}
     ΩΛ::T
 end
 
+"""
+    CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
+
+Cosmology parameters structure constructor.  
+
+Arguments:
+- `Ωm::Dual` : cosmological matter density. 
+- `Ωb::Dual` : cosmological baryonic density.
+- `h::Dual` : reduced Hubble parameter.
+- `n_s::Dual` : spectral index.
+- `σ8::Dual`: variance of the matter density field in a sphere of 8 Mpc.
+- `θCMB::Dual` : CMB temperature.
+
+Returns:
+- `CosmoPar` : cosmology parameters structure.
+
+"""
 CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
     # This is 4*sigma_SB*(2.7 K)^4/rho_crit(h=1)
     prefac = 2.38163816E-5
@@ -57,6 +111,33 @@ CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
     CosmoPar{Real}(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
 end
 
+"""
+    Cosmology(Settings, CosmoPar,
+              ks, pk0, logk, dlogk,
+              zs, chi, z_of_chi, chi_max, chi_LSS, Dz, PkLz0, Pk)
+
+Base cosmology structure.  
+
+Arguments:
+- `Settings::MutableStructure` : cosmology constructure settings. 
+- `CosmoPar::Structure` : cosmological parameters.
+- `ks::Dual` : scales array.
+- `pk0::Dual`: primordial matter power spectrum.
+- `logk::Dual` : log scales array.
+- `dlogk::Dual` : increment in log scales.
+- `zs::Dual` : redshift array.
+- `chi::Dual` : comoving distance array.
+- `z_of_chi::Dual` : redshift of comoving distance array.
+- `chi_max::Dual` : upper bound of comoving distance array.
+- `chi_LSS::Dual` : comoving distance to suface of last scattering.
+- `Dz::Dual` : growth factor.
+- `PkLz0::Dual` : interpolator of log primordial power spectrum over k-scales.
+- `Pk::Dual` : matter power spectrum.
+
+Returns:
+- `CosmoPar` : cosmology parameters structure.
+
+"""
 struct Cosmology
     settings::Settings
     cosmo::CosmoPar
@@ -76,6 +157,41 @@ struct Cosmology
     Pk::AbstractInterpolation
 end
 
+"""
+    Cosmology(cpar::CosmoPar, settings::Settings)
+
+Base cosmology structure constructor.
+
+Calculates the LCDM expansion history based on the different \
+species densities provided in `CosmoPar`.
+
+The comoving distance is then calculated integrating the \
+expansion history. 
+
+Depending on the choice of transfer function in the settings, \
+the primordial power spectrum is calculated using: 
+- `tk_mode = "BBKS"` : the BBKS fitting formula (https://ui.adsabs.harvard.edu/abs/1986ApJ...304...15B)
+- `tk_mode = "EisHu"` : the Eisenstein & Hu formula (arXiv:astro-ph/9710252)
+- `tk_mode = "emulator"` : the Mootoovaloo et al 2021 emulator (arXiv:2105.02256v2)
+
+is `custom_Dz = nothing`, the growth factor is obtained either by solving the Jeans equation. \
+Otherwise, provided custom growth factor is used.
+
+
+Depending on the choice of power spectrum mode in the settings, \
+the matter power spectrum is either: 
+- `Pk_mode = "linear"` : the linear matter power spectrum.
+- `Pk_mode = "halofit"` : the Halofit non-linear matter power spectrum (arXiv:astro-ph/0207664).
+
+Arguments:
+- `Settings::MutableStructure` : cosmology constructure settings. 
+- `CosmoPar::Structure` : cosmological parameters.
+
+Returns:
+
+- `Cosmology` : cosmology structure.
+
+"""
 Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Load settings
     cosmo_type = settings.cosmo_type
@@ -166,8 +282,39 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
               chi_LSS, Dzi, pki, Pk)
 end
 
+"""
+    Cosmology(Ωm, Ωb, h, n_s, σ8;
+              θCMB=2.725/2.7, nk=500, nz=500, nz_pk=100,
+              tk_mode="BBKS", Pk_mode="linear", custom_Dz=nothing)
+
+Simple cosmology structure constructor that calls the base constructure.
+Fills the `CosmoPar` and `Settings` structure based on the given parameters.
+
+Arguments:
+
+- `Ωm::Dual` : cosmological matter density. 
+- `Ωb::Dual` : cosmological baryonic density.
+- `h::Dual` : reduced Hubble parameter.
+- `n_s::Dual` : spectral index.
+- `σ8::Dual`: variance of the matter density field in a sphere of 8 Mpc.
+
+Kwargs:
+
+- `θCMB::Dual` : CMB temperature.
+- `nz::Int` : number of nodes in the general redshift array.
+- `nz_pk::Int` : number of nodes in the redshift array used for matter power spectrum.
+- `nk::Int`: number of nodes in the matter power spectrum.
+- `tk_mode::String` : choice of transfer function.
+- `Pk_mode::String` : choice of matter power spectrum.
+- `custom_Dz::Any` : custom growth factor.
+
+Returns:
+
+- `Cosmology` : cosmology structure.
+
+"""
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nk=500, nz=500, nz_pk=100,
+          θCMB=2.725/2.7, nz=500, nz_pk=100, nk=500,
           tk_mode="BBKS", Pk_mode="linear", custom_Dz=nothing) = begin
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
@@ -175,12 +322,38 @@ Cosmology(Ωm, Ωb, h, n_s, σ8;
     Cosmology(cpar, settings)
 end
 
+"""
+    Cosmology()
+
+Calls the simple Cosmology structure constructor for the \
+paramters `[0.30, 0.05, 0.67, 0.96, 0.81]`.
+
+Returns:
+
+- `Cosmology` : cosmology structure.
+
+"""
 Cosmology() = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
 
 function σR2(cosmo::Cosmology, R)
     return _σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)
 end
 
+"""
+    TkBBKS(cosmo::CosmoPar, k)
+
+Computes the primordial power spectrum using the BBKS formula (https://ui.adsabs.harvard.edu/abs/1986ApJ...304...15B).  
+
+Arguments:
+
+- `cosmo::CosmoPar` : cosmological parameters structure 
+- `k::Vector{Dual}` : scales array
+
+Returns:
+
+- `Tk::Vector{Dual}` : transfer function.
+
+"""
 function TkBBKS(cosmo::CosmoPar, k)
     q = @. (cosmo.θCMB^2 * k/(cosmo.Ωm * cosmo.h^2 * exp(-cosmo.Ωb*(1+sqrt(2*cosmo.h)/cosmo.Ωm))))
     return (@. (log(1+2.34q)/(2.34q))^2/sqrt(1+3.89q+(16.1q)^2+(5.46q)^3+(6.71q)^4))
@@ -193,6 +366,19 @@ function _T0(keq, k, ac, bc)
     return T0
 end 
 
+"""
+    TkEisHu(cosmo::CosmoPar, k)
+
+Computes the primordial power spectrum using the Einsentein & Hu formula (arXiv:astro-ph/9710252).  
+
+Arguments:
+- `cosmo::CosmoPar` : cosmological parameters structure
+- `k::Vector{Dual}` : scales array
+
+Returns:
+- `Tk::Vector{Dual}` : transfer function.
+
+"""
 function TkEisHu(cosmo::CosmoPar, k)
     Ωc = cosmo.Ωm-cosmo.Ωb
     wm=cosmo.Ωm*cosmo.h^2
@@ -257,7 +443,19 @@ function _dgrowth!(dd, d, cosmo::CosmoPar, a)
     dd[2] = d[1] / (a^3*ez)
 end
 
-# Functions we will actually export
+"""
+    chi_to_z(cosmo::Cosmology, chi)
+
+Given a `Cosmology` instance, converts from comoving distance to redshift.  
+
+Arguments:
+- `cosmo::Cosmology` : cosmology structure
+- `chi::Dual` : comoving distance
+
+Returns:
+- `z::Dual` : redshift
+
+"""
 function chi_to_z(cosmo::Cosmology, chi)
     closest_chi, idx = findmin(abs(chi-cosmo.chis))
     if closest_chi >= chi
@@ -266,15 +464,100 @@ function chi_to_z(cosmo::Cosmology, chi)
 
     return z
 end
+
+"""
+    Ez(cosmo::Cosmology, z)
+
+Given a `Cosmology` instance, it returns the expansion rate (H(z)/H0). 
+
+Arguments:
+- `cosmo::Cosmology` : cosmology structure
+- `z::Dual` : redshift
+
+Returns:
+- `Ez::Dual` : expansion rate 
+
+"""
 Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
+
+"""
+    Hmpc(cosmo::Cosmology, z)
+
+Given a `Cosmology` instance, it returns the expansion history (H(z)) in Mpc. 
+
+Arguments:
+- `cosmo::Cosmology` : cosmology structure
+- `z::Dual` : redshift
+
+Returns:
+- `Hmpc::Dual` : expansion rate 
+
+"""
 Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
+
+"""
+    comoving_radial_distance(cosmo::Cosmology, z)
+
+Given a `Cosmology` instance, it returns the comoving radial distance. 
+
+Arguments:
+- `cosmo::Cosmology` : cosmology structure
+- `z::Dual` : redshift
+
+Returns:
+- `Chi::Dual` : comoving radial distance
+
+"""
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
+
+"""
+    growth_factor(cosmo::Cosmology, z)
+
+Given a `Cosmology` instance, it returns the growth factor (D(z) = log(δ)). 
+
+Arguments:
+- `cosmo::Cosmology` : cosmological structure
+- `z::Dual` : redshift
+
+Returns:
+- `Chi::Dual` : comoving radial distance
+
+"""
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
 
+"""
+    nonlin_Pk(cosmo::Cosmology, k, z)
+
+Given a `Cosmology` instance, it returns the non-linear matter power spectrum (P(k,z)) \
+using the Halofit fitting formula (arXiv:astro-ph/0207664). 
+
+Arguments:
+- `cosmo::Cosmology` : cosmology structure
+- `k::Dual` : scale
+- `z::Dual` : redshift
+
+Returns:
+- `Pk::Dual` : non-linear matter power spectrum
+
+"""
 function nonlin_Pk(cosmo::Cosmology, k, z)
     return @. exp(cosmo.Pk(log(k), z))
 end
 
+"""
+    lin_Pk(cosmo::Cosmology, k, z)
+
+Given a `Cosmology` instance, it returns the linear matter power spectrum (P(k,z))
+
+Arguments:
+- `cosmo::Cosmology` : cosmology structure
+- `k::Dual` : scale
+- `z::Dual` : redshift
+
+Returns:
+- `Pk::Dual` : linear matter power spectrum
+
+"""
 function lin_Pk(cosmo::Cosmology, k, z)
     pk0 = @. exp(cosmo.PkLz0(log(k)))
     Dz2 = cosmo.Dz(z)^2
