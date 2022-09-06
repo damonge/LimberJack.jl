@@ -9,8 +9,17 @@ function Cℓintegrand(cosmo::Cosmology,
         return 0
     end
     z = cosmo.z_of_chi(chi)
-    w1 = t1.wint(chi)*t1.b
-    w2 = t2.wint(chi)*t2.b
+    w1 = t1.wint(chi) # *t1.b
+    w2 = t2.wint(chi) # *t2.b
+
+    if typeof(t1) == [NumberCountsTracer, WeakLensingTracer]
+        w1 .*= t1.b
+    end
+
+    if typeof(t2) == [NumberCountsTracer, WeakLensingTracer]
+        w2 .*= t2.b
+    end
+
     pk = nonlin_Pk(cosmo, k, z)
     k*w1*w2*pk
 end

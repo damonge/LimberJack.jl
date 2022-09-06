@@ -1,2 +1,3 @@
-# GaussianProcess.jl
-A minimal Gaussian process package in Julia.
+# LimberJack.jl
+
+A differentiable cosmological code in Julia

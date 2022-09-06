@@ -1,5 +1,6 @@
 abstract type Tracer end
 
+
 struct NumberCountsTracer <: Tracer
     warr
     chis
@@ -9,7 +10,6 @@ struct NumberCountsTracer <: Tracer
 end
 
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
-                   #bias=1.0) = begin
 
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
     
@@ -37,7 +37,6 @@ struct WeakLensingTracer <: Tracer
 end
 
 WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
-                  #mbias=0.0, IA_params=[0.0, 0.0]) = begin
     
     nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
     
@@ -83,7 +82,6 @@ end
 
 struct CMBLensingTracer <: Tracer
     wint::AbstractInterpolation
-    b
     lpre::Int
 end
 
@@ -99,7 +97,7 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
 
     # Interpolate
     wint = LinearInterpolation(chis, w_arr, extrapolation_bc=0)
-    CMBLensingTracer(wint, 1.0, 1)
+    CMBLensingTracer(wint, 1)
 end
 
 function get_IA(cosmo::Cosmology, zs, IA_params)
