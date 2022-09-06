@@ -29,11 +29,11 @@ function Cℓintegrand(cosmo::Cosmology,
     w1 = t1.wint(chi) # *t1.b
     w2 = t2.wint(chi) # *t2.b
 
-    if typeof(t1) == [NumberCountsTracer, WeakLensingTracer]
+    if typeof(t1) in [NumberCountsTracer, WeakLensingTracer]
         w1 *= t1.b
     end
 
-    if typeof(t2) == [NumberCountsTracer, WeakLensingTracer]
+    if typeof(t2) in [NumberCountsTracer, WeakLensingTracer]
         w2 *= t2.b
     end
 
