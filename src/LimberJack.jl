@@ -8,7 +8,7 @@ export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
 export Theory, get_nzs
 
 using Interpolations, OrdinaryDiffEq, ForwardDiff 
-using LinearAlgebra, Statistics, Trapz, QuadGK, PythonCall
+using LinearAlgebra, Statistics, Trapz, QuadGK, NPZ
 
 include("core.jl")
 include("emulator.jl")

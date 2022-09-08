@@ -1,25 +1,16 @@
 function get_nzs(nz_path, tracer_name)
-    nzs = np.load(string(nz_path, "nz_", tracer_name, ".npz"))
-    zs = pyconvert(Vector{Float64}, nzs["z"])
-    nz = pyconvert(Vector{Float64}, nzs["dndz"])
+    nzs = npzread(string(nz_path, "nz_", tracer_name, ".npz"))
+    zs = nzs["z"]
+    nz = nzs["dndz"]
     cov = get(nzs, "cov", zeros(length(zs)))
-    if length(cov[1])==1
-        cov = pyconvert(Vector{Float64}, cov)
-    else
-        cov = pyconvert(Matrix{Float64}, cov)
-    end
-
     return zs, nz, cov
 end
 
-function Theory(cosmology::Cosmology, files;
-            nz_path="data/FD/nzs/",
-            Nuisances=Dict())
-
-    tracers_names = pyconvert(Vector{String}, files["tracers"])
-    pairs = pyconvert(Vector{Vector{String}}, files["pairs"]);
-    pairs_ids = pyconvert(Vector{Vector{Int}}, files["pairs_ids"])
-    idx = pyconvert(Vector{Int}, files["idx"])
+function Theory(cosmology::Cosmology,
+                tracers_names, pairs,
+                pairs_ids, idx;
+                nz_path="data/FD/nzs/",
+                Nuisances=Dict())
 
     nui_type = valtype(Nuisances)
     if !(nui_type <: Float64) & (nui_type != Any)
