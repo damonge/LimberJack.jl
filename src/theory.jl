@@ -13,38 +13,8 @@ function get_nzs(nz_path, tracer_name)
 end
 
 function Theory(cosmology::Cosmology, files;
-                nz_path="data/FD/nzs/",
-                Nuisances=Dict())
-
-    tracers_names = pyconvert(Vector{String}, files["tracers"])
-    pairs = pyconvert(Vector{Vector{String}}, files["pairs"]);
-    pairs_ids = pyconvert(Vector{Vector{Int}}, files["pairs_ids"])
-    idx = pyconvert(Vector{Int}, files["idx"])
-
-    nui_type = valtype(Nuisances)
-    if !(nui_type <: Float64) & (nui_type != Any)
-        if nui_type != Real
-            cosmology.settings.cosmo_type = nui_type
-        end
-    end
-
-    ntracers = length(tracers_names)
-    tracers = []
-    for name in tracers_names
-        n = length(name)
-        t_type = name[n-1:n]
-        bin = name[n-3:n-2]
-        zs_mean, nz_mean, cov = get_nzs(nz_path, tracer_type, bin)
-        if t_type == "0"
-            b = get(Nuisances, string("b", bin), 1.0)
-            nz = get(Nuisances, string("nz_g", bin), nz_mean)
-            dzi = get(Nuisances, string("dz_g", bin), 0.0)
-            zs = zs_mean .+ dzi  # Opposite sign in KiDS
-            sel = zs .> 0.
-            tracer = NumberCountsTracer(cosmology, zs[sel], nz[sel];
-  function Theory(cosmology::Cosmology, files;
-                nz_path="data/FD/nzs/",
-                Nuisances=Dict())
+            nz_path="data/FD/nzs/",
+            Nuisances=Dict())
 
     tracers_names = pyconvert(Vector{String}, files["tracers"])
     pairs = pyconvert(Vector{Vector{String}}, files["pairs"]);
