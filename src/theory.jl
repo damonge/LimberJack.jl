@@ -42,6 +42,36 @@ function Theory(cosmology::Cosmology, files;
             zs = zs_mean .+ dzi  # Opposite sign in KiDS
             sel = zs .> 0.
             tracer = NumberCountsTracer(cosmology, zs[sel], nz[sel];
+  function Theory(cosmology::Cosmology, files;
+                nz_path="data/FD/nzs/",
+                Nuisances=Dict())
+
+    tracers_names = pyconvert(Vector{String}, files["tracers"])
+    pairs = pyconvert(Vector{Vector{String}}, files["pairs"]);
+    pairs_ids = pyconvert(Vector{Vector{Int}}, files["pairs_ids"])
+    idx = pyconvert(Vector{Int}, files["idx"])
+
+    nui_type = valtype(Nuisances)
+    if !(nui_type <: Float64) & (nui_type != Any)
+        if nui_type != Real
+            cosmology.settings.cosmo_type = nui_type
+        end
+    end
+
+    ntracers = length(tracers_names)
+    tracers = []
+    for name in tracers_names
+        n = length(name)
+        t_type = name[n:n]
+        bin = name[n-3:n-2]
+        zs_mean, nz_mean, cov = get_nzs(nz_path, name)
+        if t_type == "0"
+            b = get(Nuisances, string("b", bin), 1.0)
+            nz = get(Nuisances, string("nz_g", bin), nz_mean)
+            dzi = get(Nuisances, string("dz_g", bin), 0.0)
+            zs = zs_mean .+ dzi  # Opposite sign in KiDS
+            sel = zs .> 0.
+            tracer = NumberCountsTracer(cosmology, zs[sel], nz[sel];
                                         b=b)
         elseif t_type == "e"
             mb = get(Nuisances, string("mb", bin), 0.0)
@@ -61,6 +91,8 @@ function Theory(cosmology::Cosmology, files;
 
     end
 
+    println("Hello World")
+
     npairs = length(pairs)
     total_len = last(idx)
     cls = zeros(cosmology.settings.cosmo_type, total_len)
@@ -68,6 +100,7 @@ function Theory(cosmology::Cosmology, files;
         name1, name2 = pairs[i]
         id1, id2 = pairs_ids[i]
         ls = files[string("ls_", name1, "_", name2)]
+        ls = pyconvert(Vector{Float64}, ls)
         tracer1 = tracers[id1]
         tracer2 = tracers[id2]
         cls[idx[i]+1:idx[i+1]] = angularCℓs(cosmology, tracer1, tracer2, ls)
