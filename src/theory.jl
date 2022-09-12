@@ -24,22 +24,21 @@ function Theory(cosmology::Cosmology,
     for name in tracers_names
         n = length(name)
         t_type = name[n:n]
-        bin = name[n-3:n-2]
         zs_mean, nz_mean, cov = get_nzs(nz_path, name)
         if t_type == "0"
-            b = get(Nuisances, string(name, "_", "b", bin), 1.0)
-            nz = get(Nuisances, string(name, "_", "nz_g", bin), nz_mean)
-            dzi = get(Nuisances, string(name, "_", "dz_g", bin), 0.0)
+            b = get(Nuisances, string(name, "_", "b"), 1.0)
+            nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
+            dzi = get(Nuisances, string(name, "_", "dz"), 0.0)
             zs = zs_mean .+ dzi  # Opposite sign in KiDS
             sel = zs .> 0.
             tracer = NumberCountsTracer(cosmology, zs[sel], nz[sel];
                                         b=b)
         elseif t_type == "e"
-            mb = get(Nuisances, string(name, "_", "mb", bin), 0.0)
+            mb = get(Nuisances, string(name, "_", "mb"), 0.0)
             IA_params = [get(Nuisances, "A_IA", 0.0),
                          get(Nuisances, "alpha_IA", 0.0)]
-            nz = get(Nuisances, string(name, "_", "nz_k", bin), nz_mean)
-            dzi = get(Nuisances, string(name, "_", "dz_k", bin), 0.0)
+            nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
+            dzi = get(Nuisances, string(name, "_", "dz"), 0.0)
             zs = zs_mean .+ dzi  # Opposite sign in KiDS
             sel = zs .> 0.
             tracer = WeakLensingTracer(cosmology, zs[sel], nz[sel];
