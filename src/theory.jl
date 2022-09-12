@@ -51,8 +51,6 @@ function Theory(cosmology::Cosmology,
 
     end
 
-    println("Hello World")
-
     npairs = length(pairs)
     total_len = last(idx)
     cls = zeros(cosmology.settings.cosmo_type, total_len)
