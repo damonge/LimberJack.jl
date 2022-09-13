@@ -5,6 +5,8 @@ import yaml
 def get_type(name):
     if ('DESwl' in name) or ('KiDS1000' in name):
         return 'e'
+    elif "PLAcv" in name:
+        return 'k'
     else:
         return '0'
 
@@ -12,8 +14,6 @@ s = sacc.Sacc().load_fits("FD/cls_FD_covG.fits")
 fname = "FD/K1K_DELS_DESY1_eBOSS"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
-
-s.remove_tracers(["PLAcv"])
 
 # Apply scale cuts
 indices = []
@@ -85,8 +85,9 @@ for pair, l in zip(pairs, ls):
     dict_save[f'ls_{t1}_{t2}'] = np.array(l)
 
 for name, tracer in s.tracers.items():
-    z=np.array(tracer.z)
-    dndz=np.array(tracer.nz)
-    dict_save[f'nz_{name}']  = np.array([z, dndz]) 
+    if name != "PLAcv":
+        z=np.array(tracer.z)
+        dndz=np.array(tracer.nz)
+        dict_save[f'nz_{name}'+'_'+get_type(name)]  = np.array([z, dndz]) 
 
 np.savez(fname+"_files.npz", **dict_save)

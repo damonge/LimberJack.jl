@@ -17,7 +17,8 @@ function Theory(cosmology::Cosmology,
         n = length(name)
         t_type = name[n:n]
         nzs = files[string("nz_", name, ".npz")]
-        zs_mean, nz_mean, cov = nzs[1], nzs[2], nzs[3]
+        nzs = [nzs[i,:] for i in 1:size(nzs,1)]
+        zs_mean, nz_mean = nzs[1], nzs[2]
         if t_type == "0"
             b = get(Nuisances, string(name, "_", "b"), 1.0)
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
@@ -36,6 +37,10 @@ function Theory(cosmology::Cosmology,
             sel = zs .> 0.
             tracer = WeakLensingTracer(cosmology, zs[sel], nz[sel];
                                        mb=mb, IA_params=IA_params)
+            
+        elseif t_type == "k"
+            tracer = CMBLensingTracer(cosmology)
+
         else
             print("Not implemented")
             trancer = nothing
