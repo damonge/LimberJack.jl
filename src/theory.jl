@@ -16,10 +16,11 @@ function Theory(cosmology::Cosmology,
     for name in tracers_names
         n = length(name)
         t_type = name[n:n]
-        nzs = files[string("nz_", name)]
-        nzs = [nzs[i,:] for i in 1:size(nzs,1)]
-        zs_mean, nz_mean = nzs[1], nzs[2]
         if t_type == "0"
+            nzs = files[string("nz_", name)]
+            nzs = [nzs[i,:] for i in 1:size(nzs,1)]
+            zs_mean, nz_mean = nzs[1], nzs[2]
+
             b = get(Nuisances, string(name, "_", "b"), 1.0)
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
             dzi = get(Nuisances, string(name, "_", "dz"), 0.0)
@@ -28,6 +29,10 @@ function Theory(cosmology::Cosmology,
             tracer = NumberCountsTracer(cosmology, zs[sel], nz[sel];
                                         b=b)
         elseif t_type == "e"
+            nzs = files[string("nz_", name)]
+            nzs = [nzs[i,:] for i in 1:size(nzs,1)]
+            zs_mean, nz_mean = nzs[1], nzs[2]
+
             mb = get(Nuisances, string(name, "_", "mb"), 0.0)
             IA_params = [get(Nuisances, "A_IA", 0.0),
                          get(Nuisances, "alpha_IA", 0.0)]

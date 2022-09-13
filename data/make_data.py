@@ -2,16 +2,19 @@ import numpy as np
 import sacc
 import yaml
 
-def get_type(name):
+def get_type(name, mode="write"):
     if ('DESwl' in name) or ('KiDS1000' in name):
         return 'e'
     elif "PLAcv" in name:
-        return 'k'
+        if mode=="write":
+            return 'k'
+        if mode=="read":
+            return "0"
     else:
         return '0'
 
 s = sacc.Sacc().load_fits("FD/cls_FD_covG.fits")
-fname = "FD/K1K_DELS_DESY1_eBOSS"
+fname = "FD/K1K_DELS_DESY1_eBOSS_CMBk"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
@@ -20,7 +23,11 @@ indices = []
 for cl in config['order']:
     t1, t2 = cl['tracers']
     lmin, lmax = cl['ell_cuts']
-    cl_name = 'cl_%s%s' % (get_type(t1), get_type(t2))
+    type1 = get_type(t1, mode="read")
+    type2 = get_type(t2, mode="read")
+    cl_name = 'cl_%s%s' % (type1, type2)
+    if cl_name == 'cl_e0':
+        cl_name = 'cl_0e'
     ind = s.indices(cl_name, (t1, t2),
                     ell__gt=lmin, ell__lt=lmax)
     indices += list(ind)
@@ -32,9 +39,11 @@ indices = []
 pairs = []
 for cl in config['order']:
     t1, t2 = cl['tracers']
-    type1 = get_type(t1)
-    type2 = get_type(t2)
+    type1 = get_type(t1, mode="read")
+    type2 = get_type(t2, mode="read")
     cl_name = 'cl_%s%s' % (type1, type2)
+    if cl_name == 'cl_e0':
+        cl_name = 'cl_0e'
     l, c_ell, ind = s.get_ell_cl(cl_name, t1, t2,
                                  return_cov=False,
                                  return_ind=True)
