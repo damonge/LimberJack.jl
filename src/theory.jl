@@ -16,7 +16,7 @@ function Theory(cosmology::Cosmology,
     for name in tracers_names
         n = length(name)
         t_type = name[n:n]
-        nzs = files[string("nz_", name, ".npz")]
+        nzs = files[string("nz_", name)]
         nzs = [nzs[i,:] for i in 1:size(nzs,1)]
         zs_mean, nz_mean = nzs[1], nzs[2]
         if t_type == "0"
