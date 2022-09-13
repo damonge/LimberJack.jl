@@ -9,7 +9,6 @@ end
 function Theory(cosmology::Cosmology,
                 tracers_names, pairs,
                 pairs_ids, idx, files;
-                nz_path=nothing,
                 Nuisances=Dict())
 
     ntracers = length(tracers_names)
@@ -17,7 +16,7 @@ function Theory(cosmology::Cosmology,
     for name in tracers_names
         n = length(name)
         t_type = name[n:n]
-        nzs = files[string("nz_", tracer_name, ".npz")]
+        nzs = files[string("nz_", name, ".npz")]
         zs_mean, nz_mean, cov = nzs[1], nzs[2], nzs[3]
         if t_type == "0"
             b = get(Nuisances, string(name, "_", "b"), 1.0)
