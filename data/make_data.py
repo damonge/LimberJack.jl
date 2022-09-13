@@ -50,6 +50,8 @@ for cl in config['order']:
     indices += list(ind)
     cls += list(c_ell)
     ls.append(l)
+    type1 = get_type(t1, mode="write")
+    type2 = get_type(t2, mode="write")
     pairs.append([t1+'_'+type1, t2+'_'+type2])
 
 tracers = np.unique(pairs).flatten()
