@@ -27,7 +27,7 @@ using Distributed
                                   pairs_id=pairs_ids,
                                   idx=idx,
                                   cov_tot=cov_tot)
-    #KiDS priors
+
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
     h ~ Uniform(0.64, 0.82)

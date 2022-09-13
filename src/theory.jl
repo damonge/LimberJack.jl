@@ -8,23 +8,17 @@ end
 
 function Theory(cosmology::Cosmology,
                 tracers_names, pairs,
-                pairs_ids, idx;
-                nz_path="data/FD/nzs/",
+                pairs_ids, idx, files;
+                nz_path=nothing,
                 Nuisances=Dict())
-
-    nui_type = valtype(Nuisances)
-    if !(nui_type <: Float64) & (nui_type != Any)
-        if nui_type != Real
-            cosmology.settings.cosmo_type = nui_type
-        end
-    end
 
     ntracers = length(tracers_names)
     tracers = []
     for name in tracers_names
         n = length(name)
         t_type = name[n:n]
-        zs_mean, nz_mean, cov = get_nzs(nz_path, name)
+        nzs = files[string("nz_", tracer_name, ".npz")]
+        zs_mean, nz_mean, cov = nzs[1], nzs[2], nzs[3]
         if t_type == "0"
             b = get(Nuisances, string(name, "_", "b"), 1.0)
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
@@ -58,7 +52,6 @@ function Theory(cosmology::Cosmology,
         name1, name2 = pairs[i]
         id1, id2 = pairs_ids[i]
         ls = files[string("ls_", name1, "_", name2)]
-        ls = pyconvert(Vector{Float64}, ls)
         tracer1 = tracers[id1]
         tracer2 = tracers[id2]
         cls[idx[i]+1:idx[i+1]] = angularCℓs(cosmology, tracer1, tracer2, ls)
