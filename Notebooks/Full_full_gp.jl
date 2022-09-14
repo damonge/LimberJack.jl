@@ -125,10 +125,21 @@ using Distributed
                      "KiDS1000__3_e_m" => KiDS1000__3_e_m,
                      "KiDS1000__4_e_m" => KiDS1000__4_e_m)
 
+    eta ~ Uniform(0.01, 0.1) # = 0.05
+    l ~ Uniform(0.1, 4) # = 1
+    latent_N = length(latent_x)
+    v ~ filldist(truncated(Normal(0, 1), -3, 3), latent_N)
+    
+    mu = fid_cosmo.Dz(vec(latent_x))
+    K = sqexp_cov_fn(latent_x; eta=eta, l=l)
+    latent_gp = latent_GP(mu, v, K)
+    gp = conditional(latent_x, x, latent_gp, sqexp_cov_fn;
+                      eta=eta, l=l)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
-                                     Pk_mode="Halofit")
+                                     Pk_mode="Halofit";
+                                     custom_Dz=gp)
     
     theory = Theory(cosmology, tracers_names, pairs,
                     pairs_ids, idx, files;
