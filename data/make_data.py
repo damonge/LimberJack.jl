@@ -14,7 +14,7 @@ def get_type(name, mode="write"):
         return '0'
 
 s = sacc.Sacc().load_fits("FD/cls_FD_covG.fits")
-fname = "FD/K1K_DELS_DESY1_eBOSS_CMBk"
+fname = "SD/SD"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
