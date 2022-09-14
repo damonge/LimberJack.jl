@@ -30,11 +30,12 @@ using Distributed
                                   cov_tot=cov_tot, 
                                   files=files)
 
+    #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
     h ~ Uniform(0.64, 0.82)
-    s8 ~ Uniform(0.6, 0.9)
     ns ~ Uniform(0.84, 1.1)
+    s8 = 0.811
     
     DESgc__0_0_b ~ Uniform(0.8, 3.0)
     DESgc__1_0_b ~ Uniform(0.8, 3.0)
@@ -46,6 +47,9 @@ using Distributed
     DESgc__2_0_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
     DESgc__3_0_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
     DESgc__4_0_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    
+    A_IA ~ Uniform(-5, 5) 
+    alpha_IA ~ Uniform(-5, 5)
 
     DESgc__0_e_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
     DESgc__1_e_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
@@ -56,8 +60,8 @@ using Distributed
     DESgc__2_e_m ~ Normal(0.012, 0.023)
     DESgc__3_e_m ~ Normal(0.012, 0.023)
 
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
+    eBOSS__0_0_b ~ Uniform(0.8, 5.0)
+    eBOSS__1_0_b ~ Uniform(0.8, 5.0)
     
     DECALS__0_0_b ~ Uniform(0.8, 3.0)
     DECALS__1_0_b ~ Uniform(0.8, 3.0)
@@ -90,6 +94,9 @@ using Distributed
                      "DESgc__2_0_dz" => DESgc__2_0_dz,
                      "DESgc__3_0_dz" => DESgc__3_0_dz,
                      "DESgc__4_0_dz" => DESgc__4_0_dz,
+        
+                     "A_IA" => A_IA,
+                     "alpha_IA" => alpha_IA,
 
                      "DESgc__0_e_dz" => DESgc__0_e_dz,
                      "DESgc__1_e_dz" => DESgc__1_e_dz,
@@ -99,9 +106,9 @@ using Distributed
                      "DESgc__1_e_m" => DESgc__1_e_m,
                      "DESgc__2_e_m" => DESgc__2_e_m,
                      "DESgc__3_e_m" => DESgc__3_e_m,
-
-                     "A_IA" => A_IA,
-                     "alpha_IA" => alpha_IA,
+        
+                     "eBOSS__0_0_b" => eBOSS__0_0_b,
+                     "eBOSS__1_0_b" => eBOSS__1_0_b,
         
                      "DECALS__0_0_b" => DECALS__0_0_b,
                      "DECALS__1_0_b" => DECALS__1_0_b,
@@ -111,9 +118,6 @@ using Distributed
                      "DECALS__1_0_dz" => DECALS__1_0_dz,
                      "DECALS__2_0_dz" => DECALS__2_0_dz,
                      "DECALS__3_0_dz" => DECALS__3_0_dz,
-                    
-                     "eBOSS__0_0_b" => eBOSS__0_0_b,
-                     "eBOSS__1_0_b" => eBOSS__1_0_b,
                     
                      "KiDS1000__0_e_dz" => KiDS1000__0_e_dz,
                      "KiDS1000__1_e_dz" => KiDS1000__1_e_dz,
