@@ -12,7 +12,7 @@ using Distributed
 
 @everywhere data_set = "FD"
 @everywhere meta = np.load(string("../data/", data_set, "/", data_set, "_meta.npz"))
-@everywhere files = np.load(string("../data/", data_set, "/", data_set, "_files.npz"))
+@everywhere files = npzread(string("../data/", data_set, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
@@ -181,11 +181,11 @@ end
 
 for i in (1+last_n):(last_n+cycles)
     if i == 1
-        chain = sample(model(data_vector), HMC(init_ϵ, steps),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), HMC(init_ϵ, steps),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  
