@@ -2,9 +2,11 @@ using Distributed
 
 @everywhere using Turing
 @everywhere using LimberJack
+@everywhere using GaussianProcess
 @everywhere using CSV
 @everywhere using NPZ
 @everywhere using FITSIO
+@everywhere using Random
 @everywhere using PythonCall
 @everywhere np = pyimport("numpy")
 
@@ -21,6 +23,19 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
+@everywhere fid_cosmo = Cosmology()
+@everywhere N = 100
+@everywhere latent_x = Vector(0:0.3:3)
+@everywhere x = Vector(range(0., stop=3., length=N))
+
+@everywhere function generated_quantities(model::DynamicPPL.Model, chain::MCMCChains.Chains)
+   varinfo = DynamicPPL.VarInfo(model)
+   iters = Iterators.product(1:size(chain, 1), 1:size(chain, 3))
+   return map(iters) do (sample_idx, chain_idx)
+       DynamicPPL.setval!(varinfo, chain, sample_idx, chain_idx)
+       model(varinfo)
+   end
+end
 
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
@@ -28,7 +43,10 @@ using Distributed
                                   pairs_id=pairs_ids,
                                   idx=idx,
                                   cov_tot=cov_tot, 
-                                  files=files)
+                                  files=files,
+                                  fid_cosmo=fid_cosmo,
+                                  latent_x=latent_x,
+                                  x=x)
 
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
@@ -108,7 +126,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     pairs_ids, idx, files;
-                    Nuisances=nuisances).cls
+                    Nuisances=nuisances)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
@@ -132,28 +150,28 @@ folpath = "../chains"
 folname = string(data_set, "_gp_hp_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
-if isdir(folname)
-    fol_files = readdir(folname)
-    last_chain = last([file for file in fol_files if occursin("chain", file)])
-    last_n = parse(Int, last_chain[7])
-    println("Restarting chain")
-else
-    mkdir(folname)
-    println(string("Created new folder ", folname))
-    last_n = 0
-end
+mkdir(folname)
+println(string("Created new folder ", folname))
 
-for i in (1+last_n):(last_n+cycles)
+for i in 1:cycles
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
-    end  
+    end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
     CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
+    derived = generated_quantities(model(data_vector), chain)
+    gps = vec([row.gp for row in derived])
+    cls = vec([row.theory for row in derived])
+    CSV.write(joinpath(folname, string("gps_", i,".csv")), 
+              DataFrame(gps, :auto), header = false)
+    CSV.write(joinpath(folname, string("cls_", i,".csv")), 
+              DataFrame(cls, :auto), header = false)
+    
 end

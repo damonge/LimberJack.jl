@@ -97,7 +97,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     pairs_ids, idx, files;
-                    Nuisances=nuisances).cls
+                    Nuisances=nuisances)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
