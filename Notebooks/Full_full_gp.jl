@@ -10,8 +10,9 @@ using Distributed
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere meta = np.load("../data/FD/FD_meta.npz")
-@everywhere files = np.load("../data/FD/FD_files.npz")
+@everywhere data_set = "FD"
+@everywhere meta = np.load(string("../data/", data_set, "/", data_set, "_meta.npz"))
+@everywhere files = np.load(string("../data/", data_set, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
@@ -125,8 +126,8 @@ using Distributed
                      "KiDS1000__3_e_m" => KiDS1000__3_e_m,
                      "KiDS1000__4_e_m" => KiDS1000__4_e_m)
 
-    eta ~ Uniform(0.01, 0.1) # = 0.05
-    l ~ Uniform(0.1, 4) # = 1
+    eta ~ Uniform(0.01, 0.1)
+    l ~ Uniform(0.1, 4)
     latent_N = length(latent_x)
     v ~ filldist(truncated(Normal(0, 1), -3, 3), latent_N)
     
@@ -164,7 +165,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("Full_full_", "TAP_", TAP)
+folname = string(data_set, "_gp_hp_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
