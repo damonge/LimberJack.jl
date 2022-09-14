@@ -51,14 +51,14 @@ using Distributed
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
 
-    DESgc__0_e_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
-    DESgc__1_e_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
-    DESgc__2_e_dz ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
-    DESgc__3_e_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
-    DESgc__0_e_m ~ Normal(0.012, 0.023)
-    DESgc__1_e_m ~ Normal(0.012, 0.023)
-    DESgc__2_e_m ~ Normal(0.012, 0.023)
-    DESgc__3_e_m ~ Normal(0.012, 0.023)
+    DESwl__0_e_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
+    DESwl__1_e_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
+    DESwl__2_e_dz ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
+    DESwl__3_e_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
+    DESwl__0_e_m ~ Normal(0.012, 0.023)
+    DESwl__1_e_m ~ Normal(0.012, 0.023)
+    DESwl__2_e_m ~ Normal(0.012, 0.023)
+    DESwl__3_e_m ~ Normal(0.012, 0.023)
 
     eBOSS__0_0_b ~ Uniform(0.8, 5.0)
     eBOSS__1_0_b ~ Uniform(0.8, 5.0)
@@ -72,16 +72,16 @@ using Distributed
     DECALS__2_0_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
     DECALS__3_0_dz ~ TruncatedNormal(0.0, 0.010, -0.2, 0.2)
     
-    KiDS1000__0_0_dz ~ TruncatedNormal(0.0, 0.0106, -0.2, 0.2)
-    KiDS1000__1_0_dz ~ TruncatedNormal(0.0, 0.0113, -0.2, 0.2)
-    KiDS1000__2_0_dz ~ TruncatedNormal(0.0, 0.0118, -0.2, 0.2)
-    KiDS1000__3_0_dz ~ TruncatedNormal(0.0, 0.0087, -0.2, 0.2)
-    KiDS1000__4_0_dz ~ TruncatedNormal(0.0, 0.0097, -0.2, 0.2)
-    KiDS1000__0_0_m ~ Normal(0.0, 0.019)
-    KiDS1000__1_0_m ~ Normal(0.0, 0.020)
-    KiDS1000__2_0_m ~ Normal(0.0, 0.017)
-    KiDS1000__3_0_m ~ Normal(0.0, 0.012)
-    KiDS1000__4_0_m ~ Normal(0.0, 0.010)
+    KiDS1000__0_e_dz ~ TruncatedNormal(0.0, 0.0106, -0.2, 0.2)
+    KiDS1000__1_e_dz ~ TruncatedNormal(0.0, 0.0113, -0.2, 0.2)
+    KiDS1000__2_e_dz ~ TruncatedNormal(0.0, 0.0118, -0.2, 0.2)
+    KiDS1000__3_e_dz ~ TruncatedNormal(0.0, 0.0087, -0.2, 0.2)
+    KiDS1000__4_e_dz ~ TruncatedNormal(0.0, 0.0097, -0.2, 0.2)
+    KiDS1000__0_e_m ~ Normal(0.0, 0.019)
+    KiDS1000__1_e_m ~ Normal(0.0, 0.020)
+    KiDS1000__2_e_m ~ Normal(0.0, 0.017)
+    KiDS1000__3_e_m ~ Normal(0.0, 0.012)
+    KiDS1000__4_e_m ~ Normal(0.0, 0.010)
 
 
     nuisances = Dict("DESgc__0_0_b" => DESgc__0_0_b,
@@ -98,14 +98,14 @@ using Distributed
                      "A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
 
-                     "DESgc__0_e_dz" => DESgc__0_e_dz,
-                     "DESgc__1_e_dz" => DESgc__1_e_dz,
-                     "DESgc__2_e_dz" => DESgc__2_e_dz,
-                     "DESgc__3_e_dz" => DESgc__3_e_dz,
-                     "DESgc__0_e_m" => DESgc__0_e_m,
-                     "DESgc__1_e_m" => DESgc__1_e_m,
-                     "DESgc__2_e_m" => DESgc__2_e_m,
-                     "DESgc__3_e_m" => DESgc__3_e_m,
+                     "DESwl__0_e_dz" => DESwl__0_e_dz,
+                     "DESwl__1_e_dz" => DESwl__1_e_dz,
+                     "DESwl__2_e_dz" => DESwl__2_e_dz,
+                     "DESwl__3_e_dz" => DESwl__3_e_dz,
+                     "DESwl__0_e_m" => DESwl__0_e_m,
+                     "DESwl__1_e_m" => DESwl__1_e_m,
+                     "DESwl__2_e_m" => DESwl__2_e_m,
+                     "DESwl__3_e_m" => DESwl__3_e_m,
         
                      "eBOSS__0_0_b" => eBOSS__0_0_b,
                      "eBOSS__1_0_b" => eBOSS__1_0_b,

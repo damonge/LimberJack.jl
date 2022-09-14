@@ -52,16 +52,16 @@ using Distributed
     DECALS__2_0_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
     DECALS__3_0_dz ~ TruncatedNormal(0.0, 0.010, -0.2, 0.2)
     
-    KiDS1000__0_0_dz ~ TruncatedNormal(0.0, 0.0106, -0.2, 0.2)
-    KiDS1000__1_0_dz ~ TruncatedNormal(0.0, 0.0113, -0.2, 0.2)
-    KiDS1000__2_0_dz ~ TruncatedNormal(0.0, 0.0118, -0.2, 0.2)
-    KiDS1000__3_0_dz ~ TruncatedNormal(0.0, 0.0087, -0.2, 0.2)
-    KiDS1000__4_0_dz ~ TruncatedNormal(0.0, 0.0097, -0.2, 0.2)
-    KiDS1000__0_0_m ~ Normal(0.0, 0.019)
-    KiDS1000__1_0_m ~ Normal(0.0, 0.020)
-    KiDS1000__2_0_m ~ Normal(0.0, 0.017)
-    KiDS1000__3_0_m ~ Normal(0.0, 0.012)
-    KiDS1000__4_0_m ~ Normal(0.0, 0.010)
+    KiDS1000__0_e_dz ~ TruncatedNormal(0.0, 0.0106, -0.2, 0.2)
+    KiDS1000__1_e_dz ~ TruncatedNormal(0.0, 0.0113, -0.2, 0.2)
+    KiDS1000__2_e_dz ~ TruncatedNormal(0.0, 0.0118, -0.2, 0.2)
+    KiDS1000__3_e_dz ~ TruncatedNormal(0.0, 0.0087, -0.2, 0.2)
+    KiDS1000__4_e_dz ~ TruncatedNormal(0.0, 0.0097, -0.2, 0.2)
+    KiDS1000__0_e_m ~ Normal(0.0, 0.019)
+    KiDS1000__1_e_m ~ Normal(0.0, 0.020)
+    KiDS1000__2_e_m ~ Normal(0.0, 0.017)
+    KiDS1000__3_e_m ~ Normal(0.0, 0.012)
+    KiDS1000__4_e_m ~ Normal(0.0, 0.010)
 
 
     nuisances = Dict("A_IA" => A_IA,
