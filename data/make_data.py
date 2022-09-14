@@ -93,12 +93,13 @@ dict_save = {}
 
 for pair, l in zip(pairs, ls):
     t1, t2 = pair
+    print(t1, t2, len(l))
     dict_save[f'ls_{t1}_{t2}'] = np.array(l)
 
 for name, tracer in s.tracers.items():
     if name != "PLAcv":
         z=np.array(tracer.z)
         dndz=np.array(tracer.nz)
-        dict_save[f'nz_{name}'+'_'+get_type(name)]  = np.array([z, dndz]) 
+        dict_save[f'nz_{name}'+'_'+get_type(name)]  = np.array([z, dndz])
 
 np.savez(fname+"_files.npz", **dict_save)
