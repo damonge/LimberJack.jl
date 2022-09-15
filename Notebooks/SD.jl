@@ -130,6 +130,7 @@ if isdir(folname)
         println("Restarting chain")
     else
         last_n = 0
+    end
 else
     mkdir(folname)
     println(string("Created new folder ", folname))
