@@ -123,16 +123,20 @@ folname = joinpath(folpath, folname)
 
 if isdir(folname)
     fol_files = readdir(folname)
-    last_chain = last([file for file in fol_files if occursin("chain", file)])
-    last_n = parse(Int, last_chain[7])
-    println("Restarting chain")
+    println("Found existing file")
+    if length(fol_files)
+        last_chain = last([file for file in fol_files if occursin("chain", file)])
+        last_n = parse(Int, last_chain[7])
+        println("Restarting chain")
+    else
+        last_n = 0
 else
     mkdir(folname)
     println(string("Created new folder ", folname))
     last_n = 0
 end
 
-for i in (1+last_n):(last_n+cycles)
+for i in (1+last_n):(cycles+last_n)
     if i == 1
         chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
