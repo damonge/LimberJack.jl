@@ -193,7 +193,7 @@ folname = joinpath(folpath, folname)
 if isdir(folname)
     fol_files = readdir(folname)
     println("Found existing file")
-    if length(fol_files) == 0
+    if length(fol_files) != 0
         last_chain = last([file for file in fol_files if occursin("chain", file)])
         last_n = parse(Int, last_chain[7])
         println("Restarting chain")
