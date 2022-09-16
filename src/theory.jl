@@ -13,6 +13,14 @@ function Theory(cosmology::Cosmology,
 
     ntracers = length(tracers_names)
     tracers = []
+    
+    nui_type = valtype(Nuisances)
+    if !(nui_type <: Float64) & (nui_type != Any)
+        if nui_type != Real
+            cosmology.settings.cosmo_type = nui_type
+        end
+    end
+    
     for name in tracers_names
         n = length(name)
         t_type = name[n:n]
