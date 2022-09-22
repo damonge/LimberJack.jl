@@ -13,8 +13,8 @@ def get_type(name, mode="write"):
     else:
         return '0'
 
-s = sacc.Sacc().load_fits("FD/cls_FD_covG.fits")
-fname = "SD/SD"
+s = sacc.Sacc().load_fits("DESY1/cls_covG_new.fits")
+fname = "DESY1/wlwl"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
@@ -96,10 +96,18 @@ for pair, l in zip(pairs, ls):
     print(t1, t2, len(l))
     dict_save[f'ls_{t1}_{t2}'] = np.array(l)
 
+nzs_path = "DESY1/lite10_nzs/"
 for name, tracer in s.tracers.items():
-    if name != "PLAcv":
-        z=np.array(tracer.z)
-        dndz=np.array(tracer.nz)
-        dict_save[f'nz_{name}'+'_'+get_type(name)]  = np.array([z, dndz])
+    name = name+'_'+get_type(name, mode="write")
+    if name in tracers:
+        if nzs_path is None:       
+            z=np.array(tracer.z)
+            dndz=np.array(tracer.nz)
+            dict_save[f'nz_{name}'] = np.array([z, dndz])
+        else:
+            nzs = np.load(nzs_path+f'nz_{name}.npz')
+            z = nzs["z"]
+            dndz = nzs["dndz"]
+            dict_save[f'nz_{name}'] = np.array([z, dndz])
 
-np.savez(fname+"_files.npz", **dict_save)
+np.savez(fname+"_lite10_files.npz", **dict_save)
