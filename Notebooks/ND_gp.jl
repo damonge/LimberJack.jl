@@ -28,15 +28,6 @@ using Distributed
 @everywhere latent_x = Vector(0:0.3:3)
 @everywhere x = Vector(range(0., stop=3., length=N))
 
-@everywhere function generated_quantities(model::DynamicPPL.Model, chain::MCMCChains.Chains)
-   varinfo = DynamicPPL.VarInfo(model)
-   iters = Iterators.product(1:size(chain, 1), 1:size(chain, 3))
-   return map(iters) do (sample_idx, chain_idx)
-       DynamicPPL.setval!(varinfo, chain, sample_idx, chain_idx)
-       model(varinfo)
-   end
-end
-
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
@@ -178,12 +169,4 @@ for i in (1+last_n):(cycles+last_n)
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
     CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
-    derived = generated_quantities(model(data_vector), chain)
-    gps = vec([row.gp for row in derived])
-    cls = vec([row.theory for row in derived])
-    CSV.write(joinpath(folname, string("gps_", i,".csv")), 
-              DataFrame(gps, :auto), header = false)
-    CSV.write(joinpath(folname, string("cls_", i,".csv")), 
-              DataFrame(cls, :auto), header = false)
-    
 end
