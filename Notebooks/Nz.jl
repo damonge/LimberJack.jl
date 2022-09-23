@@ -70,10 +70,9 @@ using Distributed
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = Theory(cosmology, files;
-                    nz_path=nz_path,
+    theory = Theory(cosmology, tracers_names, pairs,
+                    pairs_ids, idx, files;
                     Nuisances=nuisances)
-    
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
