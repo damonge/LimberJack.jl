@@ -6,6 +6,8 @@ using Distributed
 @everywhere using NPZ
 @everywhere using FITSIO
 @everywhere using LinearAlgebra
+@everywhere using PythonCall
+@everywhere np = pyimport("numpy")
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
