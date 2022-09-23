@@ -14,7 +14,7 @@ def get_type(name, mode="write"):
         return '0'
 
 s = sacc.Sacc().load_fits("DESY1/cls_covG_new.fits")
-fname = "DESY1/wlwl"
+fname = "DESY1/gcgc_gcwl_wlwl"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
@@ -96,7 +96,7 @@ for pair, l in zip(pairs, ls):
     print(t1, t2, len(l))
     dict_save[f'ls_{t1}_{t2}'] = np.array(l)
 
-nzs_path = "DESY1/lite10_nzs/"
+nzs_path = None
 for name, tracer in s.tracers.items():
     name = name+'_'+get_type(name, mode="write")
     if name in tracers:
@@ -110,4 +110,4 @@ for name, tracer in s.tracers.items():
             dndz = nzs["dndz"]
             dict_save[f'nz_{name}'] = np.array([z, dndz])
 
-np.savez(fname+"_lite10_files.npz", **dict_save)
+np.savez(fname+"_files.npz", **dict_save)
