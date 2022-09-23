@@ -39,11 +39,11 @@ using Distributed
                                   latent_x=latent_x,
                                   x=x)
 
-    #KiDS priors
-    Ωm ~ Uniform(0.2, 0.6)
-    Ωb ~ Uniform(0.028, 0.065)
-    h ~ Uniform(0.64, 0.82)
-    ns ~ Uniform(0.84, 1.1)
+    #DESY1 priors
+    Ωm ~ Uniform(0.1, 0.6)
+    Ωb ~ Uniform(0.03, 0.045)
+    h ~ Uniform(0.60, 0.91)
+    ns ~ Uniform(0.87, 1.07)
     s8 = 0.811
     
     A_IA ~ Uniform(-5, 5) 
