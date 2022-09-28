@@ -70,7 +70,8 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
         pk_NLs[1:nk, i] = _power_spectrum_nonlin(cosmo, PkLz0 .* Dz2, k, z[i], rsig, neff, C)
     end
     
-    pk_NL = LinearInterpolation((logk, z), log.(pk_NLs))
+    pk_NL = LinearInterpolation((logk, z), log.(pk_NLs), 
+                                extrapolation_bc=Line())
 
     return pk_NL
 end 
