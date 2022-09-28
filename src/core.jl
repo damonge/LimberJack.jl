@@ -141,13 +141,7 @@ Returns:
 struct Cosmology
     settings::Settings
     cosmo::CosmoPar
-    # Power spectrum
-    ks::Array
-    pk0::Array
-    logk
-    dlogk
     # Redshift and background
-    zs::Array
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
     chi_max
@@ -195,9 +189,10 @@ Returns:
 Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Load settings
     cosmo_type = settings.cosmo_type
-    nk = settings.nk
     nz_pk = settings.nz_pk
     nz = settings.nz
+    zs_pk = range(0., stop=3., length=nz_pk)
+
     # Compute linear power spectrum at z=0.
     ks_emul, pk0_emul = get_emulated_log_pk0(cpar)
     #pki_emul = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
@@ -225,33 +220,27 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Distance to LSS
     chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
-
-    # ODE solution for growth factor
-    z_ini = 1000.0
-    a_ini = 1.0/(1.0+z_ini)
-    ez_ini = _Ez(cpar, z_ini)
-    d0 = [a_ini^3*ez_ini, a_ini]
-    a_s = reverse(@. 1.0 / (1.0 + zs))
-    prob = ODEProblem(_dgrowth!, d0, (a_ini, 1.0), cpar)
-    sol = solve(prob, Tsit5(), reltol=1E-6,
-                abstol=1E-8, saveat=a_s)
-    # OPT: interpolation (see below), ODE method, tolerances
-    # Note that sol already includes some kind of interpolation,
-    # so it may be possible to optimize this by just using
-    # sol directly.
-    s = vcat(sol.u'...)
-    Dzs = reverse(s[:, 2] / s[end, 2])
-    # OPT: interpolation method
-    Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
-
-    # OPT: separate zs for Pk and background
-    zs_pk = range(0., stop=3., length=nz_pk)
-    
-    custom_Dz = settings.custom_Dz
-    if custom_Dz == nothing
+    if settings.custom_Dz == nothing
+        # ODE solution for growth factor
+        z_ini = 1000.0
+        a_ini = 1.0/(1.0+z_ini)
+        ez_ini = _Ez(cpar, z_ini)
+        d0 = [a_ini^3*ez_ini, a_ini]
+        a_s = reverse(@. 1.0 / (1.0 + zs))
+        prob = ODEProblem(_dgrowth!, d0, (a_ini, 1.0), cpar)
+        sol = solve(prob, Tsit5(), reltol=1E-6,
+                    abstol=1E-8, saveat=a_s)
+        # OPT: interpolation (see below), ODE method, tolerances
+        # Note that sol already includes some kind of interpolation,
+        # so it may be possible to optimize this by just using
+        # sol directly.
+        s = vcat(sol.u'...)
+        Dzs_sol = reverse(s[:, 2] / s[end, 2])
+        Dzi = LinearInterpolation(zs, Dzs_sol, extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
     else
         Dzs = custom_Dz
+        Dzi = LinearInterpolation(zs_pk, Dzs, extrapolation_bc=Line())
     end
 
     if settings.Pk_mode == "linear"
@@ -259,16 +248,13 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         Pks = reduce(vcat, transpose.(Pks))
         Pk = LinearInterpolation((log.(ks_emul), zs_pk), log.(Pks))
     elseif settings.Pk_mode == "Halofit"
-        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0_emul, Dzs, cosmo_type)
-    else 
-        Pks = [@. pk*Dzs^2 for pk in pk0_emul]
-        Pks = reduce(vcat, transpose.(Pks))
-        Pk = LinearInterpolation((log.(ks_emul), zs_pk), log.(Pks))
+        Pk = get_PKnonlin(cpar, zs_pk, ks_emul, pk0_emul, Dzs, cosmo_type)
+    else
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(settings, cpar, ks_emul, pk0_emul,
-              collect(zs), chii, zi, chis[end],
-              chi_LSS, Dzi, pki, Pk)
+    Cosmology(settings, cpar,
+              chii, zi, chis[end], chi_LSS,
+              Dzi, pki, Pk)
 end
 
 """
