@@ -199,9 +199,6 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     nz_pk = settings.nz_pk
     nz = settings.nz
     # Compute linear power spectrum at z=0.
-    logk = range(log(0.0001), stop=log(100.0), length=nk)
-    ks = exp.(logk)
-    dlogk = log(ks[2]/ks[1])
     ks_emul, pk0_emul = get_emulated_log_pk0(cpar)
     #pki_emul = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
     #                               extrapolation_bc=Line())
@@ -258,18 +255,18 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     end
 
     if settings.Pk_mode == "linear"
-        Pks = [@. pk*Dzs^2 for pk in pk0]
+        Pks = [@. pk*Dzs^2 for pk in pk0_emul]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
+        Pk = LinearInterpolation((log.(ks_emul), zs_pk), log.(Pks))
     elseif settings.Pk_mode == "Halofit"
-        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs, cosmo_type)
+        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0_emul, Dzs, cosmo_type)
     else 
-        Pks = [@. pk*Dzs^2 for pk in pk0]
+        Pks = [@. pk*Dzs^2 for pk in pk0_emul]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
+        Pk = LinearInterpolation((log.(ks_emul), zs_pk), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(settings, cpar, ks, pk0, logk, dlogk,
+    Cosmology(settings, cpar, ks_emul, pk0_emul,
               collect(zs), chii, zi, chis[end],
               chi_LSS, Dzi, pki, Pk)
 end
