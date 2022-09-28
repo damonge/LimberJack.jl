@@ -194,15 +194,14 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     zs_pk = range(0., stop=3., length=nz_pk)
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
+    dlogk = log(ks[2]/ks[1])
 
     # Compute linear power spectrum at z=0.
     ks_emul, pk0_emul = get_emulated_log_pk0(cpar)
-    pki_emul = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
-                                   extrapolation_bc=Line())
     #Renormalize Pk
-    #σ8_2_here = _σR2(ks_emul, pk0_emul, dlogk, 8.0/cpar.h)
-    #norm = cpar.σ8^2 / σ8_2_here
-    #pk0_emul *= norm
+    σ8_2_here = _σR2(ks_emul, pk0_emul, dlogk, 8.0/cpar.h)
+    norm = cpar.σ8^2 / σ8_2_here
+    pk0_emul *= norm
     
     # OPT: interpolation method
     pki = LinearInterpolation(log.(ks_emul), log.(pk0_emul),

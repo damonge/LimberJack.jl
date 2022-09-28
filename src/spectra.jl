@@ -38,7 +38,7 @@ function Cℓintegrand(cosmo::Cosmology,
     end
 
     pk = nonlin_Pk(cosmo, k, z)
-    return k*w1*w2*pk
+    return @. (k*w1*w2*pk)
 end
 
 """
@@ -66,13 +66,12 @@ function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     Cℓs = zeros(cosmo_type, length(ℓs))
     for i in 1:length(ℓs)
         ℓ = ℓs[i]
-        integrand = zeros(cosmo_type, cosmo.settings.nk)
-        for j in 1:length(logks)
-            logk = logks[j]
-            integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
-        end
-        #integrand = [Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5) for logk in logks]
-        #Cℓ = sum(0.5 .* (integrand[1:res-1] .+ integrand[2:res]) .* dlogk)
+        integrand =  Cℓintegrand(cosmo, t1, t2, logks, ℓ)/(ℓ+0.5)
+        #integrand = zeros(cosmo_type, cosmo.settings.nk)
+        #for j in 1:length(logks)
+        #    logk = logks[j]
+        #    integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
+        #end
         Cℓ = trapz(logks, integrand)
         fℓ1 = _get_Fℓ(t1, ℓ)
         fℓ2 = _get_Fℓ(t2, ℓ)
