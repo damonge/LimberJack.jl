@@ -20,8 +20,8 @@ function Cℓintegrand(cosmo::Cosmology,
                      t2::Tracer,
                      logk,
                      ℓ)
-    k = exp(logk)
-    chi = (ℓ+0.5)/k
+    k = exp.(logk)
+    chi = (ℓ+0.5) ./ k
     if chi > cosmo.chi_max
         return 0
     end
