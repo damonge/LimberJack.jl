@@ -198,13 +198,17 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
 
     # Compute linear power spectrum at z=0.
     ks_emul, pk0_emul = get_emulated_log_pk0(cpar)
+    pki_emul = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
+                              extrapolation_bc=Line())
+    pk0 = exp.(pki_emul(logk))
+
     #Renormalize Pk
-    σ8_2_here = _σR2(ks_emul, pk0_emul, dlogk, 8.0/cpar.h)
+    σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
     norm = cpar.σ8^2 / σ8_2_here
-    pk0_emul *= norm
+    pk0 *= norm
     
     # OPT: interpolation method
-    pki = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
+    pki = LinearInterpolation(log.(ks), log.(pk0),
                               extrapolation_bc=Line())
 
     # Compute redshift-distance relation
@@ -248,7 +252,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         Pk = LinearInterpolation((log.(ks_emul), zs_pk), log.(Pks),
                                  extrapolation_bc=Line())
     elseif settings.Pk_mode == "Halofit"
-        Pk = get_PKnonlin(cpar, zs_pk, ks, exp.(pki(logk)), Dzs, cosmo_type)
+        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs, cosmo_type)
     else
         print("Pk mode not implemented. Using linear Pk.")
     end
