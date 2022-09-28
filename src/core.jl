@@ -47,7 +47,6 @@ mutable struct Settings
     nz::Int
     nz_pk::Int
     nk::Int
-    tk_mode::String
     Pk_mode::String
     custom_Dz
 end
@@ -290,10 +289,10 @@ Returns:
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
           θCMB=2.725/2.7, nz=500, nz_pk=100, nk=500,
-          tk_mode="BBKS", Pk_mode="linear", custom_Dz=nothing) = begin
+          Pk_mode="linear", custom_Dz=nothing) = begin
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    settings = Settings(cosmo_type, nz, nz_pk, nk, tk_mode, Pk_mode, custom_Dz)
+    settings = Settings(cosmo_type, nz, nz_pk, nk, Pk_mode, custom_Dz)
     Cosmology(cpar, settings)
 end
 

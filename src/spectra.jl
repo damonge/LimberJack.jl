@@ -60,13 +60,13 @@ Returns:
 function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     # OPT: we are not optimizing the limits of integration
     cosmo_type = cosmo.settings.cosmo_type
-    logk = range(log(0.0001), stop=log(100.0), length=settings.nk)
+    logk = range(log(0.0001), stop=log(100.0), length=cosmo.settings.nk)
     dlogk = log(exp.(logk)[2]/exp.(logk)[1])
 
     Cℓs = zeros(cosmo_type, length(ℓs))
     for i in 1:length(ℓs)
         ℓ = ℓs[i]
-        integrand = zeros(cosmo_type, settings.nk)
+        integrand = zeros(cosmo_type, cosmo.settings.nk)
         for j in 1:length(logks)
             logk = logks[j]
             integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
