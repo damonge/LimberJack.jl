@@ -245,7 +245,8 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     if settings.Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0_emul]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = LinearInterpolation((log.(ks_emul), zs_pk), log.(Pks))
+        Pk = LinearInterpolation((log.(ks_emul), zs_pk),
+                                  log.(Pks), extrapolation_bc=Line())
     elseif settings.Pk_mode == "Halofit"
         Pk = get_PKnonlin(cpar, zs_pk, ks_emul, pk0_emul, Dzs, cosmo_type)
     else
