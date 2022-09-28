@@ -201,7 +201,7 @@ np = pyimport("numpy")
         
         function emul(p::T)::Array{T,1} where T<:Real
             Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.04, 0.67, 0.96, 0.81, tk_mode="emulator")
+            cosmo = LimberJack.Cosmology(Ωm, 0.04, 0.67, 0.96, 0.81, Pk_mode="linear")
             pk = lin_Pk(cosmo, ks, 0.)
             return pk
         end
