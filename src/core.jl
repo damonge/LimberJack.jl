@@ -198,9 +198,9 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     #pki_emul = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
     #                               extrapolation_bc=Line())
     #Renormalize Pk
-    σ8_2_here = _σR2(ks_emul, pk0_emul, dlogk, 8.0/cpar.h)
-    norm = cpar.σ8^2 / σ8_2_here
-    pk0_emul *= norm
+    #σ8_2_here = _σR2(ks_emul, pk0_emul, dlogk, 8.0/cpar.h)
+    #norm = cpar.σ8^2 / σ8_2_here
+    #pk0_emul *= norm
     
     # OPT: interpolation method
     pki = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
