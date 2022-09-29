@@ -15,13 +15,14 @@ function Cℓintegrand(cosmo::Cosmology,
                      t2::Tracer,
                      logk,
                      ℓ)
-    k = exp.(logk)
-    chi = (ℓ+0.5) ./ k
-    chi .*= (chi .< cosmo.chi_max)
+
+    chis = zeros(cosmo.settings.cosmo_type, cosmo.settings.nk)
+    chis[1:cosmo.settings.nk] = (ℓ+0.5) ./ cosmo.ks
+    chis .*= (chis .< cosmo.chi_max)
 
     z = cosmo.z_of_chi(chi)
-    w1 = t1.wint(chi) # *t1.b
-    w2 = t2.wint(chi) # *t2.b
+    w1 = t1.wint(chis) # *t1.b
+    w2 = t2.wint(chis) # *t2.b
 
     if typeof(t1) in [NumberCountsTracer, WeakLensingTracer]
         w1 .*= t1.b
@@ -53,21 +54,15 @@ Returns:
 """
 function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     # OPT: we are not optimizing the limits of integration
-    cosmo_type = cosmo.settings.cosmo_type
-    logks = cosmo.logk
-    dlogk = cosmo.dlogk
-    res = length(logks)
-    Cℓs = zeros(cosmo_type, length(ℓs))
+    Cℓs = zeros(cosmo.settings.cosmo_type, length(ℓs))
     for i in 1:length(ℓs)
         ℓ = ℓs[i]
-        integrand = Cℓintegrand(cosmo, t1, t2, logks, ℓ)/(ℓ+0.5)
+        integrand = Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5)
         #for j in 1:length(logks)
         #    logk = logks[j]
         #    integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
         #end
-        #integrand = [Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5) for logk in logks]
-        #Cℓ = sum(0.5 .* (integrand[1:res-1] .+ integrand[2:res]) .* dlogk)
-        Cℓ = trapz(logks, integrand)
+        Cℓ = trapz(cosmo.logks, integrand)
         fℓ1 = _get_Fℓ(t1, ℓ)
         fℓ2 = _get_Fℓ(t2, ℓ)
         Cℓs[i] = Cℓ * fℓ1 * fℓ2
