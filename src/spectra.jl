@@ -24,11 +24,11 @@ function Cℓintegrand(cosmo::Cosmology,
     w2 = t2.wint(chi) # *t2.b
 
     if typeof(t1) in [NumberCountsTracer, WeakLensingTracer]
-        w1 *= t1.b
+        w1 .*= t1.b
     end
 
     if typeof(t2) in [NumberCountsTracer, WeakLensingTracer]
-        w2 *= t2.b
+        w2 .*= t2.b
     end
 
     pk = nonlin_Pk(cosmo, k, z)
