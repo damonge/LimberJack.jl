@@ -13,7 +13,6 @@ Returns:
 function Cℓintegrand(cosmo::Cosmology,
                      t1::Tracer,
                      t2::Tracer,
-                     logk,
                      ℓ)
 
     chis = zeros(cosmo.settings.cosmo_type, cosmo.settings.nk)
