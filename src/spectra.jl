@@ -18,8 +18,8 @@ function Cℓintegrand(cosmo::Cosmology,
     chis = zeros(cosmo.settings.cosmo_type, cosmo.settings.nk)
     chis[1:cosmo.settings.nk] = (ℓ+0.5) ./ cosmo.ks
     chis .*= (chis .< cosmo.chi_max)
+    z = cosmo.z_of_chi(chis)
 
-    z = cosmo.z_of_chi(chi)
     w1 = t1.wint(chis) # *t1.b
     w2 = t2.wint(chis) # *t2.b
 
@@ -31,7 +31,7 @@ function Cℓintegrand(cosmo::Cosmology,
         w2 .*= t2.b
     end
 
-    pk = nonlin_Pk(cosmo, k, z)
+    pk = nonlin_Pk(cosmo, cosmo.ks, z)
     return @. (k*w1*w2*pk)
 end
 
