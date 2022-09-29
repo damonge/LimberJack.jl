@@ -32,7 +32,7 @@ function Cℓintegrand(cosmo::Cosmology,
     end
 
     pk = nonlin_Pk(cosmo, cosmo.ks, z)
-    return @. (k*w1*w2*pk)
+    return @. (cosmo.ks*w1*w2*pk)
 end
 
 """
