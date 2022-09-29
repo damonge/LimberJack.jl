@@ -197,7 +197,9 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     cosmo_type = settings.cosmo_type
     nk = settings.nk
     nz_pk = settings.nz_pk
+    zs_pk = range(0., stop=3., length=nz_pk)
     nz = settings.nz
+    zs = range(0., stop=3., length=nz)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
@@ -223,7 +225,6 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # OPT: interpolation method
     pki = LinearInterpolation(logk, log.(pk0), extrapolation_bc=Line())
     # Compute redshift-distance relation
-    zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / cpar.h
     chis_integrand = 1 ./ _Ez(cpar, zs)
     chis = cumul_integrate(zs, chis_integrand, TrapezoidalFast()) * norm
