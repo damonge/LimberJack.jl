@@ -12,7 +12,7 @@ using Distributed
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere data_set = "SD"
+@everywhere data_set = "ND"
 @everywhere meta = np.load(string("../data/", data_set, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../data/", data_set, "/", data_set, "_files.npz"))
 
