@@ -1,30 +1,24 @@
 """
     Cℓintegrand(cosmo::Cosmology, t1::Tracer, t2::Tracer, logk, ℓ)
-
 Returns the integrand of the angular power spectrum. 
-
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure.
 - `t1::Tracer` : tracer structure.
 - `t2::Tracer` : tracer structure.
 - `logk::Vector{Float}` : log scale array.
 - `ℓ::Float` : multipole.
-
 Returns:
 - `integrand::Vector{Real}` : integrand of the angular power spectrum.
-
 """
 function Cℓintegrand(cosmo::Cosmology,
                      t1::Tracer,
                      t2::Tracer,
                      logk,
                      ℓ)
-    k = exp(logk)
-    chi = (ℓ+0.5)/k
-    if chi > cosmo.chi_max
-        return 0
-    end
+    k = exp.(logk)
+    chi = (ℓ+0.5) ./ k
+    chi .*= (chi .< cosmo.chi_max)
+
     z = cosmo.z_of_chi(chi)
     w1 = t1.wint(chi) # *t1.b
     w2 = t2.wint(chi) # *t2.b
@@ -38,7 +32,7 @@ function Cℓintegrand(cosmo::Cosmology,
     end
 
     pk = nonlin_Pk(cosmo, k, z)
-    return k*w1*w2*pk
+    return @. (k*w1*w2*pk)
 end
 
 """
@@ -66,11 +60,11 @@ function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     Cℓs = zeros(cosmo_type, length(ℓs))
     for i in 1:length(ℓs)
         ℓ = ℓs[i]
-        integrand = zeros(cosmo_type, length(logks))
-        for j in 1:length(logks)
-            logk = logks[j]
-            integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
-        end
+        integrand = Cℓintegrand(cosmo, t1, t2, logks, ℓ)/(ℓ+0.5)
+        #for j in 1:length(logks)
+        #    logk = logks[j]
+        #    integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
+        #end
         #integrand = [Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5) for logk in logks]
         #Cℓ = sum(0.5 .* (integrand[1:res-1] .+ integrand[2:res]) .* dlogk)
         Cℓ = trapz(logks, integrand)
