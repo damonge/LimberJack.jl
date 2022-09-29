@@ -22,9 +22,8 @@ function Cℓintegrand(cosmo::Cosmology,
                      ℓ)
     k = exp.(logk)
     chi = (ℓ+0.5) ./ k
-    if chi > cosmo.chi_max
-        return 0
-    end
+    chi .*= (chi .> cosmo.chi_max)
+
     z = cosmo.z_of_chi(chi)
     w1 = t1.wint(chi) # *t1.b
     w2 = t2.wint(chi) # *t2.b
