@@ -130,7 +130,8 @@ Returns:
 function reparametrize(cosmo::CosmoPar)
     Ωc = cosmo.Ωm - cosmo.Ωb 
     wc = Ωc*cosmo.h^2
-    params = [wc, cosmo.Ωb, cosmo.σ8, cosmo.n_s, cosmo.h]
+    wb = Ωb*cosmo.h^2
+    params = [wc, wb, 2.7, cosmo.n_s, cosmo.h]
     cosmotype = eltype(params)
     return cosmotype, params
 end
