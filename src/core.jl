@@ -225,44 +225,35 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Compute redshift-distance relation
     zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / cpar.h
-    chis = zeros(cosmo_type, nz)
-    for i in 1:nz
-        zz = zs[i]
-        chis[i] = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
-    end
+    chis_integrand = 1 ./ _Ez(cpar, zs)
+    chis = cumul_integrate(zs, chis_integrand, TrapezoidalFast()) * norm
     # OPT: tolerances, interpolation method
     chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
     zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
     chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
-
-    # ODE solution for growth factor
-    z_ini = 1000.0
-    a_ini = 1.0/(1.0+z_ini)
-    ez_ini = _Ez(cpar, z_ini)
-    d0 = [a_ini^3*ez_ini, a_ini]
-    a_s = reverse(@. 1.0 / (1.0 + zs))
-    prob = ODEProblem(_dgrowth!, d0, (a_ini, 1.0), cpar)
-    sol = solve(prob, Tsit5(), reltol=1E-6,
-                abstol=1E-8, saveat=a_s)
-    # OPT: interpolation (see below), ODE method, tolerances
-    # Note that sol already includes some kind of interpolation,
-    # so it may be possible to optimize this by just using
-    # sol directly.
-    s = vcat(sol.u'...)
-    Dzs = reverse(s[:, 2] / s[end, 2])
-    # OPT: interpolation method
-    Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
-
-    # OPT: separate zs for Pk and background
-    zs_pk = range(0., stop=3., length=nz_pk)
-    
-    custom_Dz = settings.custom_Dz
-    if custom_Dz == nothing
+    if settings.custom_Dz == nothing
+        # ODE solution for growth factor
+        z_ini = 1000.0
+        a_ini = 1.0/(1.0+z_ini)
+        ez_ini = _Ez(cpar, z_ini)
+        d0 = [a_ini^3*ez_ini, a_ini]
+        a_s = reverse(@. 1.0 / (1.0 + zs))
+        prob = ODEProblem(_dgrowth!, d0, (a_ini, 1.0), cpar)
+        sol = solve(prob, Tsit5(), reltol=1E-6,
+                    abstol=1E-8, saveat=a_s)
+        # OPT: interpolation (see below), ODE method, tolerances
+        # Note that sol already includes some kind of interpolation,
+        # so it may be possible to optimize this by just using
+        # sol directly.
+        s = vcat(sol.u'...)
+        Dzs_sol = reverse(s[:, 2] / s[end, 2])
+        Dzi = LinearInterpolation(zs, Dzs_sol, extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
     else
         Dzs = custom_Dz
+        Dzi = LinearInterpolation(zs_pk, Dzs, extrapolation_bc=Line())
     end
 
     if settings.Pk_mode == "linear"
