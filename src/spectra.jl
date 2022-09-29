@@ -61,7 +61,7 @@ function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
         #    logk = logks[j]
         #    integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
         #end
-        Cℓ = trapz(cosmo.logks, integrand)
+        Cℓ = trapz(cosmo.logk, integrand)
         fℓ1 = _get_Fℓ(t1, ℓ)
         fℓ2 = _get_Fℓ(t2, ℓ)
         Cℓs[i] = Cℓ * fℓ1 * fℓ2
