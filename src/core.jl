@@ -122,12 +122,6 @@ struct Cosmology
     settings::Settings
     cosmo::CosmoPar
     # Power spectrum
-    ks::Array
-    pk0::Array
-    logk
-    dlogk
-    # Redshift and background
-    zs::Array
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
     chi_max
@@ -167,6 +161,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     nk = settings.nk
     nz_pk = settings.nz_pk
     nz = settings.nz
+    zs_pk = range(0., stop=3., length=nz_pk)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
@@ -238,9 +233,9 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(settings, cpar, ks, pk0, logk, dlogk,
-              collect(zs), chii, zi, chis[end],
-              chi_LSS, Dzi, pki, Pk)
+    Cosmology(settings, cpar,
+              chii, zi, chis[end], chi_LSS,
+              Dzi, pki, Pk)
 end
 
 """
