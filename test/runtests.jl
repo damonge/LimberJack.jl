@@ -62,7 +62,7 @@ np = pyimport("numpy")
                                nk=500, tk_mode="emulator")
         cosmo_emul_bm = ccl.Cosmology(Omega_c=0.255, Omega_b=0.045, h=0.67, n_s=0.96, sigma8=0.81,
                                       Omega_g=0, Omega_k=0,
-                                      transfer_function="boltzmann_class",
+                                      transfer_function="boltzmann_camb",
                                       matter_power_spectrum="linear")
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
@@ -100,7 +100,7 @@ np = pyimport("numpy")
                                             Omega_g=0, Omega_k=0)
         cosmo_emul_bm = ccl.Cosmology(Omega_c=0.255, Omega_b=0.045, h=0.67, n_s=0.96, sigma8=0.81,
                                       Omega_g=0, Omega_k=0,
-                                      transfer_function="boltzmann_class",
+                                      transfer_function="boltzmann_camb",
                                       matter_power_spectrum="halofit")
 
         lks = LinRange(-3, 2, 20)
@@ -184,7 +184,7 @@ np = pyimport("numpy")
     @testset "emul_Cℓs" begin
         cosmo_emul_bm = ccl.Cosmology(Omega_c=0.255, Omega_b=0.045, h=0.67, n_s=0.96, sigma8=0.81,
                                       Omega_g=0, Omega_k=0,
-                                      transfer_function="boltzmann_class",
+                                      transfer_function="boltzmann_camb",
                                       matter_power_spectrum="linear")
         cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
                           nk=512, tk_mode="emulator")
@@ -269,7 +269,7 @@ np = pyimport("numpy")
     @testset "emul_Halo_Cℓs" begin
         cosmo_emul_bm = ccl.Cosmology(Omega_c=0.255, Omega_b=0.045, h=0.67, n_s=0.96, sigma8=0.81,
                                       Omega_g=0, Omega_k=0,
-                                      transfer_function="boltzmann_class",
+                                      transfer_function="boltzmann_camb",
                                       matter_power_spectrum="halofit")
         cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
                           tk_mode="emulator", Pk_mode="Halofit")
