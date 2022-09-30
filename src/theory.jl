@@ -65,7 +65,7 @@ function Theory(cosmology::Cosmology,
     npairs = length(pairs)
     total_len = last(idx)
     cls = zeros(cosmology.settings.cosmo_type, total_len)
-    @inbounds Threads.@threads for i in 1:npairs
+    @inbounds Threads.@threads :dynamic for i in 1:npairs
         name1, name2 = pairs[i]
         id1, id2 = pairs_ids[i]
         ls = files[string("ls_", name1, "_", name2)]
