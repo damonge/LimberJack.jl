@@ -66,7 +66,7 @@ function Theory(cosmology::Cosmology,
     total_len = last(idx)
     cls = zeros(cosmology.settings.cosmo_type, total_len)
     @inbounds for i in 1:npairs
-        Threads.@spawn cls[idx[i]+1:idx[i+1]] = _fil_cls(i)
+        cls[idx[i]+1:idx[i+1]] = _fil_cls(i)
     end
 
     return cls

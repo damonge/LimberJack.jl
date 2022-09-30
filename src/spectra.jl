@@ -54,7 +54,7 @@ Returns:
 function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     # OPT: we are not optimizing the limits of integration
     Cℓs = zeros(cosmo.settings.cosmo_type, length(ℓs))
-    for i in 1:length(ℓs)
+    @inbounds Threads.@threads for i in 1:length(ℓs)
         ℓ = ℓs[i]
         integrand = Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5)
         #for j in 1:length(logks)
