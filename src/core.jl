@@ -325,7 +325,7 @@ Returns:
 - `Cosmology` : cosmology structure.
 
 """
-Cosmology() = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
+Cosmology() = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81)
 
 function σR2(cosmo::Cosmology, R)
     return _σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)

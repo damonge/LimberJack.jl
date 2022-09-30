@@ -58,11 +58,11 @@ np = pyimport("numpy")
         cosmo_EisHu_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
                                                   matter_power_spectrum="linear",
                                                   Omega_g=0, Omega_k=0)
-        cosmo_emul = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+        cosmo_emul = Cosmology(0.295, 0.045, 0.67, 0.96, 0.81,
                                nk=500, tk_mode="emulator")
         cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb",
                                                  matter_power_spectrum="linear",
-                                                 Omega_g=0, Omega_k=0)
+                                                 Omega_g=0, Omega_k=0, Omega_b=0.045)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
@@ -91,7 +91,7 @@ np = pyimport("numpy")
         cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                                 nk=512, tk_mode="EisHu", 
                                 Pk_mode="Halofit")
-        cosmo_emul = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+        cosmo_emul = Cosmology(0.295, 0.045, 0.67, 0.96, 0.81,
                                nk=512, tk_mode="emulator", 
                                Pk_mode="Halofit")
         cosmo_EisHu_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
@@ -99,7 +99,7 @@ np = pyimport("numpy")
                                             Omega_g=0, Omega_k=0)
         cosmo_emul_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb",
                                             matter_power_spectrum="halofit",
-                                            Omega_g=0, Omega_k=0)
+                                            Omega_g=0, Omega_k=0, Omega_b=0.045)
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0)
@@ -264,8 +264,8 @@ np = pyimport("numpy")
     @testset "emul_Halo_Cℓs" begin
         cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="boltzmann_camb", 
                                             matter_power_spectrum="halofit",
-                                            Omega_g=0, Omega_k=0)
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                                            Omega_g=0, Omega_k=0, Omega_b=0.045)
+        cosmo = Cosmology(0.295, 0.045, 0.67, 0.96, 0.81,
                           tk_mode="emulator", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -384,7 +384,6 @@ np = pyimport("numpy")
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
     end
 
-"""
     @testset "IsemulHalofitDiff" begin
 
         zs = 0.02:0.02:1.0
@@ -392,7 +391,7 @@ np = pyimport("numpy")
         
         function Halofit(p::T)::Array{T,1} where T<:Real
             Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.04, 0.67, 0.96, 0.81,
+            cosmo = LimberJack.Cosmology(Ωm, 0.045, 0.67, 0.96, 0.81,
                                          tk_mode="emulator", Pk_mode="Halofit")
             pk = LimberJack.nonlin_Pk(cosmo, ks, 0)
             return pk
@@ -406,7 +405,7 @@ np = pyimport("numpy")
 
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 0.5))
     end
-"""
+
 
     @testset "AreClsDiff" begin
         
