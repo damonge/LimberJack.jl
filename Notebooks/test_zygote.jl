@@ -35,86 +35,16 @@ using Distributed
     #DESY1 priors
     Ωm ~ Uniform(0.1, 0.6)
     Ωb ~ Uniform(0.03, 0.045)
-    h ~ Uniform(0.60, 0.91)
-    ns ~ Uniform(0.87, 1.07)
-    s8 ~ Uniform(0.6, 0.9)
-    
-    DESgc__0_0_b ~ Uniform(0.8, 3.0)
-    DESgc__1_0_b ~ Uniform(0.8, 3.0)
-    DESgc__2_0_b ~ Uniform(0.8, 3.0)
-    DESgc__3_0_b ~ Uniform(0.8, 3.0)
-    DESgc__4_0_b ~ Uniform(0.8, 3.0)
-    DESgc__0_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-    DESgc__1_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-    DESgc__2_0_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
-    DESgc__3_0_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-    DESgc__4_0_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-    
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
-
-    DESwl__0_e_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
-    DESwl__1_e_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
-    DESwl__2_e_dz ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
-    DESwl__3_e_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
-    DESwl__0_e_m ~ Normal(0.012, 0.023)
-    DESwl__1_e_m ~ Normal(0.012, 0.023)
-    DESwl__2_e_m ~ Normal(0.012, 0.023)
-    DESwl__3_e_m ~ Normal(0.012, 0.023)
-
-    nuisances = Dict("DESgc__0_0_b" => DESgc__0_0_b,
-                     "DESgc__1_0_b" => DESgc__1_0_b,
-                     "DESgc__2_0_b" => DESgc__2_0_b,
-                     "DESgc__3_0_b" => DESgc__3_0_b,
-                     "DESgc__4_0_b" => DESgc__4_0_b,
-                     "DESgc__0_0_dz" => DESgc__0_0_dz,
-                     "DESgc__1_0_dz" => DESgc__1_0_dz,
-                     "DESgc__2_0_dz" => DESgc__2_0_dz,
-                     "DESgc__3_0_dz" => DESgc__3_0_dz,
-                     "DESgc__4_0_dz" => DESgc__4_0_dz,
-        
-                     "A_IA" => A_IA,
-                     "alpha_IA" => alpha_IA,
-
-                     "DESwl__0_e_dz" => DESwl__0_e_dz,
-                     "DESwl__1_e_dz" => DESwl__1_e_dz,
-                     "DESwl__2_e_dz" => DESwl__2_e_dz,
-                     "DESwl__3_e_dz" => DESwl__3_e_dz,
-                     "DESwl__0_e_m" => DESwl__0_e_m,
-                     "DESwl__1_e_m" => DESwl__1_e_m,
-                     "DESwl__2_e_m" => DESwl__2_e_m,
-                     "DESwl__3_e_m" => DESwl__3_e_m,
-        
-                     "eBOSS__0_0_b" => eBOSS__0_0_b,
-                     "eBOSS__1_0_b" => eBOSS__1_0_b,
-        
-                     "DECALS__0_0_b" => DECALS__0_0_b,
-                     "DECALS__1_0_b" => DECALS__1_0_b,
-                     "DECALS__2_0_b" => DECALS__2_0_b,
-                     "DECALS__3_0_b" => DECALS__3_0_b,
-                     "DECALS__0_0_dz" => DECALS__0_0_dz,
-                     "DECALS__1_0_dz" => DECALS__1_0_dz,
-                     "DECALS__2_0_dz" => DECALS__2_0_dz,
-                     "DECALS__3_0_dz" => DECALS__3_0_dz,
-                    
-                     "KiDS1000__0_e_dz" => KiDS1000__0_e_dz,
-                     "KiDS1000__1_e_dz" => KiDS1000__1_e_dz,
-                     "KiDS1000__2_e_dz" => KiDS1000__2_e_dz,
-                     "KiDS1000__3_e_dz" => KiDS1000__3_e_dz,
-                     "KiDS1000__4_e_dz" => KiDS1000__4_e_dz,
-                     "KiDS1000__0_e_m" => KiDS1000__0_e_m,
-                     "KiDS1000__1_e_m" => KiDS1000__1_e_m,
-                     "KiDS1000__2_e_m" => KiDS1000__2_e_m,
-                     "KiDS1000__3_e_m" => KiDS1000__3_e_m,
-                     "KiDS1000__4_e_m" => KiDS1000__4_e_m)
+    h  = 0.67 #~ Uniform(0.60, 0.91)
+    ns = 0.96 #~ Uniform(0.87, 1.07)
+    s8 = 0.811 #~ Uniform(0.6, 0.9)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
                                      Pk_mode="Halofit")
     
     theory = Theory(cosmology, tracers_names, pairs,
-                    pairs_ids, idx, files;
-                    Nuisances=nuisances)
+                    pairs_ids, idx, files)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
