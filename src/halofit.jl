@@ -52,7 +52,7 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
     lR1 = log(10.0)
     lRs = range(lR0, stop=lR1, length=100)
     σ2s = zeros(cosmo_type, length(lRs))
-    for i in 1:length(lRs)
+    @inbounds for i in 1:length(lRs)
         lR = lRs[i]
         σ2s[i] = _get_σ2(logk, k, PkLz0, exp(lR), 0)
     end
@@ -60,7 +60,7 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
     # When s8<0.6 lσ2i interpolation fails --> Extrapolation needed
     lσ2i = CubicSplineInterpolation(lRs, lσ2s, extrapolation_bc=Line())
     pk_NLs = zeros(cosmo_type, nk, nz)
-    for i in 1:nz
+    @inbounds for i in 1:nz
         Dz2 =  Dz2s[i]
         rsig =  _get_rsigma(lσ2i, Dz2, lR0, lR1)
         onederiv_int = _get_σ2(logk, k, PkLz0, rsig, 2) * Dz2

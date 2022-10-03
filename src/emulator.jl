@@ -105,7 +105,7 @@ function get_emulated_log_pk0(cosmo::CosmoPar)
     
     nk = length(emulator.training_karr)
     pk0s_t = zeros(cosmotype, nk)
-    for i in 1:nk
+    @inbounds for i in 1:nk
         kernel = _get_kernel(emulator.trans_cosmos, params_t, emulator.hypers[i, :])
         pk0s_t[i] = dot(vec(kernel), vec(emulator.alphas[i,:]))
     end
@@ -130,7 +130,8 @@ Returns:
 function reparametrize(cosmo::CosmoPar)
     Ωc = cosmo.Ωm - cosmo.Ωb 
     wc = Ωc*cosmo.h^2
-    params = [wc, cosmo.Ωb, cosmo.σ8, cosmo.n_s, cosmo.h]
+    wb = cosmo.Ωb*cosmo.h^2
+    params = [wc, wb, 2.7, cosmo.n_s, cosmo.h]
     cosmotype = eltype(params)
     return cosmotype, params
 end

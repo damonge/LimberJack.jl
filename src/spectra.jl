@@ -1,44 +1,38 @@
 """
     Cℓintegrand(cosmo::Cosmology, t1::Tracer, t2::Tracer, logk, ℓ)
-
 Returns the integrand of the angular power spectrum. 
-
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure.
 - `t1::Tracer` : tracer structure.
 - `t2::Tracer` : tracer structure.
 - `logk::Vector{Float}` : log scale array.
 - `ℓ::Float` : multipole.
-
 Returns:
 - `integrand::Vector{Real}` : integrand of the angular power spectrum.
-
 """
 function Cℓintegrand(cosmo::Cosmology,
                      t1::Tracer,
                      t2::Tracer,
-                     logk,
                      ℓ)
-    k = exp(logk)
-    chi = (ℓ+0.5)/k
-    if chi > cosmo.chi_max
-        return 0
-    end
-    z = cosmo.z_of_chi(chi)
-    w1 = t1.wint(chi) # *t1.b
-    w2 = t2.wint(chi) # *t2.b
+
+    chis = zeros(cosmo.settings.cosmo_type, cosmo.settings.nk)
+    chis[1:cosmo.settings.nk] = (ℓ+0.5) ./ cosmo.ks
+    chis .*= (chis .< cosmo.chi_max)
+    z = cosmo.z_of_chi(chis)
+
+    w1 = t1.wint(chis) # *t1.b
+    w2 = t2.wint(chis) # *t2.b
 
     if typeof(t1) in [NumberCountsTracer, WeakLensingTracer]
-        w1 *= t1.b
+        w1 .*= t1.b
     end
 
     if typeof(t2) in [NumberCountsTracer, WeakLensingTracer]
-        w2 *= t2.b
+        w2 .*= t2.b
     end
 
-    pk = nonlin_Pk(cosmo, k, z)
-    return k*w1*w2*pk
+    pk = nonlin_Pk(cosmo, cosmo.ks, z)
+    return @. (cosmo.ks*w1*w2*pk)
 end
 
 """
@@ -59,21 +53,11 @@ Returns:
 """
 function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     # OPT: we are not optimizing the limits of integration
-    cosmo_type = cosmo.settings.cosmo_type
-    logks = cosmo.logk
-    dlogk = cosmo.dlogk
-    res = length(logks)
-    Cℓs = zeros(cosmo_type, length(ℓs))
-    for i in 1:length(ℓs)
+    Cℓs = zeros(cosmo.settings.cosmo_type, length(ℓs))
+    @inbounds for i in 1:length(ℓs)
         ℓ = ℓs[i]
-        integrand = zeros(cosmo_type, length(logks))
-        for j in 1:length(logks)
-            logk = logks[j]
-            integrand[j] = Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5)
-        end
-        #integrand = [Cℓintegrand(cosmo, t1, t2, logk, ℓ)/(ℓ+0.5) for logk in logks]
-        #Cℓ = sum(0.5 .* (integrand[1:res-1] .+ integrand[2:res]) .* dlogk)
-        Cℓ = trapz(logks, integrand)
+        integrand = Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5)
+        Cℓ = trapz(cosmo.logk, integrand)
         fℓ1 = _get_Fℓ(t1, ℓ)
         fℓ2 = _get_Fℓ(t2, ℓ)
         Cℓs[i] = Cℓ * fℓ1 * fℓ2

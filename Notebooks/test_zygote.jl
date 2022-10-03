@@ -1,20 +1,22 @@
 using Distributed
 
 @everywhere using Turing
+@everywhere using Zygote
+@everywhere Turing.setadbackend(:zygote)
 @everywhere using LimberJack
-@everywhere using GaussianProcess
 @everywhere using CSV
 @everywhere using NPZ
 @everywhere using FITSIO
-@everywhere using Random
+@everywhere using LinearAlgebra
 @everywhere using PythonCall
 @everywhere np = pyimport("numpy")
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere data_set = "ND"
-@everywhere meta = np.load(string("../data/", data_set, "/", data_set, "_meta.npz"))
-@everywhere files = npzread(string("../data/", data_set, "/", data_set, "_files.npz"))
+@everywhere fol = "DESY1"
+@everywhere data_set = "gcgc_gcwl_wlwl"
+@everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
+@everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
@@ -23,28 +25,19 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
-@everywhere fid_cosmo = Cosmology()
-@everywhere N = 100
-@everywhere latent_x = Vector(0:0.3:3)
-@everywhere x = Vector(range(0., stop=3., length=N))
-
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   pairs_id=pairs_ids,
                                   idx=idx,
                                   cov_tot=cov_tot, 
-                                  files=files,
-                                  fid_cosmo=fid_cosmo,
-                                  latent_x=latent_x,
-                                  x=x)
-
+                                  files=files)
     #DESY1 priors
     Ωm ~ Uniform(0.1, 0.6)
     Ωb ~ Uniform(0.03, 0.045)
     h ~ Uniform(0.60, 0.91)
     ns ~ Uniform(0.87, 1.07)
-    s8 = 0.811
+    s8 ~ Uniform(0.6, 0.9)
     
     DESgc__0_0_b ~ Uniform(0.8, 3.0)
     DESgc__1_0_b ~ Uniform(0.8, 3.0)
@@ -68,9 +61,6 @@ using Distributed
     DESwl__1_e_m ~ Normal(0.012, 0.023)
     DESwl__2_e_m ~ Normal(0.012, 0.023)
     DESwl__3_e_m ~ Normal(0.012, 0.023)
-
-    eBOSS__0_0_b ~ Uniform(0.8, 5.0)
-    eBOSS__1_0_b ~ Uniform(0.8, 5.0)
 
     nuisances = Dict("DESgc__0_0_b" => DESgc__0_0_b,
                      "DESgc__1_0_b" => DESgc__1_0_b,
@@ -96,23 +86,31 @@ using Distributed
                      "DESwl__3_e_m" => DESwl__3_e_m,
         
                      "eBOSS__0_0_b" => eBOSS__0_0_b,
-                     "eBOSS__1_0_b" => eBOSS__1_0_b)
-
-    eta ~ Uniform(0.01, 0.1)
-    l ~ Uniform(0.1, 4)
-    latent_N = length(latent_x)
-    v ~ filldist(truncated(Normal(0, 1), -3, 3), latent_N)
-    
-    mu = fid_cosmo.Dz(vec(latent_x))
-    K = sqexp_cov_fn(latent_x; eta=eta, l=l)
-    latent_gp = latent_GP(mu, v, K)
-    gp = conditional(latent_x, x, latent_gp, sqexp_cov_fn;
-                      eta=eta, l=l)
+                     "eBOSS__1_0_b" => eBOSS__1_0_b,
+        
+                     "DECALS__0_0_b" => DECALS__0_0_b,
+                     "DECALS__1_0_b" => DECALS__1_0_b,
+                     "DECALS__2_0_b" => DECALS__2_0_b,
+                     "DECALS__3_0_b" => DECALS__3_0_b,
+                     "DECALS__0_0_dz" => DECALS__0_0_dz,
+                     "DECALS__1_0_dz" => DECALS__1_0_dz,
+                     "DECALS__2_0_dz" => DECALS__2_0_dz,
+                     "DECALS__3_0_dz" => DECALS__3_0_dz,
+                    
+                     "KiDS1000__0_e_dz" => KiDS1000__0_e_dz,
+                     "KiDS1000__1_e_dz" => KiDS1000__1_e_dz,
+                     "KiDS1000__2_e_dz" => KiDS1000__2_e_dz,
+                     "KiDS1000__3_e_dz" => KiDS1000__3_e_dz,
+                     "KiDS1000__4_e_dz" => KiDS1000__4_e_dz,
+                     "KiDS1000__0_e_m" => KiDS1000__0_e_m,
+                     "KiDS1000__1_e_m" => KiDS1000__1_e_m,
+                     "KiDS1000__2_e_m" => KiDS1000__2_e_m,
+                     "KiDS1000__3_e_m" => KiDS1000__3_e_m,
+                     "KiDS1000__4_e_m" => KiDS1000__4_e_m)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
-                                     Pk_mode="Halofit";
-                                     custom_Dz=gp)
+                                     Pk_mode="Halofit")
     
     theory = Theory(cosmology, tracers_names, pairs,
                     pairs_ids, idx, files;
@@ -137,7 +135,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_gp_hp_TAP_", TAP)
+folname = string("test_zygote_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -156,17 +154,16 @@ else
     last_n = 0
 end
 
-for i in (1+last_n):(cycles+last_n)
+for i in (1+last_n):(last_n+cycles)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
-    end 
+    end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
     CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
-end

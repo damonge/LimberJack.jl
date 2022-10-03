@@ -197,14 +197,16 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     cosmo_type = settings.cosmo_type
     nk = settings.nk
     nz_pk = settings.nz_pk
+    zs_pk = range(0., stop=3., length=nz_pk)
     nz = settings.nz
+    zs = range(0., stop=3., length=nz)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     if settings.tk_mode == "emulator"
         ks_emul, pk0_emul = get_emulated_log_pk0(cpar)
-        pki_emul = LinearInterpolation(log.(ks_emul), log.(pk0_emul),
+        pki_emul = linear_interpolation(log.(ks_emul), log.(pk0_emul),
                                        extrapolation_bc=Line())
         pk0 = exp.(pki_emul(logk))
     elseif settings.tk_mode == "EisHu"
@@ -221,60 +223,50 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     norm = cpar.σ8^2 / σ8_2_here
     pk0 *= norm
     # OPT: interpolation method
-    pki = LinearInterpolation(logk, log.(pk0), extrapolation_bc=Line())
+    pki = linear_interpolation(logk, log.(pk0), extrapolation_bc=Line())
     # Compute redshift-distance relation
-    zs = range(0., stop=3., length=nz)
     norm = CLIGHT_HMPC / cpar.h
-    chis = zeros(cosmo_type, nz)
-    for i in 1:nz
-        zz = zs[i]
-        chis[i] = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
-    end
+    chis_integrand = 1 ./ _Ez(cpar, zs)
+    chis = cumul_integrate(zs, chis_integrand, TrapezoidalFast()) * norm
     # OPT: tolerances, interpolation method
-    chii = LinearInterpolation(zs, chis, extrapolation_bc=Line())
-    zi = LinearInterpolation(chis, zs, extrapolation_bc=Line())
+    chii = linear_interpolation(zs, chis, extrapolation_bc=Line())
+    zi = linear_interpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
     chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
-
-    # ODE solution for growth factor
-    z_ini = 1000.0
-    a_ini = 1.0/(1.0+z_ini)
-    ez_ini = _Ez(cpar, z_ini)
-    d0 = [a_ini^3*ez_ini, a_ini]
-    a_s = reverse(@. 1.0 / (1.0 + zs))
-    prob = ODEProblem(_dgrowth!, d0, (a_ini, 1.0), cpar)
-    sol = solve(prob, Tsit5(), reltol=1E-6,
-                abstol=1E-8, saveat=a_s)
-    # OPT: interpolation (see below), ODE method, tolerances
-    # Note that sol already includes some kind of interpolation,
-    # so it may be possible to optimize this by just using
-    # sol directly.
-    s = vcat(sol.u'...)
-    Dzs = reverse(s[:, 2] / s[end, 2])
-    # OPT: interpolation method
-    Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
-
-    # OPT: separate zs for Pk and background
-    zs_pk = range(0., stop=3., length=nz_pk)
-    
-    custom_Dz = settings.custom_Dz
-    if custom_Dz == nothing
+    if settings.custom_Dz == nothing
+        # ODE solution for growth factor
+        z_ini = 1000.0
+        a_ini = 1.0/(1.0+z_ini)
+        ez_ini = _Ez(cpar, z_ini)
+        d0 = [a_ini^3*ez_ini, a_ini]
+        a_s = reverse(@. 1.0 / (1.0 + zs))
+        prob = ODEProblem(_dgrowth!, d0, (a_ini, 1.0), cpar)
+        sol = solve(prob, Tsit5(), reltol=1E-6,
+                    abstol=1E-8, saveat=a_s)
+        # OPT: interpolation (see below), ODE method, tolerances
+        # Note that sol already includes some kind of interpolation,
+        # so it may be possible to optimize this by just using
+        # sol directly.
+        s = vcat(sol.u'...)
+        Dzs_sol = reverse(s[:, 2] / s[end, 2])
+        Dzi = linear_interpolation(zs, Dzs_sol, extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
     else
         Dzs = custom_Dz
+        Dzi = linear_interpolation(zs_pk, Dzs, extrapolation_bc=Line())
     end
 
     if settings.Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
+        Pk = linear_interpolation((logk, zs_pk), log.(Pks))
     elseif settings.Pk_mode == "Halofit"
         Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs, cosmo_type)
     else 
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = LinearInterpolation((logk, zs_pk), log.(Pks))
+        Pk = linear_interpolation((logk, zs_pk), log.(Pks))
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(settings, cpar, ks, pk0, logk, dlogk,
@@ -314,7 +306,7 @@ Returns:
 
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nz=500, nz_pk=100, nk=500,
+          θCMB=2.725/2.7, nz=250, nz_pk=100, nk=100,
           tk_mode="BBKS", Pk_mode="linear", custom_Dz=nothing) = begin
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
@@ -333,7 +325,7 @@ Returns:
 - `Cosmology` : cosmology structure.
 
 """
-Cosmology() = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81)
+Cosmology() = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81)
 
 function σR2(cosmo::Cosmology, R)
     return _σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)

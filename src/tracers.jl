@@ -120,7 +120,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     # Calculate integral at each chi
     w_itg(chii) = @.(nz_w*(1-chii/chi))
     w_arr = zeros(cosmo_type, res)
-    for i in 1:res
+    @inbounds for i in 1:res
         w_arr[i] = trapz(z_w[i:res], w_itg(chi[i])[i:res])
     end
     
