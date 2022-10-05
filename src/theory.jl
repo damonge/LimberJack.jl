@@ -66,20 +66,13 @@ function Theory(cosmology::Cosmology,
     total_len = last(idx)
     cls = zeros(cosmology.settings.cosmo_type, total_len)
     @inbounds Threads.@threads :static for i in 1:npairs
-        cls[idx[i]+1:idx[i+1]] = _fill_cls(i; pairs=pairs,
-                                              pairs_ids=pairs_ids,
-                                              files=files,
-                                              tracers=tracers)
+        name1, name2 = pairs[i]
+        id1, id2 = pairs_ids[i]
+        ls = files[string("ls_", name1, "_", name2)]
+        tracer1 = tracers[id1]
+        tracer2 = tracers[id2]
+        cls[idx[i]+1:idx[i+1]] = angularCℓs(cosmology, tracer1, tracer2, ls)
     end
-
+    
     return cls
-end
-
-function _fill_cls(i; pairs=pairs, pairs_ids=pairs_ids, files=files, tracers=tracers)
-    name1, name2 = pairs[i]
-    id1, id2 = pairs_ids[i]
-    ls = files[string("ls_", name1, "_", name2)]
-    tracer1 = tracers[id1]
-    tracer2 = tracers[id2]
-    return angularCℓs(cosmology, tracer1, tracer2, ls)
 end
