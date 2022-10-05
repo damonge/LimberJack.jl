@@ -14,7 +14,7 @@ function Theory(cosmology::Cosmology,
     ntracers = length(tracers_names)
     tracers = []
     
-    nui_type = valtype(Nuisances)
+    nui_type =  eltype(valtype(Nuisances))
     if !(nui_type <: Float64) & (nui_type != Any)
         if nui_type != Real
             cosmology.settings.cosmo_type = nui_type
