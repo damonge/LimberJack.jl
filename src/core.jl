@@ -426,7 +426,8 @@ function TkEisHu(cosmo::CosmoPar, k)
 end
 
 function _Ez(cosmo::CosmoPar, z)
-    @. sqrt(sqrt((cosmo.Ωm*(1+z)^3+cosmo.Ωr*(1+z)^4+cosmo.ΩΛ)^2))
+    E2 = @. (cosmo.Ωm*(1+z)^3+cosmo.Ωr*(1+z)^4+cosmo.ΩΛ)
+    return sqrt.(E2)
 end
 
 function _dgrowth!(dd, d, cosmo::CosmoPar, a)
