@@ -66,7 +66,10 @@ function Theory(cosmology::Cosmology,
     total_len = last(idx)
     cls = zeros(cosmology.settings.cosmo_type, total_len)
     @inbounds Threads.@threads :static for i in 1:npairs
-        cls[idx[i]+1:idx[i+1]] = _fill_cls(i)
+        cls[idx[i]+1:idx[i+1]] = _fill_cls(i; pairs=pairs,
+                                              pairs_ids=pairs_ids,
+                                              files=files,
+                                              tracers=tracers)
     end
 
     return cls
