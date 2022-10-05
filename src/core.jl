@@ -235,7 +235,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     #chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
     zs_LSS = exp.(LinRange(0.0, 7, nz)).-1
     chis_integrand_LSS = 1 ./ _Ez(cpar, zs_LSS)
-    chis_LSS = trapz(zs_LSS, chis_integrand_LSS)
+    chi_LSS = trapz(zs_LSS, chis_integrand_LSS)
 
     if settings.custom_Dz == nothing
         # ODE solution for growth factor
