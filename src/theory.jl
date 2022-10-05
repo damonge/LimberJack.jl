@@ -72,7 +72,7 @@ function Theory(cosmology::Cosmology,
     return cls
 end
 
-function _fill_cls(i; pairs=pairs, pair_ids=pair_ids, files=files, tracers=tracers)
+function _fill_cls(i; pairs=pairs, pairs_ids=pairs_ids, files=files, tracers=tracers)
     name1, name2 = pairs[i]
     id1, id2 = pairs_ids[i]
     ls = files[string("ls_", name1, "_", name2)]
