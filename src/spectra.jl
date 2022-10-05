@@ -53,19 +53,11 @@ Returns:
 """
 function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     # OPT: we are not optimizing the limits of integration
-    Cℓs = zeros(cosmo.settings.cosmo_type, length(ℓs))
-    @inbounds for i in 1:length(ℓs)
-        ℓ = ℓs[i]
-        integrand = Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5)
-        Cℓ = trapz(cosmo.logk, integrand)
-        fℓ1 = _get_Fℓ(t1, ℓ)
-        fℓ2 = _get_Fℓ(t2, ℓ)
-        Cℓs[i] = Cℓ * fℓ1 * fℓ2
-    end
-    return Cℓs
+    Cℓs = [trapz(cosmo.logk, Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5)) for ℓ in ℓs]
+    return _get_Fℓ(t1, ℓs) .* _get_Fℓ(t2, ℓs) .* Cℓs
 end
 
-function _get_Fℓ(t::Tracer, ℓ::Real)
+function _get_Fℓ(t::Tracer, ℓ)
     if typeof(t) == WeakLensingTracer
         return @. sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2
     elseif typeof(t) == CMBLensingTracer
