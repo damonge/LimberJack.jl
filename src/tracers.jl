@@ -43,7 +43,7 @@ Returns:
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
 
     nz_int = linear_interpolation(z_n, nz, extrapolation_bc=0)
-    z_w = LinRange(z_n[1], z_n[end], cosmo.settings.nz)
+    z_w = range(0.00001, stop=z_n[end], length=res)
     nz_w = nz_int(z_w)
     nz_norm = trapz(z_w, nz_w)
     
