@@ -235,25 +235,35 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     #chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
     zs_LSS = exp.(LinRange(0.0, 7, nz)).-1
     chis_integrand_LSS = 1 ./ _Ez(cpar, zs_LSS)
-    chi_LSS = trapz(zs_LSS, chis_integrand_LSS)
+    chi_LSS = trapz(zs_LSS, chis_integrand_LSS) * norm
 
     if settings.custom_Dz == nothing
         # ODE solution for growth factor
-        z_ini = 1000.0
-        a_ini = 1.0/(1.0+z_ini)
-        ez_ini = _Ez(cpar, z_ini)
-        d0 = [a_ini^3*ez_ini, a_ini]
-        a_s = reverse(@. 1.0 / (1.0 + zs))
-        prob = ODEProblem(_dgrowth!, d0, (a_ini, 1.0), cpar)
-        sol = solve(prob, Tsit5(), reltol=1E-6,
-                    abstol=1E-8, saveat=a_s)
-        # OPT: interpolation (see below), ODE method, tolerances
-        # Note that sol already includes some kind of interpolation,
-        # so it may be possible to optimize this by just using
-        # sol directly.
-        s = vcat(sol.u'...)
-        Dzs_sol = reverse(s[:, 2] / s[end, 2])
-        Dzi = linear_interpolation(zs, Dzs_sol, extrapolation_bc=Line())
+        x_Dz = LinRange(0, log(1+1100), nz)
+        dx_Dz = x_Dz[2]-x_Dz[1]
+        z_Dz = @.(exp(x_Dz) - 1)
+        a_Dz = @.(1/(1+z_Dz))
+        aa = reverse(a_Dz)
+        ee = reverse(_Ez(cpar, z_Dz))
+        
+        dd = zeros(settings.cosmo_type, nz)
+        yy = zeros(settings.cosmo_type, nz)
+        dd[1] = aa[1]
+        yy[1] = aa[1]^3*ee[end]
+        
+        for i in 1:(nz-1)
+            A0 = -1.5 * cpar.Ωm / (aa[i]*ee[i])
+            B0 = -1. / (aa[i]^2*ee[i])
+            A1 = -1.5 * cpar.Ωm / (aa[i+1]*ee[i+1])
+            B1 = -1. / (aa[i+1]^2*ee[i+1])
+            yy[i+1] = (1+0.5*dx_Dz^2*A0*B0)*yy[i] + 0.5*(A0+A1)*dx_Dz*dd[i]
+            dd[i+1] = 0.5*(B0+B1)*dx_Dz*yy[i] + (1+0.5*dx_Dz^2*A0*B0)*dd[i]
+        end
+        
+        y = reverse(yy)
+        d = reverse(dd)
+        
+        Dzi = linear_interpolation(z_Dz, d./d[1], extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
     else
         Dzs = custom_Dz
