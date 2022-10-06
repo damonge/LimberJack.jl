@@ -319,7 +319,7 @@ Returns:
 
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nz=250, nz_pk=100, nk=100,
+          θCMB=2.725/2.7, nk=200, nz=200, nz_pk=100,
           tk_mode="BBKS", Pk_mode="linear", custom_Dz=nothing) = begin
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
