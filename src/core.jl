@@ -249,7 +249,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         dd = zeros(settings.cosmo_type, nz)
         yy = zeros(settings.cosmo_type, nz)
         dd[1] = aa[1]
-        yy[1] = aa[1]^3*E[1]
+        yy[1] = aa[1]^3*ee[end]
         
         for i in range(nz-1)
             A0 = -1.5 * cpar.Ωm / (aa[i]*ee[i])
