@@ -42,7 +42,7 @@ Returns:
 """
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
 
-    nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
+    nz_int = linear_interpolation(z_n, nz, extrapolation_bc=0)
     z_w = LinRange(z_n[1], z_n[end], cosmo.settings.nz)
     nz_w = nz_int(z_w)
     nz_norm = trapz(z_w, nz_w)
@@ -51,7 +51,7 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     hz = Hmpc(cosmo, z_w)
     
     w_arr = @. (nz_w*hz/nz_norm)
-    wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
+    wint = linear_interpolation(chi, w_arr, extrapolation_bc=0)
     
     NumberCountsTracer(w_arr, chi, wint, kwargs[:b])
 end
@@ -99,7 +99,7 @@ Returns:
 """
 WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     
-    nz_int = LinearInterpolation(z_n, nz, extrapolation_bc=0)
+    nz_int = linear_interpolation(z_n, nz, extrapolation_bc=0)
     
     cosmo_type = cosmo.settings.cosmo_type
     res = cosmo.settings.nz
@@ -136,7 +136,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     # Interpolate
     # Fix first element
     chi[1] = 0.0
-    wint = LinearInterpolation(chi, w_arr, extrapolation_bc=0)
+    wint = linear_interpolation(chi, w_arr, extrapolation_bc=0)
     b = kwargs[:mb]+1.0 
     WeakLensingTracer(w_arr, chi, wint, b)
 end
@@ -190,7 +190,7 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     w_arr = @. lens_prefac*chis*(1-chis/cosmo.chi_LSS)*(1+zs)
 
     # Interpolate
-    wint = LinearInterpolation(chis, w_arr, extrapolation_bc=0)
+    wint = linear_interpolation(chis, w_arr, extrapolation_bc=0)
     CMBLensingTracer(w_arr, chis, wint)
 end
 
