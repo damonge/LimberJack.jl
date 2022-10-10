@@ -15,8 +15,7 @@ using Distributed
 @everywhere files = npzread(string("../data/", data_set, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
-@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
-@everywhere pairs_ids = pyconvert(Vector{Vector{Int}}, meta["pairs_ids"])
+@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
@@ -25,7 +24,6 @@ using Distributed
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
-                                  pairs_id=pairs_ids,
                                   idx=idx,
                                   cov_tot=cov_tot, 
                                   files=files)
@@ -136,8 +134,7 @@ using Distributed
                                      Pk_mode="Halofit")
     
     theory = Theory(cosmology, tracers_names, pairs,
-                    pairs_ids, idx, files;
-                    Nuisances=nuisances)
+                    idx, files; Nuisances=nuisances)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
