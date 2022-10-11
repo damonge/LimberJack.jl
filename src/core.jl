@@ -522,6 +522,21 @@ Returns:
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 
 """
+    fs8(cosmo::Cosmology, z)
+
+Given a `Cosmology` instance, it returns fs8. 
+
+Arguments:
+- `cosmo::Cosmology` : cosmology structure
+- `z::Dual` : redshift
+
+Returns:
+- `fs8::Dual` : fs8
+
+"""
+fs8(cosmo::Cosmology, z) = cosmo.fs8i(z)
+
+"""
     growth_factor(cosmo::Cosmology, z)
 
 Given a `Cosmology` instance, it returns the growth factor (D(z) = log(δ)). 
