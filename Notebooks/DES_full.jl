@@ -5,16 +5,27 @@ using Distributed
 @everywhere using CSV
 @everywhere using NPZ
 @everywhere using FITSIO
+@everywhere using PythonCall
+@everywhere np = pyimport("numpy")
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere files = npzread("../data/DESY1_cls/Cls_meta.npz")
-@everywhere Cls_meta = cls_meta(files)
-@everywhere cov_tot = files["cov"]
-@everywhere data_vector = files["cls"]
+@everywhere data_set = "DESY1"
+@everywhere meta = np.load(string("../data/", data_set, "/", "gcgc_gcwl_wlwl", "_meta.npz"))
+@everywhere files = npzread(string("../data/", data_set, "/", "gcgc_gcwl_wlwl", "_files.npz"))
 
+@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
+@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
+@everywhere idx = pyconvert(Vector{Int}, meta["idx"])
+@everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
+@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
-@everywhere @model function model(data_vector; cov_tot=cov_tot)
+@everywhere @model function model(data_vector;
+                                  tracers_names=tracers_names,
+                                  pairs=pairs,
+                                  idx=idx,
+                                  cov_tot=cov_tot, 
+                                  files=files)
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
@@ -65,19 +76,19 @@ using Distributed
                      "alpha_IA" => alpha_IA)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
-                                     tk_mode="EisHu",
+                                     tk_mode="emulator",
                                      Pk_mode="Halofit")
     
-    theory = Theory(cosmology, Cls_meta, files;
-                    Nuisances=nuisances).cls
+    theory = Theory(cosmology, tracers_names, pairs,
+                    idx, files; Nuisances=nuisances)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
 cycles = 6
 steps = 50
-iterations = 250
+iterations = 100
 TAP = 0.60
-adaptation = 1000
+adaptation = 100
 init_ϵ = 0.05
 nchains = nprocs()
 println("sampling settings: ")
@@ -90,27 +101,32 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_", "TAP_", TAP)
+folname = string(data_set, "_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
     fol_files = readdir(folname)
-    last_chain = last([file for file in fol_files if occursin("chain", file)])
-    last_n = parse(Int, last_chain[7])
-    println("Restarting chain")
+    println("Found existing file")
+    if length(fol_files) != 0
+        last_chain = last([file for file in fol_files if occursin("chain", file)])
+        last_n = parse(Int, last_chain[7])
+        println("Restarting chain")
+    else
+        last_n = 0
+    end
 else
     mkdir(folname)
     println(string("Created new folder ", folname))
     last_n = 0
 end
 
-for i in (1+last_n):(last_n+cycles)
+for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), HMC(init_ϵ, steps),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), HMC(init_ϵ, steps),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  
