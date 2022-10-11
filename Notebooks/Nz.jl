@@ -43,6 +43,7 @@ using Distributed
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
     DESwl__0_e_nz ~ MvNormal(nz_k0, cov_k0)
+    #DESwl__0_e_nz ~ arraydist([truncated(Normal(nz_k0[i], cov_k0[i]), 0, 1), for i in 1:length(zs_k0)])
     DESwl__1_e_nz ~ MvNormal(nz_k1, cov_k1)
     DESwl__2_e_nz ~ MvNormal(nz_k2, cov_k2)
     DESwl__3_e_nz ~ MvNormal(nz_k3, cov_k3)

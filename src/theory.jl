@@ -59,7 +59,6 @@ function Theory(cosmology::Cosmology,
             trancer = nothing
         end
         merge!(tracers, Dict(name => tracer))
-
     end
 
     npairs = length(pairs)
