@@ -23,7 +23,7 @@ function Theory(cosmology::Cosmology,
     
     tracers =  Dict{String}{Tracer}()
     
-    @inbounds Threads.@threads :static for name in tracers_names
+    @inbounds for name in tracers_names
         n = length(name)
         t_type = name[n:n]
         if t_type == "0"
@@ -56,7 +56,7 @@ function Theory(cosmology::Cosmology,
 
         else
             print("Not implemented")
-            trancer = nothing
+            tracer = nothing
         end
         merge!(tracers, Dict(name => tracer))
     end
