@@ -153,6 +153,7 @@ struct Cosmology
     chi_max
     chi_LSS
     Dz::AbstractInterpolation
+    fs8z::AbstractInterpolation
     PkLz0::AbstractInterpolation
     Pk::AbstractInterpolation
 end
@@ -244,7 +245,8 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         z_Dz = @.(exp(x_Dz) - 1)
         a_Dz = @.(1/(1+z_Dz))
         aa = reverse(a_Dz)
-        ee = reverse(_Ez(cpar, z_Dz))
+        e = _Ez(cpar, z_Dz)
+        ee = reverse(e)
         
         dd = zeros(settings.cosmo_type, nz)
         yy = zeros(settings.cosmo_type, nz)
@@ -265,9 +267,12 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         
         Dzi = linear_interpolation(z_Dz, d./d[1], extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
+        fs8i = linear_interpolation(z_Dz, cpar.s8.*y./ (a_Dz.^2 .*e.*d[1]),
+                                    extrapolation_bc=Line())
     else
-        Dzs = settings.custom_Dz
+        Dzs, fs8s = settings.custom_Dz
         Dzi = linear_interpolation(zs_pk, Dzs, extrapolation_bc=Line())
+        fs8i = linear_interpolation(zs_pk, fs8s, extrapolation_bc=Line())
     end
 
     if settings.Pk_mode == "linear"
@@ -284,7 +289,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     end
     Cosmology(settings, cpar, ks, pk0, logk, dlogk,
               collect(zs), chii, zi, chis[end],
-              chi_LSS, Dzi, pki, Pk)
+              chi_LSS, Dzi, fs8i, pki, Pk)
 end
 
 """
