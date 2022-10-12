@@ -448,12 +448,6 @@ function _Ez(cosmo::CosmoPar, z)
     return sqrt.(E2)
 end
 
-function _dgrowth!(dd, d, cosmo::CosmoPar, a)
-    ez = _Ez(cosmo, 1.0/a-1.0)
-    dd[1] = d[2] * 1.5 * cosmo.Ωm / (a^2*ez)
-    dd[2] = d[1] / (a^3*ez)
-end
-
 """
     chi_to_z(cosmo::Cosmology, chi)
 
