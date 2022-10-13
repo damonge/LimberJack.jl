@@ -7,79 +7,112 @@ using Distributed
 @everywhere using NPZ
 @everywhere using FITSIO
 @everywhere using Random
-@everywhere using DataFrames
+@everywhere using PythonCall
+@everywhere np = pyimport("numpy")
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere files = npzread("../data/DESY1_cls/gcgc_gcwl_wlwl.npz")
-@everywhere cov_tot = files["cov"]
-@everywhere data_vector = files["cls"]
+@everywhere data_set = "FD"
+@everywhere meta = np.load(string("../data/", data_set, "/", data_set, "_meta.npz"))
+@everywhere files = npzread(string("../data/", data_set, "/", data_set, "_files.npz"))
+
+@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
+@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
+@everywhere idx = pyconvert(Vector{Int}, meta["idx"])
+@everywhere cls_data = pyconvert(Vector{Float64}, meta["cls"])
+@everywhere cls_cov = pyconvert(Matrix{Float64}, meta["cov"]);
+
+@everywhere fs8_meta = npzread("../data/fs8s/fs8s.npz")
+@everywhere fs8_zs = fs8_meta["z"]
+@everywhere fs8_data = fs8_meta["data"]
+@everywhere fs8_cov = fs8_meta["cov"]
+
+@everywhere cov_tot = zeros(Float64, length(fs8_data)+length(cls_data), length(fs8_data)+length(cls_data))
+@everywhere cov_tot[1:length(fs8_data), 1:length(fs8_data)] = fs8_cov
+@everywhere cov_tot[length(fs8_data)+1:(length(fs8_data)+length(cls_data)),
+        length(fs8_data)+1:(length(fs8_data)+length(cls_data))] = cls_cov
+@everywhere data_vector = [fs8_data ; cls_data];
 
 @everywhere fid_cosmo = Cosmology()
 @everywhere N = 100
 @everywhere latent_x = Vector(0:0.3:3)
 @everywhere x = Vector(range(0., stop=3., length=N))
 
-@everywhere function generated_quantities(model::DynamicPPL.Model, chain::MCMCChains.Chains)
-   varinfo = DynamicPPL.VarInfo(model)
-   iters = Iterators.product(1:size(chain, 1), 1:size(chain, 3))
-   return map(iters) do (sample_idx, chain_idx)
-       DynamicPPL.setval!(varinfo, chain, sample_idx, chain_idx)
-       model(varinfo)
-   end
-end
+@everywhere @model function model(data_vector;
+                                  tracers_names=tracers_names,
+                                  pairs=pairs,
+                                  idx=idx,
+                                  cov_tot=cov_tot, 
+                                  files=files,
+                                  fid_cosmo=fid_cosmo,
+                                  latent_x=latent_x,
+                                  x=x)
 
-@everywhere @model function model(data_vector; cov_tot=cov_tot, fid_cosmo=fid_cosmo,
-                                  latent_x=latent_x, x=x,
-                                  nz_path="../data/DESY1_cls/fiducial_nzs/")
-    
-    Ωm ~ Uniform(0.1, 0.9)
-    Ωb ~ Uniform(0.03, 0.07)
-    h ~ Uniform(0.55, 0.91)
-    ns ~ Uniform(0.87, 1.07)
+    #KiDS priors
+    Ωm ~ Uniform(0.2, 0.6)
+    Ωb ~ Uniform(0.028, 0.065)
+    h ~ Uniform(0.64, 0.82)
+    ns ~ Uniform(0.84, 1.1)
     s8 = 0.811
     
-    b0 ~ Uniform(0.8, 3.0)
-    b1 ~ Uniform(0.8, 3.0)
-    b2 ~ Uniform(0.8, 3.0)
-    b3 ~ Uniform(0.8, 3.0)
-    b4 ~ Uniform(0.8, 3.0)
-    dz_g0 ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-    dz_g1 ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-    dz_g2 ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
-    dz_g3 ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-    dz_g4 ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-    dz_k0 ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
-    dz_k1 ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
-    dz_k2 ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
-    dz_k3 ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
-    mb0 ~ Normal(0.012, 0.023)
-    mb1 ~ Normal(0.012, 0.023)
-    mb2 ~ Normal(0.012, 0.023)
-    mb3 ~ Normal(0.012, 0.023)
+    DESgc__0_0_b ~ Uniform(0.8, 3.0)
+    DESgc__1_0_b ~ Uniform(0.8, 3.0)
+    DESgc__2_0_b ~ Uniform(0.8, 3.0)
+    DESgc__3_0_b ~ Uniform(0.8, 3.0)
+    DESgc__4_0_b ~ Uniform(0.8, 3.0)
+    DESgc__0_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    DESgc__1_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    DESgc__2_0_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
+    DESgc__3_0_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    DESgc__4_0_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
 
-    nuisances = Dict("b0" => b0,
-                     "b1" => b1,
-                     "b2" => b2,
-                     "b3" => b3,
-                     "b4" => b4,
-                     "dz_g0" => dz_g0,
-                     "dz_g1" => dz_g1,
-                     "dz_g2" => dz_g2,
-                     "dz_g3" => dz_g3,
-                     "dz_g4" => dz_g4,
-                     "dz_k0" => dz_k0,
-                     "dz_k1" => dz_k1,
-                     "dz_k2" => dz_k2,
-                     "dz_k3" => dz_k3,
-                     "mb0" => mb0,
-                     "mb1" => mb1,
-                     "mb2" => mb2,
-                     "mb3" => mb3,
+    DESwl__0_e_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
+    DESwl__1_e_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
+    DESwl__2_e_dz ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
+    DESwl__3_e_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
+    DESwl__0_e_m ~ Normal(0.012, 0.023)
+    DESwl__1_e_m ~ Normal(0.012, 0.023)
+    DESwl__2_e_m ~ Normal(0.012, 0.023)
+    DESwl__3_e_m ~ Normal(0.012, 0.023)
+
+
+    nuisances = Dict("DESgc__0_0_b" => DESgc__0_0_b,
+                     "DESgc__1_0_b" => DESgc__1_0_b,
+                     "DESgc__2_0_b" => DESgc__2_0_b,
+                     "DESgc__3_0_b" => DESgc__3_0_b,
+                     "DESgc__4_0_b" => DESgc__4_0_b,
+                     "DESgc__0_0_dz" => DESgc__0_0_dz,
+                     "DESgc__1_0_dz" => DESgc__1_0_dz,
+                     "DESgc__2_0_dz" => DESgc__2_0_dz,
+                     "DESgc__3_0_dz" => DESgc__3_0_dz,
+                     "DESgc__4_0_dz" => DESgc__4_0_dz,
+        
                      "A_IA" => A_IA,
-                     "alpha_IA" => alpha_IA)
+                     "alpha_IA" => alpha_IA,
+
+                     "DESwl__0_e_dz" => DESwl__0_e_dz,
+                     "DESwl__1_e_dz" => DESwl__1_e_dz,
+                     "DESwl__2_e_dz" => DESwl__2_e_dz,
+                     "DESwl__3_e_dz" => DESwl__3_e_dz,
+                     "DESwl__0_e_m" => DESwl__0_e_m,
+                     "DESwl__1_e_m" => DESwl__1_e_m,
+                     "DESwl__2_e_m" => DESwl__2_e_m,
+                     "DESwl__3_e_m" => DESwl__3_e_m,
+        
+                     "eBOSS__0_0_b" => eBOSS__0_0_b,
+                     "eBOSS__1_0_b" => eBOSS__1_0_b,
+        
+                     "DECALS__0_0_b" => DECALS__0_0_b,
+                     "DECALS__1_0_b" => DECALS__1_0_b,
+                     "DECALS__2_0_b" => DECALS__2_0_b,
+                     "DECALS__3_0_b" => DECALS__3_0_b,
+                     "DECALS__0_0_dz" => DECALS__0_0_dz,
+                     "DECALS__1_0_dz" => DECALS__1_0_dz,
+                     "DECALS__2_0_dz" => DECALS__2_0_dz,
+                     "DECALS__3_0_dz" => DECALS__3_0_dz)
 
     eta = 0.05
     l = 1
@@ -88,12 +121,13 @@ end
     
     mu = fid_cosmo.Dz(vec(latent_x))
     K = sqexp_cov_fn(latent_x; eta=eta, l=l)
-    dmu = fid_cosmo.fs8z(vec(latent_x))
-    dK = sqexp_cov_grad(latent_x; eta=eta, l=l)
     latent_gp = latent_GP(mu, v, K)
-    latent_dgp = latent_GP(dmu, v, dK)
     gp = conditional(latent_x, x, latent_gp, sqexp_cov_fn;
                       eta=eta, l=l)
+
+    dmu =  growth_rate(fid_cosmo, vec(latent_x)) ./ (1 .+ latent_x)
+    dK = sqexp_cov_grad(latent_x; eta=eta, l=l)
+    latent_dgp = latent_GP(dmu, v, dK)
     dgp = conditional(latent_x, x, latent_dgp, sqexp_cov_grad;
                       eta=eta, l=l)
     
@@ -102,22 +136,20 @@ end
                           Pk_mode="Halofit", 
                           custom_Dz=[x, gp, dgp])
     
-    cls = Theory(cosmology, files;
-                 Nuisances=nuisances,
-                 nz_path=nz_path)
+    cls = Theory(cosmology, tracers_names, pairs,
+                    idx, files; Nuisances=nuisances)
     
-    fs8s = fs8(z_fs8)
-    theory = [cls; fs8s]
+    fs8s = fs8(cosmology, fs8_zs)
+    theory = [fs8s; cls]
     
     data_vector ~ MvNormal(theory, cov_tot)
-    return(gp=gp, theory=theory)
 end;
 
 cycles = 6
 steps = 50
-iterations = 250
+iterations = 100
 TAP = 0.60
-adaptation = 1000
+adaptation = 100
 init_ϵ = 0.05
 nchains = nprocs()
 println("sampling settings: ")
@@ -130,31 +162,36 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_full_gp_nos8_", "TAP_", TAP)
+folname = string(data_set, "fs8_gp_hp_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
-mkdir(folname)
-println(string("Created new folder ", folname))
+if isdir(folname)
+    fol_files = readdir(folname)
+    println("Found existing file")
+    if length(fol_files) != 0
+        last_chain = last([file for file in fol_files if occursin("chain", file)])
+        last_n = parse(Int, last_chain[7])
+        println("Restarting chain")
+    else
+        last_n = 0
+    end
+else
+    mkdir(folname)
+    println(string("Created new folder ", folname))
+    last_n = 0
+end
 
-for i in 1:cycles
+for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), #HMC(init_ϵ, steps), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), #HMC(init_ϵ, steps), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
     CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
-    derived = generated_quantities(model(data_vector), chain)
-    gps = vec([row.gp for row in derived])
-    cls = vec([row.theory for row in derived])
-    CSV.write(joinpath(folname, string("gps_", i,".csv")), 
-              DataFrame(gps, :auto), header = false)
-    CSV.write(joinpath(folname, string("cls_", i,".csv")), 
-              DataFrame(cls, :auto), header = false)
-    
 end
