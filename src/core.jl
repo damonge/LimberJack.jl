@@ -153,7 +153,7 @@ struct Cosmology
     chi_max
     chi_LSS
     Dz::AbstractInterpolation
-    fs8z::AbstractInterpolation
+    fz::AbstractInterpolation
     PkLz0::AbstractInterpolation
     Pk::AbstractInterpolation
 end
@@ -266,13 +266,15 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         d = reverse(dd)
         
         Dzi = linear_interpolation(z_Dz, d./d[1], extrapolation_bc=Line())
-        Dzs = Dzi(zs_pk)
-        fs8i = linear_interpolation(z_Dz, cpar.s8.*y./ (a_Dz.^2 .*e.*d[1]),
+        fzi = linear_interpolation(z_Dz, y./ (a_Dz.^2 .*e.*d[1]),
                                     extrapolation_bc=Line())
+        Dzs = Dzi(zs_pk)
     else
-        Dzs, fs8s = settings.custom_Dz
-        Dzi = linear_interpolation(zs_pk, Dzs, extrapolation_bc=Line())
-        fs8i = linear_interpolation(zs_pk, fs8s, extrapolation_bc=Line())
+        zs_c, Dzs_c, dDzs_c = settings.custom_Dz
+        Dzi = linear_interpolation(zs_c, Dzs_c ./ Dzs_c[1], extrapolation_bc=Line())
+        fzi = linear_interpolation(zs_c, -(1 .+ zs_c).*dDzs_c./Dzs_c[1],
+                                   extrapolation_bc=Line())
+        Dzs = Dzi(zs_pk)
     end
 
     if settings.Pk_mode == "linear"
@@ -289,7 +291,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     end
     Cosmology(settings, cpar, ks, pk0, logk, dlogk,
               collect(zs), chii, zi, chis[end],
-              chi_LSS, Dzi, fs8i, pki, Pk)
+              chi_LSS, Dzi, fzi, pki, Pk)
 end
 
 """
@@ -516,6 +518,21 @@ Returns:
 comoving_radial_distance(cosmo::Cosmology, z) = cosmo.chi(z)
 
 """
+    growth_rate(cosmo::Cosmology, z)
+
+Given a `Cosmology` instance, it returns growth rate. 
+
+Arguments:
+- `cosmo::Cosmology` : cosmology structure
+- `z::Dual` : redshift
+
+Returns:
+- `f::Dual` : f
+
+"""
+growth_rate(cosmo::Cosmology, z) = cosmo.fz(z)
+
+"""
     fs8(cosmo::Cosmology, z)
 
 Given a `Cosmology` instance, it returns fs8. 
@@ -528,7 +545,7 @@ Returns:
 - `fs8::Dual` : fs8
 
 """
-fs8(cosmo::Cosmology, z) = cosmo.fs8i(z)
+fs8(cosmo::Cosmology, z) = cosmo.cosmo.σ8 .* cosmo.Dz(z) .* cosmo.fz(z)
 
 """
     growth_factor(cosmo::Cosmology, z)

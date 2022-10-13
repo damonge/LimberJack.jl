@@ -91,20 +91,23 @@ end
     dmu = fid_cosmo.fs8z(vec(latent_x))
     dK = sqexp_cov_grad(latent_x; eta=eta, l=l)
     latent_gp = latent_GP(mu, v, K)
-    latent_dgp = latent_GP(mu, v, K)
+    latent_dgp = latent_GP(dmu, v, dK)
     gp = conditional(latent_x, x, latent_gp, sqexp_cov_fn;
                       eta=eta, l=l)
     dgp = conditional(latent_x, x, latent_dgp, sqexp_cov_grad;
                       eta=eta, l=l)
     
-    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
-                                     tk_mode="EisHu",
-                                     Pk_mode="Halofit", 
-                                     custom_Dz=[gp, dgp])
+    cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
+                          tk_mode="EisHu",
+                          Pk_mode="Halofit", 
+                          custom_Dz=[x, gp, dgp])
     
-    theory = Theory(cosmology, files;
-                    Nuisances=nuisances,
-                    nz_path=nz_path)
+    cls = Theory(cosmology, files;
+                 Nuisances=nuisances,
+                 nz_path=nz_path)
+    
+    fs8s = fs8(z_fs8)
+    theory = [cls; fs8s]
     
     data_vector ~ MvNormal(theory, cov_tot)
     return(gp=gp, theory=theory)
