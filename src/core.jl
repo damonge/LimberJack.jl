@@ -153,7 +153,7 @@ struct Cosmology
     chi_max
     chi_LSS
     Dz::AbstractInterpolation
-    fz::AbstractInterpolation
+    fs8z::AbstractInterpolation
     PkLz0::AbstractInterpolation
     Pk::AbstractInterpolation
 end
@@ -266,13 +266,13 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         d = reverse(dd)
         
         Dzi = linear_interpolation(z_Dz, d./d[1], extrapolation_bc=Line())
-        fzi = linear_interpolation(z_Dz, y./ (a_Dz.^2 .*e.*d[1]),
+        fs8zi = linear_interpolation(z_Dz, cpar.σ8 .* y./ (a_Dz.^2 .*e.*d[1]),
                                     extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
     else
         zs_c, Dzs_c, dDzs_c = settings.custom_Dz
         Dzi = linear_interpolation(zs_c, Dzs_c ./ Dzs_c[1], extrapolation_bc=Line())
-        fzi = linear_interpolation(zs_c, (1 .+ zs_c).*dDzs_c./Dzs_c[1],
+        fs8zi = linear_interpolation(zs_c, -(1 .+ zs_c).*dDzs_c./Dzs_c[1],
                                    extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
     end
@@ -291,7 +291,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     end
     Cosmology(settings, cpar, ks, pk0, logk, dlogk,
               collect(zs), chii, zi, chis[end],
-              chi_LSS, Dzi, fzi, pki, Pk)
+              chi_LSS, Dzi, fs8zi, pki, Pk)
 end
 
 """
@@ -530,7 +530,7 @@ Returns:
 - `f::Dual` : f
 
 """
-growth_rate(cosmo::Cosmology, z) = cosmo.fz(z)
+growth_rate(cosmo::Cosmology, z) = cosmo.fs8z(z) ./ (cosmo.cosmo.σ8*cosmo.Dz(z)/cosmo.Dz(0))
 
 """
     fs8(cosmo::Cosmology, z)
@@ -545,7 +545,7 @@ Returns:
 - `fs8::Dual` : fs8
 
 """
-fs8(cosmo::Cosmology, z) = cosmo.cosmo.σ8 .* cosmo.Dz(z) .* cosmo.fz(z)
+fs8(cosmo::Cosmology, z) =  cosmo.fs8z(z)
 
 """
     growth_factor(cosmo::Cosmology, z)
@@ -557,10 +557,25 @@ Arguments:
 - `z::Dual` : redshift
 
 Returns:
-- `Chi::Dual` : comoving radial distance
+- `Dz::Dual` : comoving radial distance
 
 """
 growth_factor(cosmo::Cosmology, z) = cosmo.Dz(z)
+
+"""
+    sigma8(cosmo::Cosmology, z)
+
+Given a `Cosmology` instance, it returns s8. 
+
+Arguments:
+- `cosmo::Cosmology` : cosmological structure
+- `z::Dual` : redshift
+
+Returns:
+- `s8::Dual` : comoving radial distance
+
+"""
+sigma8(cosmo::Cosmology, z) = cosmo.cosmo.σ8*cosmo.Dz(z)/cosmo.Dz(0)
 
 """
     nonlin_Pk(cosmo::Cosmology, k, z)
