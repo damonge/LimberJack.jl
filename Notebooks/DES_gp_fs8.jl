@@ -100,22 +100,10 @@ using Distributed
                      "DESwl__0_e_m" => DESwl__0_e_m,
                      "DESwl__1_e_m" => DESwl__1_e_m,
                      "DESwl__2_e_m" => DESwl__2_e_m,
-                     "DESwl__3_e_m" => DESwl__3_e_m,
-        
-                     "eBOSS__0_0_b" => eBOSS__0_0_b,
-                     "eBOSS__1_0_b" => eBOSS__1_0_b,
-        
-                     "DECALS__0_0_b" => DECALS__0_0_b,
-                     "DECALS__1_0_b" => DECALS__1_0_b,
-                     "DECALS__2_0_b" => DECALS__2_0_b,
-                     "DECALS__3_0_b" => DECALS__3_0_b,
-                     "DECALS__0_0_dz" => DECALS__0_0_dz,
-                     "DECALS__1_0_dz" => DECALS__1_0_dz,
-                     "DECALS__2_0_dz" => DECALS__2_0_dz,
-                     "DECALS__3_0_dz" => DECALS__3_0_dz)
+                     "DESwl__3_e_m" => DESwl__3_e_m)
 
-    eta = 0.05
-    l = 1
+    eta = 0.2
+    l = 0.3
     latent_N = length(latent_x)
     v ~ filldist(truncated(Normal(0, 1), -3, 3), latent_N)
     
@@ -162,7 +150,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "fs8_gp_hp_TAP_", TAP)
+folname = string(data_set, "_fs8_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

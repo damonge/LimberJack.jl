@@ -43,10 +43,9 @@ using Distributed
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
     DESwl__0_e_nz ~ MvNormal(nz_k0, cov_k0)
-    #DESwl__0_e_nz ~ arraydist([truncated(Normal(nz_k0[i], cov_k0[i]), 0, 1), for i in 1:length(zs_k0)])
-    DESwl__1_e_nz ~ MvNormal(nz_k1, cov_k1)
-    DESwl__2_e_nz ~ MvNormal(nz_k2, cov_k2)
-    DESwl__3_e_nz ~ MvNormal(nz_k3, cov_k3)
+    #DESwl__1_e_nz ~ MvNormal(nz_k1, cov_k1)
+    #DESwl__2_e_nz ~ MvNormal(nz_k2, cov_k2)
+    #DESwl__3_e_nz ~ MvNormal(nz_k3, cov_k3)
     DESwl__0_e_m ~ Normal(0.012, 0.023)
     DESwl__1_e_m ~ Normal(0.012, 0.023)
     DESwl__2_e_m ~ Normal(0.012, 0.023)
@@ -57,9 +56,9 @@ using Distributed
                      "alpha_IA" => alpha_IA,
 
                      "DESwl__0_e_nz" => DESwl__0_e_nz,
-                     "DESwl__1_e_nz" => DESwl__1_e_nz,
-                     "DESwl__2_e_nz" => DESwl__2_e_nz,
-                     "DESwl__3_e_nz" => DESwl__3_e_nz,
+                     #"DESwl__1_e_nz" => DESwl__1_e_nz,
+                     #"DESwl__2_e_nz" => DESwl__2_e_nz,
+                     #"DESwl__3_e_nz" => DESwl__3_e_nz,
                      "DESwl__0_e_m" => DESwl__0_e_m,
                      "DESwl__1_e_m" => DESwl__1_e_m,
                      "DESwl__2_e_m" => DESwl__2_e_m,
@@ -92,7 +91,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_wlwl_Nzs_", "TAP_", TAP)
+folname = string("DES_wlwl_Nz0_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
