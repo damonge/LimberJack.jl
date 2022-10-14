@@ -43,9 +43,16 @@ np = pyimport("numpy")
                                             Omega_g=0, Omega_k=0)
         ztest = [0.1, 0.5, 1.0, 3.0]
         Dz = growth_factor(cosmo, ztest)
+        fz = growth_rate(cosmo, ztest)
+        fs8z = fs8(cosmo, ztest)
         Dz_bm = ccl.growth_factor(cosmo_bm, 1 ./ (1 .+ ztest))
+        fz_bm = ccl.growth_rate(cosmo_bm, 1 ./ (1 .+ ztest))
         Dz_bm = pyconvert(Vector, Dz_bm)
-        @test all(@. (abs(Dz/Dz_bm-1.0) < 0.0005))
+        fz_bm = pyconvert(Vector, fz_bm)
+        fs8z_bm = 0.81 .* Dz_bm .* fz_bm
+        @test all(@. (abs(Dz/Dz_bm-1.0) < 0.01))
+        @test all(@. (abs(fz/fz_bm-1.0) < 0.01))
+        @test all(@. (abs(fs8z/fs8z_bm-1.0) < 0.01))
     end
 
     @testset "linear_Pk" begin
@@ -523,7 +530,8 @@ np = pyimport("numpy")
         
         function dz(p::T)::Array{T,1} where T<:Real
             cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+                                         tk_mode="EisHu", Pk_mode="Halofit",
+                                         nz=300)
             cosmo.settings.cosmo_type = typeof(p)
             z = Vector(range(0., stop=2., length=256)) .- p
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
