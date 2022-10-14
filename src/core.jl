@@ -266,13 +266,13 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         d = reverse(dd)
         
         Dzi = linear_interpolation(z_Dz, d./d[1], extrapolation_bc=Line())
-        fs8zi = linear_interpolation(z_Dz, cpar.σ8 .* y./ (a_Dz.^2 .*e.*d[1]),
+        fs8zi = linear_interpolation(z_Dz, -cpar.σ8 .* y./ (a_Dz.^2 .*e.*d[1]),
                                     extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
     else
         zs_c, Dzs_c, dDzs_c = settings.custom_Dz
         Dzi = linear_interpolation(zs_c, Dzs_c ./ Dzs_c[1], extrapolation_bc=Line())
-        fs8zi = linear_interpolation(zs_c, cpar.σ8 .* (1 .+ zs_c) .* Dzs_c .* dDzs_c,
+        fs8zi = linear_interpolation(zs_c, -cpar.σ8 .* (1 .+ zs_c) .* Dzs_c .* dDzs_c,
                                      extrapolation_bc=Line())
         Dzs = Dzi(zs_pk)
     end
