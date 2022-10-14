@@ -530,7 +530,8 @@ np = pyimport("numpy")
         
         function dz(p::T)::Array{T,1} where T<:Real
             cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+                                         tk_mode="EisHu", Pk_mode="Halofit",
+                                         nz=300)
             cosmo.settings.cosmo_type = typeof(p)
             z = Vector(range(0., stop=2., length=256)) .- p
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
