@@ -42,7 +42,22 @@ using Distributed
     
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
-    DESwl__0_e_nz ~ MvNormal(nz_k0, cov_k0)
+    DESwl__0_e_nz_1 ~ TruncatedNormal(nz_k0[1], sqrt(cov_k0[1]), 0.0, 3.0)
+    DESwl__0_e_nz_2 ~ TruncatedNormal(nz_k0[2], sqrt(cov_k0[2]), 0.0, 3.0)
+    DESwl__0_e_nz_3 ~ TruncatedNormal(nz_k0[3], sqrt(cov_k0[3]), 0.0, 3.0)
+    DESwl__0_e_nz_4 ~ TruncatedNormal(nz_k0[4], sqrt(cov_k0[4]), 0.0, 3.0)
+    DESwl__0_e_nz_5 ~ TruncatedNormal(nz_k0[5], sqrt(cov_k0[5]), 0.0, 3.0)
+    DESwl__0_e_nz_6 ~ TruncatedNormal(nz_k0[6], sqrt(cov_k0[6]), 0.0, 3.0)
+    DESwl__0_e_nz_7 ~ TruncatedNormal(nz_k0[7], sqrt(cov_k0[7]), 0.0, 3.0)
+    DESwl__0_e_nz_8 ~ TruncatedNormal(nz_k0[8], sqrt(cov_k0[8]), 0.0, 3.0)
+    DESwl__0_e_nz_9 ~ TruncatedNormal(nz_k0[9], sqrt(cov_k0[9]), 0.0, 3.0)
+    DESwl__0_e_nz_10 ~ TruncatedNormal(nz_k0[10], sqrt(cov_k0[10]), 0.0, 3.0)
+    DESwl__0_e_nz = [DESwl__0_e_nz_1, DESwl__0_e_nz_2, DESwl__0_e_nz_3,
+                     DESwl__0_e_nz_4, DESwl__0_e_nz_5, DESwl__0_e_nz_6,
+                     DESwl__0_e_nz_7, DESwl__0_e_nz_8, DESwl__0_e_nz_9,
+                     DESwl__0_e_nz_10]
+
+    #DESwl__0_e_nz ~ MvNormal(nz_k0, cov_k0)
     #DESwl__1_e_nz ~ MvNormal(nz_k1, cov_k1)
     #DESwl__2_e_nz ~ MvNormal(nz_k2, cov_k2)
     #DESwl__3_e_nz ~ MvNormal(nz_k3, cov_k3)
@@ -91,7 +106,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_wlwl_Nz0_", "TAP_", TAP)
+folname = string("DES_wlwl_Nz0_trunc_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
