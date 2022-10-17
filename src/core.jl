@@ -274,8 +274,8 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         d = mean(zs_c[2:end].-zs_c[1:end-1])
 
         Dzi = linear_interpolation(zs_c, Dzs_c ./ Dzs_c[1], extrapolation_bc=Line())
-        dDzs_mid = (1/(2*d))*(Dzs_c[3:end].-Dzs_c[1:end-2])
-        zs_mid = (zs_c[3:end].+zs_c[1:end-2])./2
+        dDzs_mid = (Dzs_c[2:end].-Dzs_c[1:end-1])/d
+        zs_mid = (zs_c[2:end].+zs_c[1:end-1])./2
         dDzi = linear_interpolation(zs_mid, dDzs_mid, extrapolation_bc=Line())
         dDzs_c = dDzi(zs_c)
         fs8zi = linear_interpolation(zs_c, -cpar.σ8 .* (1 .+ zs_c) .* Dzs_c .* dDzs_c,
