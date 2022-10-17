@@ -55,6 +55,22 @@ np = pyimport("numpy")
         @test all(@. (abs(fs8z/fs8z_bm-1.0) < 0.01))
     end
 
+    @testset "Custom_Growth" begin
+        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="bbks", 
+                                            matter_power_spectrum="linear",
+                                            Omega_g=0, Omega_k=0)
+        ztest = [0.1, 0.5, 1.0, 3.0]
+        Dz_bm = ccl.growth_factor(cosmo_bm, 1 ./ (1 .+ ztest))
+        fz_bm = ccl.growth_rate(cosmo_bm, 1 ./ (1 .+ ztest))
+        Dz_bm = pyconvert(Vector, Dz_bm)
+        fz_bm = pyconvert(Vector, fz_bm)
+        fs8z_bm = 0.81 .* Dz_bm .* fz_bm
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                          nk=500, custom_Dz=[ztest, Dz_bm])
+        fs8z = fs8(cosmo, ztest)
+        @test all(@. (abs(fs8z/fs8z_bm-1.0) < 0.01))
+    end
+    
     @testset "linear_Pk" begin
         cosmo_BBKS = Cosmology()
         cosmo_BBKS_bm = ccl.CosmologyVanillaLCDM(transfer_function="bbks", 
