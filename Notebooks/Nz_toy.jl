@@ -94,8 +94,8 @@ end;
                                  DESwl__0_e_nz_4=nz_k0[4], DESwl__0_e_nz_5=nz_k0[5], DESwl__0_e_nz_6=nz_k0[6],
                                  DESwl__0_e_nz_7=nz_k0[7], DESwl__0_e_nz_8=nz_k0[8], DESwl__0_e_nz_9=nz_k0[9],
                                  DESwl__0_e_nz_10=nz_k0[10],
-                                 DESwl__0_e_m=0.01, DESwl__0_e_m=0.01,
-                                 DESwl__0_e_m=0.01, DESwl__0_e_m= 0.01))
+                                 DESwl__0_e_m=0.01, DESwl__1_e_m=0.01,
+                                 DESwl__2_e_m=0.01, DESwl__3_e_m=0.01))
 @everywhere cond_model = model() | (;data_vector);
 
 cycles = 6
