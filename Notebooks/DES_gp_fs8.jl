@@ -111,7 +111,7 @@ using Distributed
     K = sqexp_cov_fn(latent_x; eta=eta, l=l)
     latent_gp = latent_GP(mu, v, K)
     gp = conditional(latent_x, x, latent_gp, sqexp_cov_fn;
-                      eta=eta, l=l)
+                      eta=1.0, l=l)
     
     cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
                           tk_mode="EisHu",
