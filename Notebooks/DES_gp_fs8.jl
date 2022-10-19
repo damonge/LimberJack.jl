@@ -116,7 +116,7 @@ using Distributed
     cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
                           tk_mode="EisHu",
                           Pk_mode="Halofit", 
-                          custom_Dz=[x, gp]))
+                          custom_Dz=[x, gp])
     
     cls = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
