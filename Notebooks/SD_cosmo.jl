@@ -20,6 +20,14 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
+##Whitening
+
+@everywhere fid_cosmo = Cosmology()
+@everywhere t0 = Theory(cosmology, tracers_names, pairs,
+                        idx, files)
+@everywhere data_vector = (data_vector .- t0) ./ t0
+@everywhere cov_tot = cov_tot ./ (t0 * t0')
+
 
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
@@ -30,10 +38,10 @@ using Distributed
 
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
-    Ωb ~ Uniform(0.028, 0.065)
-    h ~ Uniform(0.64, 0.82)
+    Ωb = 0.05 #~ Uniform(0.028, 0.065)
+    h = 0.67 #~ Uniform(0.64, 0.82)
     s8 ~ Uniform(0.6, 0.9)
-    ns ~ Uniform(0.84, 1.1)
+    ns = 0.81 #~ Uniform(0.84, 1.1)
     
     A_IA = 0.1 #~ Uniform(-5, 5) 
     alpha_IA = 0.1 #~ Uniform(-5, 5)
@@ -41,10 +49,10 @@ using Distributed
     eBOSS__0_0_b = 2 #~ Uniform(0.8, 5.0)
     eBOSS__1_0_b = 2 #~ Uniform(0.8, 5.0)
     
-    DECALS__0_0_b = 1.5 #~ Uniform(0.8, 3.0)
-    DECALS__1_0_b = 1.5 #~ Uniform(0.8, 3.0)
-    DECALS__2_0_b = 1.5 #~ Uniform(0.8, 3.0)
-    DECALS__3_0_b = 1.5 #~ Uniform(0.8, 3.0)
+    DECALS__0_0_b = 1.36 #~ Uniform(0.8, 3.0)
+    DECALS__1_0_b = 1.54 #~ Uniform(0.8, 3.0)
+    DECALS__2_0_b = 1.70 #~ Uniform(0.8, 3.0)
+    DECALS__3_0_b = 2.16 #~ Uniform(0.8, 3.0)
     DECALS__0_0_dz = 0 #~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     DECALS__1_0_dz = 0 #~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     DECALS__2_0_dz = 0 #~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
@@ -95,15 +103,15 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory, cov_tot)
+    data_vector ~ MvNormal((theory .- t0) ./ t0, cov_tot)
 end;
 
 cycles = 6
 steps = 50
 iterations = 100
-TAP = 0.60
+TAP = 0.80
 adaptation = 100
-init_ϵ = 0.05
+init_ϵ = 0.005
 nchains = nprocs()
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -115,7 +123,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_cosmo_TAP_", TAP)
+folname = string(data_set, "_cosmo_white_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
