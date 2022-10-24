@@ -89,7 +89,7 @@ function make_cls(; Ωm=Ωm, s8=s8)
 
     return Theory(cosmology,
                   tracers_names, pairs,
-                  pairs_ids, idx, files)
+                  idx, files)
 
 end
 
