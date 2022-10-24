@@ -23,7 +23,7 @@ using Distributed
 ##Whitening
 
 @everywhere fid_cosmo = Cosmology()
-@everywhere t0 = Theory(fid_cosmology, tracers_names, pairs,
+@everywhere t0 = Theory(fid_cosmo, tracers_names, pairs,
                         idx, files)
 @everywhere data_vector = (data_vector .- t0) ./ t0
 @everywhere cov_tot = cov_tot ./ (t0 * t0')
