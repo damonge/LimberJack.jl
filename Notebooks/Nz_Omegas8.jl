@@ -33,22 +33,25 @@ using Distributed
                                   pairs=pairs,
                                   idx=idx,
                                   cov_tot=cov_tot, 
-                                  files=files,
-                                  ::Type{T} = Float64) where {T}
+                                  files=files)
     Ωm ~ Uniform(0.2, 0.6)
     Ωb = 0.05 #~ Uniform(0.03, 0.07)
     h = 0.67 #~ Uniform(0.55, 0.91)
     ns = 0.96 #~ Uniform(0.87, 1.07)
     s8 ~ Uniform(0.6, 0.9)
     
+    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
+                                     tk_mode="EisHu",
+                                     Pk_mode="Halofit")
+    
     A_IA = 0.0 #~ Uniform(-5, 5) 
     alpha_IA = 0.0 #~ Uniform(-5, 5)
     
     n = length(nz_k0)
-    DESwl__0_e_nz = Vector{T}(undef, n)
-    DESwl__1_e_nz = Vector{T}(undef, n)
-    DESwl__2_e_nz = Vector{T}(undef, n)
-    DESwl__3_e_nz = Vector{T}(undef, n)
+    DESwl__0_e_nz = zeros(cosmology.settings.cosmo_type, n)
+    DESwl__1_e_nz = zeros(cosmology.settings.cosmo_type, n)
+    DESwl__2_e_nz = zeros(cosmology.settings.cosmo_type, n)
+    DESwl__3_e_nz = zeros(cosmology.settings.cosmo_type, n)
     for i in 1:n
         DESwl__0_e_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt(cov_k0[i]), 0.0, 3.0) 
         DESwl__1_e_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt(cov_k2[i]), 0.0, 3.0) 
@@ -75,13 +78,8 @@ using Distributed
                      "DESwl__2_e_m" => DESwl__2_e_m,
                      "DESwl__3_e_m" => DESwl__3_e_m)
     
-    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
-                                     tk_mode="EisHu",
-                                     Pk_mode="Halofit")
-    
     theory = Theory(cosmology, tracers_names, pairs,
-                    idx, files;
-                    Nuisances=nuisances)
+                    idx, files; Nuisances=nuisances)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
