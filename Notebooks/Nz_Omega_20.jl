@@ -186,8 +186,7 @@ using Distributed
                                      Pk_mode="Halofit")
     
     theory = Theory(cosmology, tracers_names, pairs,
-                    idx, files;
-                    Nuisances=nuisances)
+                    idx, files; Nuisances=nuisances)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
