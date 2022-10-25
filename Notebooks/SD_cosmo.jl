@@ -20,15 +20,6 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
-##Whitening
-
-@everywhere fid_cosmo = Cosmology()
-@everywhere t0 = Theory(fid_cosmo, tracers_names, pairs,
-                        idx, files)
-@everywhere data_vector = (data_vector .- t0) ./ t0
-@everywhere cov_tot = cov_tot ./ (t0 * t0')
-
-
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
@@ -103,14 +94,14 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal((theory .- t0) ./ t0, cov_tot)
+    data_vector ~ MvNormal(theory, cov_tot)
 end;
 
 cycles = 6
 steps = 50
 iterations = 100
 TAP = 0.80
-adaptation = 100
+adaptation = 300
 init_ϵ = 0.005
 nchains = nprocs()
 println("sampling settings: ")
@@ -144,11 +135,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  
