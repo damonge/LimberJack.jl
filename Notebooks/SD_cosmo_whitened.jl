@@ -20,6 +20,15 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
+##Whitening
+
+@everywhere fid_cosmo = Cosmology()
+@everywhere t0 = Theory(fid_cosmo, tracers_names, pairs,
+                        idx, files)
+@everywhere data_vector = (data_vector .- t0) ./ t0
+@everywhere cov_tot = cov_tot ./ (t0 * t0')
+
+
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
@@ -94,7 +103,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory, cov_tot)
+    data_vector ~ MvNormal((theory .- t0) ./ t0, cov_tot)
 end;
 
 cycles = 6
@@ -114,7 +123,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_cosmo_TAP_", TAP)
+folname = string(data_set, "_cosmo_white_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
