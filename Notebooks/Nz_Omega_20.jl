@@ -33,7 +33,8 @@ using Distributed
                                   pairs=pairs,
                                   idx=idx,
                                   cov_tot=cov_tot, 
-                                  files=files)
+                                  files=files,
+                                  ::Type{T} = Float64) where {T}
     Ωm ~ Uniform(0.2, 0.6)
     Ωb = 0.05 #~ Uniform(0.03, 0.07)
     h = 0.67 #~ Uniform(0.55, 0.91)
@@ -42,126 +43,19 @@ using Distributed
     
     A_IA = 0.0 #~ Uniform(-5, 5) 
     alpha_IA = 0.0 #~ Uniform(-5, 5)
-    DESwl__0_e_nz_1 ~ TruncatedNormal(nz_k0[1], sqrt(cov_k0[1]), 0.0, 3.0)
-    DESwl__0_e_nz_2 ~ TruncatedNormal(nz_k0[2], sqrt(cov_k0[2]), 0.0, 3.0)
-    DESwl__0_e_nz_3 ~ TruncatedNormal(nz_k0[3], sqrt(cov_k0[3]), 0.0, 3.0)
-    DESwl__0_e_nz_4 ~ TruncatedNormal(nz_k0[4], sqrt(cov_k0[4]), 0.0, 3.0)
-    DESwl__0_e_nz_5 ~ TruncatedNormal(nz_k0[5], sqrt(cov_k0[5]), 0.0, 3.0)
-    DESwl__0_e_nz_6 ~ TruncatedNormal(nz_k0[6], sqrt(cov_k0[6]), 0.0, 3.0)
-    DESwl__0_e_nz_7 ~ TruncatedNormal(nz_k0[7], sqrt(cov_k0[7]), 0.0, 3.0)
-    DESwl__0_e_nz_8 ~ TruncatedNormal(nz_k0[8], sqrt(cov_k0[8]), 0.0, 3.0)
-    DESwl__0_e_nz_9 ~ TruncatedNormal(nz_k0[9], sqrt(cov_k0[9]), 0.0, 3.0)
-    DESwl__0_e_nz_10 ~ TruncatedNormal(nz_k0[10], sqrt(cov_k0[10]), 0.0, 3.0)
-    DESwl__0_e_nz_11 ~ TruncatedNormal(nz_k0[11], sqrt(cov_k0[11]), 0.0, 3.0)
-    DESwl__0_e_nz_12 ~ TruncatedNormal(nz_k0[12], sqrt(cov_k0[12]), 0.0, 3.0)
-    DESwl__0_e_nz_13 ~ TruncatedNormal(nz_k0[13], sqrt(cov_k0[13]), 0.0, 3.0)
-    DESwl__0_e_nz_14 ~ TruncatedNormal(nz_k0[14], sqrt(cov_k0[14]), 0.0, 3.0)
-    DESwl__0_e_nz_15 ~ TruncatedNormal(nz_k0[15], sqrt(cov_k0[15]), 0.0, 3.0)
-    DESwl__0_e_nz_16 ~ TruncatedNormal(nz_k0[16], sqrt(cov_k0[16]), 0.0, 3.0)
-    DESwl__0_e_nz_17 ~ TruncatedNormal(nz_k0[17], sqrt(cov_k0[17]), 0.0, 3.0)
-    DESwl__0_e_nz_18 ~ TruncatedNormal(nz_k0[18], sqrt(cov_k0[18]), 0.0, 3.0)
-    DESwl__0_e_nz_19 ~ TruncatedNormal(nz_k0[19], sqrt(cov_k0[19]), 0.0, 3.0)
-    DESwl__0_e_nz_20 ~ TruncatedNormal(nz_k0[20], sqrt(cov_k0[20]), 0.0, 3.0)
-    DESwl__0_e_nz = [DESwl__0_e_nz_1, DESwl__0_e_nz_2, DESwl__0_e_nz_3,
-                     DESwl__0_e_nz_4, DESwl__0_e_nz_5, DESwl__0_e_nz_6,
-                     DESwl__0_e_nz_7, DESwl__0_e_nz_8, DESwl__0_e_nz_9,
-                     DESwl__0_e_nz_10,
-                     DESwl__0_e_nz_11, DESwl__0_e_nz_12, DESwl__0_e_nz_13,
-                     DESwl__0_e_nz_14, DESwl__0_e_nz_15, DESwl__0_e_nz_16,
-                     DESwl__0_e_nz_17, DESwl__0_e_nz_18, DESwl__0_e_nz_19,
-                     DESwl__0_e_nz_20]
     
-    DESwl__1_e_nz_1 ~ TruncatedNormal(nz_k1[1], sqrt(cov_k1[1]), 0.0, 3.0)
-    DESwl__1_e_nz_2 ~ TruncatedNormal(nz_k1[2], sqrt(cov_k1[2]), 0.0, 3.0)
-    DESwl__1_e_nz_3 ~ TruncatedNormal(nz_k1[3], sqrt(cov_k1[3]), 0.0, 3.0)
-    DESwl__1_e_nz_4 ~ TruncatedNormal(nz_k1[4], sqrt(cov_k1[4]), 0.0, 3.0)
-    DESwl__1_e_nz_5 ~ TruncatedNormal(nz_k1[5], sqrt(cov_k1[5]), 0.0, 3.0)
-    DESwl__1_e_nz_6 ~ TruncatedNormal(nz_k1[6], sqrt(cov_k1[6]), 0.0, 3.0)
-    DESwl__1_e_nz_7 ~ TruncatedNormal(nz_k1[7], sqrt(cov_k1[7]), 0.0, 3.0)
-    DESwl__1_e_nz_8 ~ TruncatedNormal(nz_k1[8], sqrt(cov_k1[8]), 0.0, 3.0)
-    DESwl__1_e_nz_9 ~ TruncatedNormal(nz_k1[9], sqrt(cov_k1[9]), 0.0, 3.0)
-    DESwl__1_e_nz_10 ~ TruncatedNormal(nz_k1[10], sqrt(cov_k1[10]), 0.0, 3.0)
-    DESwl__1_e_nz_11 ~ TruncatedNormal(nz_k1[11], sqrt(cov_k1[11]), 0.0, 3.0)
-    DESwl__1_e_nz_12 ~ TruncatedNormal(nz_k1[12], sqrt(cov_k1[12]), 0.0, 3.0)
-    DESwl__1_e_nz_13 ~ TruncatedNormal(nz_k1[13], sqrt(cov_k1[13]), 0.0, 3.0)
-    DESwl__1_e_nz_14 ~ TruncatedNormal(nz_k1[14], sqrt(cov_k1[14]), 0.0, 3.0)
-    DESwl__1_e_nz_15 ~ TruncatedNormal(nz_k1[15], sqrt(cov_k1[15]), 0.0, 3.0)
-    DESwl__1_e_nz_16 ~ TruncatedNormal(nz_k1[16], sqrt(cov_k1[16]), 0.0, 3.0)
-    DESwl__1_e_nz_17 ~ TruncatedNormal(nz_k1[17], sqrt(cov_k1[17]), 0.0, 3.0)
-    DESwl__1_e_nz_18 ~ TruncatedNormal(nz_k1[18], sqrt(cov_k1[18]), 0.0, 3.0)
-    DESwl__1_e_nz_19 ~ TruncatedNormal(nz_k1[19], sqrt(cov_k1[19]), 0.0, 3.0)
-    DESwl__1_e_nz_20 ~ TruncatedNormal(nz_k1[20], sqrt(cov_k1[20]), 0.0, 3.0)
-    DESwl__1_e_nz = [DESwl__1_e_nz_1, DESwl__1_e_nz_2, DESwl__1_e_nz_3,
-                     DESwl__1_e_nz_4, DESwl__1_e_nz_5, DESwl__1_e_nz_6,
-                     DESwl__1_e_nz_7, DESwl__1_e_nz_8, DESwl__1_e_nz_9,
-                     DESwl__1_e_nz_10,
-                     DESwl__1_e_nz_11, DESwl__1_e_nz_12, DESwl__1_e_nz_13,
-                     DESwl__1_e_nz_14, DESwl__1_e_nz_15, DESwl__1_e_nz_16,
-                     DESwl__1_e_nz_17, DESwl__1_e_nz_18, DESwl__1_e_nz_19,
-                     DESwl__1_e_nz_20]
-    
-    DESwl__2_e_nz_1 ~ TruncatedNormal(nz_k2[1], sqrt(cov_k2[1]), 0.0, 3.0)
-    DESwl__2_e_nz_2 ~ TruncatedNormal(nz_k2[2], sqrt(cov_k2[2]), 0.0, 3.0)
-    DESwl__2_e_nz_3 ~ TruncatedNormal(nz_k2[3], sqrt(cov_k2[3]), 0.0, 3.0)
-    DESwl__2_e_nz_4 ~ TruncatedNormal(nz_k2[4], sqrt(cov_k2[4]), 0.0, 3.0)
-    DESwl__2_e_nz_5 ~ TruncatedNormal(nz_k2[5], sqrt(cov_k2[5]), 0.0, 3.0)
-    DESwl__2_e_nz_6 ~ TruncatedNormal(nz_k2[6], sqrt(cov_k2[6]), 0.0, 3.0)
-    DESwl__2_e_nz_7 ~ TruncatedNormal(nz_k2[7], sqrt(cov_k2[7]), 0.0, 3.0)
-    DESwl__2_e_nz_8 ~ TruncatedNormal(nz_k2[8], sqrt(cov_k2[8]), 0.0, 3.0)
-    DESwl__2_e_nz_9 ~ TruncatedNormal(nz_k2[9], sqrt(cov_k2[9]), 0.0, 3.0)
-    DESwl__2_e_nz_10 ~ TruncatedNormal(nz_k2[10], sqrt(cov_k2[10]), 0.0, 3.0)
-    DESwl__2_e_nz_11 ~ TruncatedNormal(nz_k2[11], sqrt(cov_k2[11]), 0.0, 3.0)
-    DESwl__2_e_nz_12 ~ TruncatedNormal(nz_k2[12], sqrt(cov_k2[12]), 0.0, 3.0)
-    DESwl__2_e_nz_13 ~ TruncatedNormal(nz_k2[13], sqrt(cov_k2[13]), 0.0, 3.0)
-    DESwl__2_e_nz_14 ~ TruncatedNormal(nz_k2[14], sqrt(cov_k2[14]), 0.0, 3.0)
-    DESwl__2_e_nz_15 ~ TruncatedNormal(nz_k2[15], sqrt(cov_k2[15]), 0.0, 3.0)
-    DESwl__2_e_nz_16 ~ TruncatedNormal(nz_k2[16], sqrt(cov_k2[16]), 0.0, 3.0)
-    DESwl__2_e_nz_17 ~ TruncatedNormal(nz_k2[17], sqrt(cov_k2[17]), 0.0, 3.0)
-    DESwl__2_e_nz_18 ~ TruncatedNormal(nz_k2[18], sqrt(cov_k2[18]), 0.0, 3.0)
-    DESwl__2_e_nz_19 ~ TruncatedNormal(nz_k2[19], sqrt(cov_k2[19]), 0.0, 3.0)
-    DESwl__2_e_nz_20 ~ TruncatedNormal(nz_k2[20], sqrt(cov_k2[20]), 0.0, 3.0)
-    DESwl__2_e_nz = [DESwl__2_e_nz_1, DESwl__2_e_nz_2, DESwl__2_e_nz_3,
-                     DESwl__2_e_nz_4, DESwl__2_e_nz_5, DESwl__2_e_nz_6,
-                     DESwl__2_e_nz_7, DESwl__2_e_nz_8, DESwl__2_e_nz_9,
-                     DESwl__2_e_nz_10,
-                     DESwl__2_e_nz_11, DESwl__2_e_nz_12, DESwl__2_e_nz_13,
-                     DESwl__2_e_nz_14, DESwl__2_e_nz_15, DESwl__2_e_nz_16,
-                     DESwl__2_e_nz_17, DESwl__2_e_nz_18, DESwl__2_e_nz_19,
-                     DESwl__2_e_nz_20]
-    
-    DESwl__3_e_nz_1 ~ TruncatedNormal(nz_k3[1], sqrt(cov_k3[1]), 0.0, 3.0)
-    DESwl__3_e_nz_2 ~ TruncatedNormal(nz_k3[2], sqrt(cov_k3[2]), 0.0, 3.0)
-    DESwl__3_e_nz_3 ~ TruncatedNormal(nz_k3[3], sqrt(cov_k3[3]), 0.0, 3.0)
-    DESwl__3_e_nz_4 ~ TruncatedNormal(nz_k3[4], sqrt(cov_k3[4]), 0.0, 3.0)
-    DESwl__3_e_nz_5 ~ TruncatedNormal(nz_k3[5], sqrt(cov_k3[5]), 0.0, 3.0)
-    DESwl__3_e_nz_6 ~ TruncatedNormal(nz_k3[6], sqrt(cov_k3[6]), 0.0, 3.0)
-    DESwl__3_e_nz_7 ~ TruncatedNormal(nz_k3[7], sqrt(cov_k3[7]), 0.0, 3.0)
-    DESwl__3_e_nz_8 ~ TruncatedNormal(nz_k3[8], sqrt(cov_k3[8]), 0.0, 3.0)
-    DESwl__3_e_nz_9 ~ TruncatedNormal(nz_k3[9], sqrt(cov_k3[9]), 0.0, 3.0)
-    DESwl__3_e_nz_10 ~ TruncatedNormal(nz_k3[10], sqrt(cov_k3[10]), 0.0, 3.0)
-    DESwl__3_e_nz_11 ~ TruncatedNormal(nz_k3[11], sqrt(cov_k3[11]), 0.0, 3.0)
-    DESwl__3_e_nz_12 ~ TruncatedNormal(nz_k3[12], sqrt(cov_k3[12]), 0.0, 3.0)
-    DESwl__3_e_nz_13 ~ TruncatedNormal(nz_k3[13], sqrt(cov_k3[13]), 0.0, 3.0)
-    DESwl__3_e_nz_14 ~ TruncatedNormal(nz_k3[14], sqrt(cov_k3[14]), 0.0, 3.0)
-    DESwl__3_e_nz_15 ~ TruncatedNormal(nz_k3[15], sqrt(cov_k3[15]), 0.0, 3.0)
-    DESwl__3_e_nz_16 ~ TruncatedNormal(nz_k3[16], sqrt(cov_k3[16]), 0.0, 3.0)
-    DESwl__3_e_nz_17 ~ TruncatedNormal(nz_k3[17], sqrt(cov_k3[17]), 0.0, 3.0)
-    DESwl__3_e_nz_18 ~ TruncatedNormal(nz_k3[18], sqrt(cov_k3[18]), 0.0, 3.0)
-    DESwl__3_e_nz_19 ~ TruncatedNormal(nz_k3[19], sqrt(cov_k3[19]), 0.0, 3.0)
-    DESwl__3_e_nz_20 ~ TruncatedNormal(nz_k3[20], sqrt(cov_k3[20]), 0.0, 3.0)
-    DESwl__3_e_nz = [DESwl__3_e_nz_1, DESwl__3_e_nz_2, DESwl__3_e_nz_3,
-                     DESwl__3_e_nz_4, DESwl__3_e_nz_5, DESwl__3_e_nz_6,
-                     DESwl__3_e_nz_7, DESwl__3_e_nz_8, DESwl__3_e_nz_9,
-                     DESwl__3_e_nz_10,
-                     DESwl__3_e_nz_11, DESwl__3_e_nz_12, DESwl__3_e_nz_13,
-                     DESwl__3_e_nz_14, DESwl__3_e_nz_15, DESwl__3_e_nz_16,
-                     DESwl__3_e_nz_17, DESwl__3_e_nz_18, DESwl__3_e_nz_19,
-                     DESwl__3_e_nz_20]
+    n = length(nz_k0)
+    DESwl__0_e_nz = Vector{T}(undef, n)
+    DESwl__1_e_nz = Vector{T}(undef, n)
+    DESwl__2_e_nz = Vector{T}(undef, n)
+    DESwl__3_e_nz = Vector{T}(undef, n)
+    for i in 1:n
+        DESwl__0_e_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt(cov_k0[i]), 0.0, 3.0) 
+        DESwl__1_e_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt(cov_k2[i]), 0.0, 3.0) 
+        DESwl__2_e_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt(cov_k3[i]), 0.0, 3.0) 
+        DESwl__3_e_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt(cov_k4[i]), 0.0, 3.0) 
+    end
 
-    #DESwl__0_e_nz ~ MvNormal(nz_k0, cov_k0)
-    #DESwl__1_e_nz ~ MvNormal(nz_k1, cov_k1)
-    #DESwl__2_e_nz ~ MvNormal(nz_k2, cov_k2)
-    #DESwl__3_e_nz ~ MvNormal(nz_k3, cov_k3)
     DESwl__0_e_m = 0.012 #~ Normal(0.012, 0.023)
     DESwl__1_e_m = 0.012 #~ Normal(0.012, 0.023)
     DESwl__2_e_m = 0.012 #~ Normal(0.012, 0.023)
