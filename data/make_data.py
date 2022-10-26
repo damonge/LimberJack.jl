@@ -14,7 +14,7 @@ def get_type(name, mode="write"):
         return '0'
 
 s = sacc.Sacc().load_fits("FD/cls_FD_covG.fits")
-fname = "DECALS/DECALS"
+fname = "KiDS/KiDS"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
@@ -100,7 +100,7 @@ nzs_path = None
 for name, tracer in s.tracers.items():
     name = name+'_'+get_type(name, mode="write")
     if name in tracers:
-        if nzs_path is None:       
+        if nzs_path is None:
             z=np.array(tracer.z)
             dndz=np.array(tracer.nz)
             dict_save[f'nz_{name}'] = np.array([z, dndz])
