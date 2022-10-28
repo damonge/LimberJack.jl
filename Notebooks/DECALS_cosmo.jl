@@ -27,6 +27,7 @@ using Distributed
                            "DECALS__3_0_b" => 2.16)
 @everywhere fake_data = Theory(fid_cosmo, tracers_names, pairs,
                                 idx, files; Nuisances=fid_nui)
+@everywhere fake_cov = (fake_data./5).^2
 
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
@@ -59,7 +60,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory, cov_tot)
+    data_vector ~ MvNormal(theory, fake_cov)
 end;
 
 cycles = 6
@@ -79,7 +80,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_fake_cosmo_TAP_", TAP)
+folname = string(data_set, "_fake_cov_cosmo_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
