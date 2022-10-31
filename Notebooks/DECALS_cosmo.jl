@@ -21,13 +21,14 @@ using Distributed
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
 @everywhere fid_cosmo = Cosmology()
-@everywhere fid_nui = Dict("DECALS__0_0_b" => 1.36,
-                           "DECALS__1_0_b" => 1.54,
-                           "DECALS__2_0_b" => 1.70,
-                           "DECALS__3_0_b" => 2.16)
+@everywhere fid_nui = Dict("DECALS__0_0_b" => 1.166,
+                           "DECALS__1_0_b" => 1.399,
+                           "DECALS__2_0_b" => 1.349,
+                           "DECALS__3_0_b" => 1.823)
 @everywhere fake_data = Theory(fid_cosmo, tracers_names, pairs,
                                 idx, files; Nuisances=fid_nui)
-@everywhere fake_cov = (fake_data./5).^2
+
+@everywhere fake_cov = cov_tot + 0.5 * Diagonal(cov_tot)
 
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
@@ -66,7 +67,7 @@ end;
 cycles = 6
 steps = 50
 iterations = 100
-TAP = 0.80
+TAP = 0.90
 adaptation = 300
 init_ϵ = 0.005
 nchains = nprocs()
@@ -80,7 +81,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_fake_cov_cosmo_TAP_", TAP)
+folname = string(data_set, "_fake_cov2_cosmo_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -101,11 +102,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
+        chain = sample(model(fake_data), NUTS(adaptation, TAP),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  
