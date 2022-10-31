@@ -29,7 +29,7 @@ using Distributed
 @everywhere fake_data = Theory(fid_cosmo, tracers_names, pairs,
                                 idx, files; Nuisances=fid_nui)
 
-@everywhere fake_cov = cov_tot + 0.5 * Diagonal(cov_tot)
+@everywhere fake_cov = 100*Diagonal(cov_tot) 
 
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
