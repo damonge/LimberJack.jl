@@ -43,10 +43,10 @@ using Distributed
     s8 ~ Uniform(0.6, 0.9)
     ns = 0.81 #~ Uniform(0.84, 1.1)
     
-    DECALS__0_0_b = 1.36 #~ Uniform(0.8, 3.0)
-    DECALS__1_0_b = 1.54 #~ Uniform(0.8, 3.0)
-    DECALS__2_0_b = 1.70 #~ Uniform(0.8, 3.0)
-    DECALS__3_0_b = 2.16 #~ Uniform(0.8, 3.0)
+    DECALS__0_0_b = 1.166 #~ Uniform(0.8, 3.0)
+    DECALS__1_0_b = 1.399 #~ Uniform(0.8, 3.0)
+    DECALS__2_0_b = 1.349 #~ Uniform(0.8, 3.0)
+    DECALS__3_0_b = 1.823 #~ Uniform(0.8, 3.0)
 
     nuisances = Dict(
                      "DECALS__0_0_b" => DECALS__0_0_b,
