@@ -17,8 +17,8 @@ using Distributed
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
-@everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
+@everywhere cls_data = pyconvert(Vector{Float64}, meta["cls"])
+@everywhere cls_cov = pyconvert(Matrix{Float64}, meta["cov"]);
 
 @everywhere fs8_meta = npzread("../data/fs8s/fs8s.npz")
 @everywhere fs8_zs = fs8_meta["z"]
