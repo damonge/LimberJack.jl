@@ -29,7 +29,7 @@ using Distributed
 @everywhere fake_data = Theory(fid_cosmo, tracers_names, pairs,
                                 idx, files; Nuisances=fid_nui)
 
-@everywhere fake_cov = 10*Diagonal(cov_tot) 
+@everywhere fake_cov = Diagonal(cov_tot) 
 
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
@@ -82,7 +82,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_fake_cov4_cosmo_TAP_", TAP)
+folname = string(data_set, "_fake_cov5_cosmo_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

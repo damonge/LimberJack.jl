@@ -19,8 +19,8 @@ function _get_σ2(lks, ks, pks, R, kind)
         pre = 1
     end
     integrand = @. k3 * pre * exp(-x2) * pks
-    integral = sum(@.(0.5*(integrand[2:nlks]+integrand[1:nlks-1])*(lks[2:nlks]-lks[1:nlks-1])))/(2*pi^2)
-    #trapz(lks, integrand)/(2*pi^2)
+    #integral = sum(@.(0.5*(integrand[2:nlks]+integrand[1:nlks-1])*(lks[2:nlks]-lks[1:nlks-1])))/(2*pi^2)
+    integral = trapz(lks, integrand)/(2*pi^2)
     return integral
 end
 
@@ -58,7 +58,7 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
     end
     lσ2s = log.(σ2s)
     # When s8<0.6 lσ2i interpolation fails --> Extrapolation needed
-    lσ2i = CubicSplineInterpolation(lRs, lσ2s, extrapolation_bc=Line())
+    lσ2i = cubic_spline_interpolation(lRs, lσ2s, extrapolation_bc=Line())
     pk_NLs = zeros(cosmo_type, nk, nz)
     @inbounds for i in 1:nz
         Dz2 =  Dz2s[i]
