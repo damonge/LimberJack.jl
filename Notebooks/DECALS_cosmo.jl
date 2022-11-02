@@ -21,21 +21,14 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
-@everywhere fid_cosmo = Cosmology()
-@everywhere fid_nui = Dict("DECALS__0_0_b" => 1.166,
-                           "DECALS__1_0_b" => 1.399,
-                           "DECALS__2_0_b" => 1.349,
-                           "DECALS__3_0_b" => 1.823)
-@everywhere fake_data = Theory(fid_cosmo, tracers_names, pairs,
-                                idx, files; Nuisances=fid_nui)
-
-@everywhere fake_cov = Diagonal(cov_tot) 
+@everywhere fake_data = data_vector ./ sqrt.(diag(cov_tot))
+@everywhere fake_cov = cov_tot ./ diag(cov_tot) 
 
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov_tot=fake_cov, 
+                                  cov=fake_cov, 
                                   files=files)
 
     #KiDS priors
@@ -62,7 +55,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory, cov_tot)
+    data_vector ~ MvNormal(theory./sqrt.(diag(cov_tot)) , cov)
 end;
 
 cycles = 6
@@ -82,7 +75,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_fake_cov5_cosmo_TAP_", TAP)
+folname = string(data_set, "_white_cosmo_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
