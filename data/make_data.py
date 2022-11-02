@@ -13,8 +13,8 @@ def get_type(name, mode="write"):
     else:
         return '0'
 
-s = sacc.Sacc().load_fits("FD/cls_FD_covG.fits")
-fname = "KiDS/KiDS"
+s = sacc.Sacc().load_fits("DESY1/Nzs/DESwl_final_HSC_cls_NzMarg_cov_p5.0_area2_diag4.0.fits")
+fname = "DESY1/wlwl"
 with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
@@ -85,7 +85,7 @@ dict_save = {'tracers': tracers, 'pairs': pairs,
              'pairs_ids': pairs_ids, 'cls': cls, 'idx': idx,
              'cov': cov, 'inv_cov': inv_cov}
 
-np.savez(fname+"_meta.npz", **dict_save)
+np.savez(fname+"_new_meta.npz", **dict_save)
 
 ###########
 
@@ -110,4 +110,4 @@ for name, tracer in s.tracers.items():
             dndz = nzs["dndz"]
             dict_save[f'nz_{name}'] = np.array([z, dndz])
 
-np.savez(fname+"_files.npz", **dict_save)
+np.savez(fname+"_new_files.npz", **dict_save)
