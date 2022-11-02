@@ -21,8 +21,8 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
-@everywhere fake_data = data_vector ./ sqrt.(diag(cov_tot))
-@everywhere fake_cov = cov_tot ./ diag(cov_tot) 
+@everywhere fake_data = data_vector ./ (sqrt.(diag(cov_tot)) * sqrt.(diag(cov_tot))')
+@everywhere fake_cov = Hermitian(cov_tot ./ diag(cov_tot)) 
 
 @everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
