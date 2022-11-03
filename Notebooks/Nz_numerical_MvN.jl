@@ -12,7 +12,7 @@ using Distributed
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
 @everywhere fol = "DESY1"
-@everywhere data_set = "wlwl_lite10"
+@everywhere data_set = "wlwl_Nzs"
 @everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
 
@@ -22,7 +22,7 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 
-@everywhere nz_path = "../data/DESY1/lite10_nzs/"
+@everywhere nz_path = "../data/DESY1/Nzs/"
 @everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESwl__0_e")
 @everywhere zs_k1, nz_k1, cov_k1 = get_nzs(nz_path, "DESwl__1_e")
 @everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, "DESwl__2_e")
@@ -33,24 +33,29 @@ using Distributed
                                   pairs=pairs,
                                   idx=idx,
                                   cov_tot=cov_tot, 
-                                  files=files)
+                                  files=files) 
     Ωm ~ Uniform(0.2, 0.6)
-    Ωb = 0.05 #~ Uniform(0.03, 0.07)
-    h = 0.67 #~ Uniform(0.55, 0.91)
-    ns = 0.96 #~ Uniform(0.87, 1.07)
-    s8 = 0.81 #~ Uniform(0.6, 0.9)
+    s8 ~ Uniform(0.6, 0.9)
+    Ωb ~ Uniform(0.03, 0.07)
+    h ~ Uniform(0.55, 0.91)
+    ns ~ Uniform(0.87, 1.07)
     
-    A_IA = 0.0 #~ Uniform(-5, 5) 
-    alpha_IA = 0.0 #~ Uniform(-5, 5)
+    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
+                                     tk_mode="EisHu",
+                                     Pk_mode="Halofit")
+    
+    A_IA ~ Uniform(-5, 5) 
+    alpha_IA ~ Uniform(-5, 5)
 
     DESwl__0_e_nz ~ MvNormal(nz_k0, cov_k0)
     DESwl__1_e_nz ~ MvNormal(nz_k1, cov_k1)
     DESwl__2_e_nz ~ MvNormal(nz_k2, cov_k2)
     DESwl__3_e_nz ~ MvNormal(nz_k3, cov_k3)
-    DESwl__0_e_m = 0.012 #~ Normal(0.012, 0.023)
-    DESwl__1_e_m = 0.012 #~ Normal(0.012, 0.023)
-    DESwl__2_e_m = 0.012 #~ Normal(0.012, 0.023)
-    DESwl__3_e_m = 0.012 #~ Normal(0.012, 0.023)
+
+    DESwl__0_e_m ~ Normal(0.012, 0.023)
+    DESwl__1_e_m ~ Normal(0.012, 0.023)
+    DESwl__2_e_m ~ Normal(0.012, 0.023)
+    DESwl__3_e_m ~ Normal(0.012, 0.023)
 
 
     nuisances = Dict("A_IA" => A_IA,
@@ -66,13 +71,8 @@ using Distributed
                      "DESwl__2_e_m" => DESwl__2_e_m,
                      "DESwl__3_e_m" => DESwl__3_e_m)
     
-    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
-                                     tk_mode="EisHu",
-                                     Pk_mode="Halofit")
-    
     theory = Theory(cosmology, tracers_names, pairs,
-                    idx, files;
-                    Nuisances=nuisances)
+                    idx, files; Nuisances=nuisances)
     data_vector ~ MvNormal(theory, cov_tot)
 end;
 
@@ -93,7 +93,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("DES_wlwl_Nzs_Omega_MvN_", "TAP_", TAP)
+folname = string("Nzs_numerical_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

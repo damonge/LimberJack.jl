@@ -33,8 +33,10 @@ function Theory(cosmology::Cosmology,
 
             b = get(Nuisances, string(name, "_", "b"), 1.0)
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
+            nz .*=  nz .> 0 # Enforce positive
             dzi = get(Nuisances, string(name, "_", "dz"), 0.0)
             zs = zs_mean .+ dzi  # Opposite sign in KiDS
+            zs .*=  zs .> 0 # Enforce positive
             tracer = NumberCountsTracer(cosmology, zs, nz;
                                         b=b)
         elseif t_type == "e"
@@ -46,8 +48,10 @@ function Theory(cosmology::Cosmology,
             IA_params = [get(Nuisances, "A_IA", 0.0),
                          get(Nuisances, "alpha_IA", 0.0)]
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
+            nz .*=  nz .> 0 # Enforce positive
             dzi = get(Nuisances, string(name, "_", "dz"), 0.0)
             zs = zs_mean .+ dzi  # Opposite sign in KiDS
+            zs .*=  zs .> 0 # Enforce positive
             tracer = WeakLensingTracer(cosmology, zs, nz;
                                        mb=mb, IA_params=IA_params)
             
