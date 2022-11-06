@@ -20,7 +20,7 @@ using Distributed
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = npzread("../data/Nzs/cov_marg.npz")["cov_marg"]
+@everywhere cov_tot = npzread("../data/DESY1/Nzs/cov_marg.npz")["cov_marg"]
 
 @everywhere nz_path = "../data/DESY1/Nzs/"
 @everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESwl__0_e")

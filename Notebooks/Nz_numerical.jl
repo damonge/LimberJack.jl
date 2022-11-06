@@ -53,10 +53,10 @@ using Distributed
     DESwl__2_e_nz = zeros(cosmology.settings.cosmo_type, n)
     DESwl__3_e_nz = zeros(cosmology.settings.cosmo_type, n)
     for i in 1:n
-        DESwl__0_e_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt(cov_k0[i]), 0.0, Inf) 
-        DESwl__1_e_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt(cov_k1[i]), 0.0, Inf) 
-        DESwl__2_e_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt(cov_k2[i]), 0.0, Inf) 
-        DESwl__3_e_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt(cov_k3[i]), 0.0, Inf) 
+        DESwl__0_e_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt(diag(cov_k0[i])), 0.0, Inf) 
+        DESwl__1_e_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt(diag(cov_k1[i])), 0.0, Inf) 
+        DESwl__2_e_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt(diag(cov_k2[i])), 0.0, Inf) 
+        DESwl__3_e_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt(diag(cov_k3[i])), 0.0, Inf) 
     end
 
     DESwl__0_e_m ~ Normal(0.012, 0.023)
@@ -100,7 +100,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("Nzs_numerical_MvN_", "TAP_", TAP)
+folname = string("Nzs_numerical2_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

@@ -61,9 +61,9 @@ end;
 cycles = 6
 steps = 50
 iterations = 100
-TAP = 0.90
+TAP = 0.65
 adaptation = 300
-init_ϵ = 0.005
+init_ϵ = 10^-8
 nchains = nprocs()
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -75,7 +75,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_white_cosmo_TAP_", TAP)
+folname = string(data_set, "_white_HMCDA_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -96,11 +96,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), NUTS(adaptation, TAP),
+        chain = sample(model(fake_data), HMCDA(adaptation, TAP, 0.3),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
+        chain = sample(model(fake_data), HMCDA(adaptation, TAP, 0.3), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  
