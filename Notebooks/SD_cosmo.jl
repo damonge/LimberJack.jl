@@ -32,7 +32,7 @@ using Distributed
     Ωb = 0.05 #~ Uniform(0.028, 0.065)
     h = 0.67 #~ Uniform(0.64, 0.82)
     s8 ~ Uniform(0.6, 0.9)
-    ns = 0.81 #~ Uniform(0.84, 1.1)
+    ns = 0.96 #~ Uniform(0.84, 1.1)
     
     A_IA = 0.1 #~ Uniform(-5, 5) 
     alpha_IA = 0.1 #~ Uniform(-5, 5)
@@ -135,13 +135,12 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
-                       resume_from=old_chain)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(), 
+                       iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)

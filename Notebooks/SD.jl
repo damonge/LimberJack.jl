@@ -34,7 +34,7 @@ using Distributed
     h ~ Uniform(0.64, 0.82)
     s8 ~ Uniform(0.6, 0.9)
     ns ~ Uniform(0.84, 1.1)
-    
+
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
 

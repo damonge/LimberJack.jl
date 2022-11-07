@@ -121,13 +121,12 @@ end
 
 for i in (1+last_n):(last_n+cycles)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP),
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP),
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
-                       resume_from=old_chain)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
