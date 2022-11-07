@@ -20,11 +20,11 @@ using Distributed
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
+@everywhere errs = sqrt.(diag(cov_tot))
+@everywhere fake_data = data_vector ./ errs
+@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs')) 
 
-@everywhere fake_data = data_vector ./ (sqrt.(diag(cov_tot)) * sqrt.(diag(cov_tot))')
-@everywhere fake_cov = Hermitian(cov_tot ./ diag(cov_tot)) 
-
-@everywhere @model function model(data_vector;
+@everywhere @model function model(data;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
@@ -36,7 +36,7 @@ using Distributed
     Ωb = 0.05 #~ Uniform(0.028, 0.065)
     h = 0.67 #~ Uniform(0.64, 0.82)
     s8 ~ Uniform(0.6, 0.9)
-    ns = 0.81 #~ Uniform(0.84, 1.1)
+    ns = 0.96 #~ Uniform(0.84, 1.1)
     
     DECALS__0_0_b = 1.166 #~ Uniform(0.8, 3.0)
     DECALS__1_0_b = 1.399 #~ Uniform(0.8, 3.0)
@@ -55,7 +55,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory./sqrt.(diag(cov_tot)) , cov)
+    data_vector ~ MvNormal(theory./ errs , cov)
 end;
 
 cycles = 6
@@ -63,7 +63,7 @@ steps = 50
 iterations = 100
 TAP = 0.65
 adaptation = 300
-init_ϵ = 10^-8
+init_ϵ = 0.005
 nchains = nprocs()
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -75,7 +75,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_white_HMCDA_TAP_", TAP)
+folname = string(data_set, "_white_nobug_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -96,11 +96,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), HMCDA(adaptation, TAP, 0.3),
+        chain = sample(model(fake_data), NUTS(adaptation, TAP),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), HMCDA(adaptation, TAP, 0.3), 
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  
