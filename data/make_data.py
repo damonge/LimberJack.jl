@@ -19,6 +19,7 @@ with open(fname+".yml") as f:
     config = yaml.safe_load(f)
 
 # Apply scale cuts
+
 indices = []
 for cl in config['order']:
     t1, t2 = cl['tracers']
@@ -96,7 +97,7 @@ for pair, l in zip(pairs, ls):
     print(t1, t2, len(l))
     dict_save[f'ls_{t1}_{t2}'] = np.array(l)
 
-nzs_path = "DESY1/Nzs/"
+nzs_path = "DESY1/binned_40_nzs/"
 for name, tracer in s.tracers.items():
     name = name+'_'+get_type(name, mode="write")
     if name in tracers:
