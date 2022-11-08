@@ -20,15 +20,15 @@ using Distributed
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
-@everywhere errs = sqrt.(diag(cov_tot))
-@everywhere fake_data = data_vector ./ errs
-@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs')) 
+#@everywhere errs = sqrt.(diag(cov_tot))
+#@everywhere fake_data = data_vector ./ errs
+#@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs')) 
 
 @everywhere @model function model(data;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov=fake_cov, 
+                                  cov=cov_tot, 
                                   files=files)
 
     #KiDS priors
@@ -55,7 +55,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory./ errs , cov)
+    data ~ MvNormal(theory, cov)
 end;
 
 cycles = 6
@@ -75,7 +75,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_white_nobug_TAP_", TAP)
+folname = string(data_set, "_nobug_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -96,11 +96,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), NUTS(adaptation, TAP),
+        chain = sample(model(data_vector), NUTS(adaptation, TAP),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  
