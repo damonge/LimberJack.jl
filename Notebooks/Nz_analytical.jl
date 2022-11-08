@@ -12,7 +12,7 @@ using Distributed
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
 @everywhere fol = "DESY1"
-@everywhere data_set = "wlwl_Nzs"
+@everywhere data_set = "wlwl_Nzs_40"
 @everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
 
@@ -20,9 +20,9 @@ using Distributed
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = npzread("../data/DESY1/Nzs/cov_marg.npz")["cov_marg"]
+@everywhere cov_tot = npzread("../data/DESY1/binned_40_nzs/cov_marg.npz")["cov_marg"]
 
-@everywhere nz_path = "../data/DESY1/Nzs/"
+@everywhere nz_path = "../data/DESY1/binned_40_nzs/"
 @everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESwl__0_e")
 @everywhere zs_k1, nz_k1, cov_k1 = get_nzs(nz_path, "DESwl__1_e")
 @everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, "DESwl__2_e")
@@ -81,7 +81,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("Nzs_analytical_", "TAP_", TAP)
+folname = string("Nzs40_analytical_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
