@@ -54,7 +54,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data ~ MvNormal(theory /. errs, cov)
+    data ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
