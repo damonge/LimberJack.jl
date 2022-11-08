@@ -86,7 +86,7 @@ dict_save = {'tracers': tracers, 'pairs': pairs,
              'pairs_ids': pairs_ids, 'cls': cls, 'idx': idx,
              'cov': cov, 'inv_cov': inv_cov}
 
-np.savez(fname+"_Nzs_meta.npz", **dict_save)
+np.savez(fname+"_Nzs_40_meta.npz", **dict_save)
 
 ###########
 
@@ -111,4 +111,4 @@ for name, tracer in s.tracers.items():
             dndz = nzs["dndz"]
             dict_save[f'nz_{name}'] = np.array([z, dndz])
 
-np.savez(fname+"_Nzs_files.npz", **dict_save)
+np.savez(fname+"_Nzs_40_files.npz", **dict_save)
