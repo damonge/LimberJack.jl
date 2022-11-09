@@ -18,13 +18,16 @@ using Distributed
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
+@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"])
+@everywhere errs = sqrt.(diag(cov_tot))
+@everywhere fake_data = data_vector ./ errs
+@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere @model function model(data_vector;
+@everywhere @model function model(data;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov_tot=cov_tot, 
+                                  cov=fake_cov, 
                                   files=files)
 
     #KiDS priors
@@ -37,13 +40,13 @@ using Distributed
     A_IA = 0.1 #~ Uniform(-5, 5) 
     alpha_IA = 0.1 #~ Uniform(-5, 5)
 
-    eBOSS__0_0_b = 2 #~ Uniform(0.8, 5.0)
-    eBOSS__1_0_b = 2 #~ Uniform(0.8, 5.0)
+    eBOSS__0_0_b ~ Uniform(0.8, 5.0)
+    eBOSS__1_0_b ~ Uniform(0.8, 5.0)
     
-    DECALS__0_0_b = 1.36 #~ Uniform(0.8, 3.0)
-    DECALS__1_0_b = 1.54 #~ Uniform(0.8, 3.0)
-    DECALS__2_0_b = 1.70 #~ Uniform(0.8, 3.0)
-    DECALS__3_0_b = 2.16 #~ Uniform(0.8, 3.0)
+    DECALS__0_0_b ~ Uniform(0.8, 3.0)
+    DECALS__1_0_b ~ Uniform(0.8, 3.0)
+    DECALS__2_0_b ~ Uniform(0.8, 3.0)
+    DECALS__3_0_b ~ Uniform(0.8, 3.0)
     DECALS__0_0_dz = 0 #~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     DECALS__1_0_dz = 0 #~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     DECALS__2_0_dz = 0 #~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
@@ -94,7 +97,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory, cov_tot)
+    data ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
@@ -114,7 +117,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_cosmo_TAP_", TAP)
+folname = string(data_set, "_whitened_cosmo_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -135,11 +138,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(), 
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(), 
                        iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
