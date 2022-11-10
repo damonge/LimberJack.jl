@@ -96,8 +96,8 @@ using Distributed
                      "eBOSS__0_0_b" => eBOSS__0_0_b,
                      "eBOSS__1_0_b" => eBOSS__1_0_b)
 
-    eta ~ Uniform(0.01, 0.1)
-    l ~ Uniform(0.1, 4)
+    eta ~ Uniform(0.01, 0.1) # = 0.2
+    l ~ Uniform(0.1, 4) # = 0.3
     latent_N = length(latent_x)
     v ~ filldist(truncated(Normal(0, 1), -3, 3), latent_N)
     

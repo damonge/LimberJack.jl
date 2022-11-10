@@ -1,5 +1,6 @@
 using Distributed
 
+@everywhere using LinearAlgebra
 @everywhere using Turing
 @everywhere using LimberJack
 @everywhere using CSV
@@ -103,7 +104,7 @@ end;
 cycles = 6
 steps = 50
 iterations = 100
-TAP = 0.80
+TAP = 0.65
 adaptation = 300
 init_ϵ = 0.005
 nchains = nprocs()
