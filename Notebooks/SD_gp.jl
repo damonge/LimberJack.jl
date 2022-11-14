@@ -27,9 +27,10 @@ using Distributed
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
 @everywhere fid_cosmo = Cosmology()
-@everywhere N = 100
-@everywhere latent_x = Vector(0:0.3:3)
-@everywhere x = Vector(range(0., stop=3., length=N))
+@everywhere n = 11
+@everywhere N = 101
+@everywhere latent_x = Vector(LinRange(0, 3, n))
+@everywhere x = Vector(LinRange(0, 3, N))
 
 @everywhere @model function model(data;
                                   tracers_names=tracers_names,
@@ -103,8 +104,7 @@ using Distributed
 
     eta = 0.2 #~ Uniform(0.01, 0.1)
     l = 0.3 #~ Uniform(0.1, 4)
-    latent_N = length(latent_x)
-    v ~ filldist(truncated(Normal(0, 1), -3, 3), latent_N)
+    v ~ filldist(truncated(Normal(0, 1), -3, 3), n)
     
     mu = fid_cosmo.Dz(vec(latent_x))
     K = sqexp_cov_fn(latent_x; eta=eta, l=l)
@@ -115,7 +115,7 @@ using Distributed
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
                                      Pk_mode="Halofit";
-                                     custom_Dz=gp)
+                                     custom_Dz=[x, gp])
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)

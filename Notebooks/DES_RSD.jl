@@ -32,13 +32,16 @@ using Distributed
 @everywhere cov_tot[1:length(fs8_data), 1:length(fs8_data)] = fs8_cov
 @everywhere cov_tot[length(fs8_data)+1:(length(fs8_data)+length(cls_data)),
         length(fs8_data)+1:(length(fs8_data)+length(cls_data))] = cls_cov
-@everywhere data_vector = [fs8_data ; cls_data];
+@everywhere data_vector = [fs8_data ; cls_data]
+@everywhere errs = sqrt.(diag(cov_tot))
+@everywhere fake_data = data_vector ./ errs
+@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere @model function model(data_vector;
+@everywhere @model function model(data;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov_tot=cov_tot, 
+                                  cov=fake_cov, 
                                   files=files)
 
     #KiDS priors
@@ -105,7 +108,7 @@ using Distributed
     fs8s = fs8(cosmology, fs8_zs)
     theory = [fs8s; cls]
     
-    data_vector ~ MvNormal(theory, cov_tot)
+    data ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
@@ -146,13 +149,12 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
-                       resume_from=old_chain)
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)

@@ -20,18 +20,22 @@ using Distributed
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
+@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"])
+@everywhere errs = sqrt.(diag(cov_tot))
+@everywhere fake_data = data_vector ./ errs
+@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
 @everywhere fid_cosmo = Cosmology()
-@everywhere N = 100
-@everywhere latent_x = Vector(0:0.3:3)
-@everywhere x = Vector(range(0., stop=3., length=N))
+@everywhere n = 11
+@everywhere N = 101
+@everywhere latent_x = Vector(LinRange(0, 3, n))
+@everywhere x = Vector(LinRange(0, 3, N))
 
-@everywhere @model function model(data_vector;
+@everywhere @model function model(data;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov_tot=cov_tot, 
+                                  cov=fake_cov, 
                                   files=files,
                                   fid_cosmo=fid_cosmo,
                                   latent_x=latent_x,
@@ -98,8 +102,7 @@ using Distributed
 
     eta ~ Uniform(0.01, 0.1) # = 0.2
     l ~ Uniform(0.1, 4) # = 0.3
-    latent_N = length(latent_x)
-    v ~ filldist(truncated(Normal(0, 1), -3, 3), latent_N)
+    v ~ filldist(truncated(Normal(0, 1), -3, 3), n)
     
     mu = fid_cosmo.Dz(vec(latent_x))
     K = sqexp_cov_fn(latent_x; eta=eta, l=l)
@@ -110,11 +113,11 @@ using Distributed
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
                                      Pk_mode="Halofit";
-                                     custom_Dz=gp)
+                                     custom_Dz=[x, gp])
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory, cov_tot)
+    data ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
@@ -155,13 +158,12 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
-                       resume_from=old_chain)
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
