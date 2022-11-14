@@ -33,15 +33,15 @@ using Distributed
 
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
-    Ωb = 0.05 #~ Uniform(0.028, 0.065)
-    h = 0.67 #~ Uniform(0.64, 0.82)
+    Ωb ~ Uniform(0.028, 0.065)
+    h ~ Uniform(0.64, 0.82)
     s8 ~ Uniform(0.6, 0.9)
-    ns = 0.96 #~ Uniform(0.84, 1.1)
+    ns ~ Uniform(0.84, 1.1)
     
-    DECALS__0_0_b = 1.166 #~ Uniform(0.8, 3.0)
-    DECALS__1_0_b = 1.399 #~ Uniform(0.8, 3.0)
-    DECALS__2_0_b = 1.349 #~ Uniform(0.8, 3.0)
-    DECALS__3_0_b = 1.823 #~ Uniform(0.8, 3.0)
+    DECALS__0_0_b ~ Uniform(0.8, 3.0)
+    DECALS__1_0_b ~ Uniform(0.8, 3.0)
+    DECALS__2_0_b ~ Uniform(0.8, 3.0)
+    DECALS__3_0_b ~ Uniform(0.8, 3.0)
 
     nuisances = Dict("DECALS__0_0_b" => DECALS__0_0_b,
                      "DECALS__1_0_b" => DECALS__1_0_b,
@@ -74,7 +74,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_whitened_nobug_TAP_", TAP)
+folname = string(data_set, "_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
