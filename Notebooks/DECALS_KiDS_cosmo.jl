@@ -1,5 +1,6 @@
 using Distributed
 
+@everywhere using LinearAlgebra
 @everywhere using Turing
 @everywhere using LimberJack
 @everywhere using CSV
@@ -19,12 +20,15 @@ using Distributed
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
+@everywhere errs = sqrt.(diag(cov_tot))
+@everywhere fake_data = data_vector ./ errs
+@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere @model function model(data_vector;
+@everywhere @model function model(data;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov_tot=cov_tot, 
+                                  cov_tot=fake_cov, 
                                   files=files)
 
     #KiDS priors
@@ -34,10 +38,10 @@ using Distributed
     s8 ~ Uniform(0.6, 0.9)
     ns = 0.96 #~ Uniform(0.84, 1.1)
     
-    DECALS__0_0_b = 1.36 #~ Uniform(0.8, 3.0)
-    DECALS__1_0_b = 1.54 #~ Uniform(0.8, 3.0)
-    DECALS__2_0_b = 1.70 #~ Uniform(0.8, 3.0)
-    DECALS__3_0_b = 2.16 #~ Uniform(0.8, 3.0)
+    DECALS__0_0_b = 1.166 #~ Uniform(0.8, 3.0)
+    DECALS__1_0_b = 1.399 #~ Uniform(0.8, 3.0)
+    DECALS__2_0_b = 1.349 #~ Uniform(0.8, 3.0)
+    DECALS__3_0_b = 1.823 #~ Uniform(0.8, 3.0)
 
     nuisances = Dict(
                      "DECALS__0_0_b" => DECALS__0_0_b,
@@ -52,14 +56,14 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory, cov_tot)
+    data ~ MvNormal(theory ./ errs, cov_tot)
 end;
 
 cycles = 6
 steps = 50
 iterations = 100
 TAP = 0.65
-adaptation = 300
+adaptation = 100
 init_ϵ = 0.005
 nchains = nprocs()
 println("sampling settings: ")
@@ -72,7 +76,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_cosmo_TAP_", TAP)
+folname = string(data_set, "_whitened_cosmo_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -93,11 +97,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  

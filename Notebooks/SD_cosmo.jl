@@ -44,10 +44,10 @@ using Distributed
     eBOSS__0_0_b ~ Uniform(0.8, 5.0)
     eBOSS__1_0_b ~ Uniform(0.8, 5.0)
     
-    DECALS__0_0_b ~ Uniform(0.8, 3.0)
-    DECALS__1_0_b ~ Uniform(0.8, 3.0)
-    DECALS__2_0_b ~ Uniform(0.8, 3.0)
-    DECALS__3_0_b ~ Uniform(0.8, 3.0)
+    DECALS__0_0_b = 1.166 #~ Uniform(0.8, 3.0)
+    DECALS__1_0_b = 1.399 #~ Uniform(0.8, 3.0)
+    DECALS__2_0_b = 1.349 #~ Uniform(0.8, 3.0)
+    DECALS__3_0_b = 1.823 #~ Uniform(0.8, 3.0)
     DECALS__0_0_dz = 0 #~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     DECALS__1_0_dz = 0 #~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     DECALS__2_0_dz = 0 #~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
@@ -105,7 +105,7 @@ cycles = 6
 steps = 50
 iterations = 100
 TAP = 0.65
-adaptation = 300
+adaptation = 100
 init_ϵ = 0.005
 nchains = nprocs()
 println("sampling settings: ")
