@@ -21,8 +21,16 @@ using Distributed
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 @everywhere errs = sqrt.(diag(cov_tot))
-@everywhere fake_data = data_vector ./ errs
-@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
+@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'))
+@everywhere fid_cosmo = Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
+                      tk_mode="emulator", Pk_mode="Halofit")
+@everywhere fid_nui =  nuisances = Dict("DECALS__0_0_b" => 1.166,
+                                        "DECALS__1_0_b" => 1.399,
+                                        "DECALS__2_0_b" => 1.349,
+                                        "DECALS__3_0_b" => 1.823)
+@everywhere fid_data = Theory(fid_cosmo, tracers_names, pairs, idx, files;
+                              Nuisances=fid_nui)
+@everywhere fake_data = fid_data ./ errs;
 
 @everywhere @model function model(data;
                                   tracers_names=tracers_names,
@@ -76,7 +84,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_whitened_cosmo_TAP_", TAP)
+folname = string(data_set, "_fake_data_cosmo_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
