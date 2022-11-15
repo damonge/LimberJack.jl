@@ -28,7 +28,7 @@ using Distributed
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov_tot=fake_cov, 
+                                  cov=fake_cov, 
                                   files=files)
 
     #KiDS priors
@@ -56,7 +56,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data ~ MvNormal(theory ./ errs, cov_tot)
+    data ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
