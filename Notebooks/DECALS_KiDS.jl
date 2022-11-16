@@ -22,7 +22,7 @@ using Distributed
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'))
-@everywhere fake_data = fid_data ./ errs;
+@everywhere fake_data = data_vector ./ errs;
 
 @everywhere @model function model(data;
                                   tracers_names=tracers_names,
