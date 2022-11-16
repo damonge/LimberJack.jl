@@ -22,15 +22,7 @@ using Distributed
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"]);
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'))
-@everywhere fid_cosmo = Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                      tk_mode="emulator", Pk_mode="Halofit")
-@everywhere fid_nui =  nuisances = Dict("DECALS__0_0_b" => 1.166,
-                                        "DECALS__1_0_b" => 1.399,
-                                        "DECALS__2_0_b" => 1.349,
-                                        "DECALS__3_0_b" => 1.823)
-@everywhere fid_data = Theory(fid_cosmo, tracers_names, pairs, idx, files;
-                              Nuisances=fid_nui)
-@everywhere fake_data = (data_vector .- fid_data) ./ errs;
+@everywhere fake_data = fid_data ./ errs;
 
 @everywhere @model function model(data;
                                   tracers_names=tracers_names,
@@ -41,22 +33,41 @@ using Distributed
 
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
-    Ωb = 0.05 #~ Uniform(0.028, 0.065)
-    h = 0.67 #~ Uniform(0.64, 0.82)
+    Ωb ~ Uniform(0.028, 0.065)
+    h ~ Uniform(0.64, 0.82)
     s8 ~ Uniform(0.6, 0.9)
-    ns = 0.96 #~ Uniform(0.84, 1.1)
+    ns ~ Uniform(0.84, 1.1)
     
-    DECALS__0_0_b = 1.166 #~ Uniform(0.8, 3.0)
-    DECALS__1_0_b = 1.399 #~ Uniform(0.8, 3.0)
-    DECALS__2_0_b = 1.349 #~ Uniform(0.8, 3.0)
-    DECALS__3_0_b = 1.823 #~ Uniform(0.8, 3.0)
+    A_IA ~ Uniform(-5, 5) 
+    alpha_IA ~ Uniform(-5, 5)
+    
+    DECALS__0_0_b ~ Uniform(0.8, 3.0)
+    DECALS__1_0_b ~ Uniform(0.8, 3.0)
+    DECALS__2_0_b ~ Uniform(0.8, 3.0)
+    DECALS__3_0_b ~ Uniform(0.8, 3.0)
+    #DECALS__0_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    #DECALS__1_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    #DECALS__2_0_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
+    #DECALS__3_0_dz ~ TruncatedNormal(0.0, 0.010, -0.2, 0.2)
+    
+    #KiDS1000__0_e_dz ~ TruncatedNormal(0.0, 0.0106, -0.2, 0.2)
+    #KiDS1000__1_e_dz ~ TruncatedNormal(0.0, 0.0113, -0.2, 0.2)
+    #KiDS1000__2_e_dz ~ TruncatedNormal(0.0, 0.0118, -0.2, 0.2)
+    #KiDS1000__3_e_dz ~ TruncatedNormal(0.0, 0.0087, -0.2, 0.2)
+    #KiDS1000__4_e_dz ~ TruncatedNormal(0.0, 0.0097, -0.2, 0.2)
+    #KiDS1000__0_e_m ~ Normal(0.0, 0.019)
+    #KiDS1000__1_e_m ~ Normal(0.0, 0.020)
+    #KiDS1000__2_e_m ~ Normal(0.0, 0.017)
+    #KiDS1000__3_e_m ~ Normal(0.0, 0.012)
+    #KiDS1000__4_e_m ~ Normal(0.0, 0.010)
 
-    nuisances = Dict(
+
+    nuisances = Dict("A_IA" => A_IA,
+                     "alpha_IA" => alpha_IA,
                      "DECALS__0_0_b" => DECALS__0_0_b,
                      "DECALS__1_0_b" => DECALS__1_0_b,
                      "DECALS__2_0_b" => DECALS__2_0_b,
                      "DECALS__3_0_b" => DECALS__3_0_b)
-
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
@@ -64,7 +75,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data ~ MvNormal((theory .- fid_data)./ errs, cov)
+    data ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
@@ -84,7 +95,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_whitened2_cosmo_TAP_", TAP)
+folname = string(data_set, "_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
