@@ -27,11 +27,11 @@ using Distributed
                                   cov_tot=cov_tot, 
                                   files=files)
     #KiDS priors
-    Ωm ~ Uniform(0.2, 0.6)
-    Ωb ~ Uniform(0.028, 0.065)
-    h ~ Uniform(0.64, 0.82)
+    Ωm ~ Uniform(0.1, 0.9)
+    Ωb ~ Uniform(0.03, 0.07)
+    h ~ Uniform(0.55, 0.91)
     s8 ~ Uniform(0.6, 0.9)
-    ns ~ Uniform(0.84, 1.1)
+    ns ~ Uniform(0.87, 1.07)
     
     DESgc__0_0_b ~ Uniform(0.8, 3.0)
     DESgc__1_0_b ~ Uniform(0.8, 3.0)
@@ -94,7 +94,7 @@ end;
 cycles = 6
 steps = 50
 iterations = 100
-TAP = 0.60
+TAP = 0.65
 adaptation = 100
 init_ϵ = 0.05
 nchains = nprocs()
