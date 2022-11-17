@@ -1,0 +1,12 @@
+order:
+    # gc-gc
+    - tracers: ['DESgc__0', 'DESgc__0']
+      ell_cuts: [0, 145]
+    - tracers: ['DESgc__1', 'DESgc__1']
+      ell_cuts: [0, 225]
+    - tracers: ['DESgc__2', 'DESgc__2']
+      ell_cuts: [0, 298]
+    - tracers: ['DESgc__3', 'DESgc__3']
+      ell_cuts: [0, 371]
+    - tracers: ['DESgc__4', 'DESgc__4']
+      ell_cuts: [0, 435]
