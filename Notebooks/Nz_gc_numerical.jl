@@ -47,9 +47,6 @@ using Distributed
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
-    
     n = length(nz_k0)
     DESgc__0_0_nz = zeros(cosmology.settings.cosmo_type, n)
     DESgc__1_0_nz = zeros(cosmology.settings.cosmo_type, n)
@@ -62,16 +59,13 @@ using Distributed
         DESgc__3_0_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], 0.0, 1) 
     end
 
-    DESwl__0_e_m ~ Normal(0.012, 0.023)
-    DESwl__1_e_m ~ Normal(0.012, 0.023)
-    DESwl__2_e_m ~ Normal(0.012, 0.023)
-    DESwl__3_e_m ~ Normal(0.012, 0.023)
+    DESgc__0_0_b = 1.21 #~ Uniform(0.8, 3.0) # = 1.21
+    DESgc__1_0_b = 1.30 #~ Uniform(0.8, 3.0) # = 1.30
+    DESgc__2_0_b = 1.48 #~ Uniform(0.8, 3.0) # = 1.48
+    DESgc__3_0_b = 1.64 #~ Uniform(0.8, 3.0) # = 1.64
 
 
-    nuisances = Dict("A_IA" => A_IA,
-                     "alpha_IA" => alpha_IA,
-
-                     "DESgc__0_0_nz" => DESgc__0_0_nz,
+    nuisances = Dict("DESgc__0_0_nz" => DESgc__0_0_nz,
                      "DESgc__1_0_nz" => DESgc__1_0_nz,
                      "DESgc__2_0_nz" => DESgc__2_0_nz,
                      "DESgc__3_0_nz" => DESgc__3_0_nz,

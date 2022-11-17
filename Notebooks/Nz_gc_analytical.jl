@@ -41,17 +41,13 @@ using Distributed
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
-    DESgc__0_0_b ~ Uniform(0.8, 3.0) # = 1.21
-    DESgc__1_0_b ~ Uniform(0.8, 3.0) # = 1.30
-    DESgc__2_0_b ~ Uniform(0.8, 3.0) # = 1.48
-    DESgc__3_0_b ~ Uniform(0.8, 3.0) # = 1.64
+    DESgc__0_0_b = 1.21 #~ Uniform(0.8, 3.0) # = 1.21
+    DESgc__1_0_b = 1.30 #~ Uniform(0.8, 3.0) # = 1.30
+    DESgc__2_0_b = 1.48 #~ Uniform(0.8, 3.0) # = 1.48
+    DESgc__3_0_b = 1.64 #~ Uniform(0.8, 3.0) # = 1.64
 
 
-    nuisances = Dict("A_IA" => A_IA,
-                     "alpha_IA" => alpha_IA,
-                     "DESgc__0_0_b" => DESgc__0_0_b,
+    nuisances = Dict("DESgc__0_0_b" => DESgc__0_0_b,
                      "DESgc__1_0_b" => DESgc__1_0_b,
                      "DESgc__2_0_b" => DESgc__2_0_b,
                      "DESgc__3_0_b" => DESgc__3_0_b)
