@@ -38,7 +38,7 @@ using Distributed
                                   cov=fake_cov, 
                                   files=files) 
     Ωm ~ Uniform(0.2, 0.6)
-    s8 ~ Uniform(0.6, 0.9)
+    s8 = 0.811 #~ Uniform(0.6, 0.9)
     Ωb ~ Uniform(0.03, 0.07)
     h ~ Uniform(0.55, 0.91)
     ns ~ Uniform(0.87, 1.07)
@@ -59,10 +59,10 @@ using Distributed
         DESgc__3_0_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], 0.0, 1) 
     end
 
-    DESgc__0_0_b = 1.21 #~ Uniform(0.8, 3.0) # = 1.21
-    DESgc__1_0_b = 1.30 #~ Uniform(0.8, 3.0) # = 1.30
-    DESgc__2_0_b = 1.48 #~ Uniform(0.8, 3.0) # = 1.48
-    DESgc__3_0_b = 1.64 #~ Uniform(0.8, 3.0) # = 1.64
+    DESgc__0_0_b ~ Uniform(0.8, 3.0) # = 1.21
+    DESgc__1_0_b ~ Uniform(0.8, 3.0) # = 1.30
+    DESgc__2_0_b ~ Uniform(0.8, 3.0) # = 1.48
+    DESgc__3_0_b ~ Uniform(0.8, 3.0) # = 1.64
 
 
     nuisances = Dict("DESgc__0_0_nz" => DESgc__0_0_nz,
@@ -97,7 +97,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("Nzs40_gcgc_LSST_numerical_", "TAP_", TAP)
+folname = string("Nzs40_gcgc_b_LSST_numerical_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
