@@ -118,7 +118,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_whitened_cosmo_TAP_", TAP)
+folname = string(data_set, "_whitened_test_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
