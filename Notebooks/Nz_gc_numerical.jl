@@ -40,7 +40,7 @@ using Distributed
     Ωm ~ Uniform(0.2, 0.6)
     s8 = 0.811 #~ Uniform(0.6, 0.9)
     Ωb ~ Uniform(0.03, 0.07)
-    h ~ Uniform(0.55, 0.91)
+    h = 0.67 #~ Uniform(0.55, 0.91)
     ns ~ Uniform(0.87, 1.07)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
