@@ -13,10 +13,10 @@ def get_type(name, mode="write"):
     else:
         return '0'
 
-sacc_path = "LSST/cls_covG_lsst_clustering.fits"
-yaml_path = "LSST/gcgc"
+sacc_path = "FD/cls_FD_covG.fits"
+yaml_path = "DESY1/gcgc"
 nzs_path = "DESY1/binned_40_nzs/"
-fname = "LSST/gcgc_Nzs_40"
+fname = "DESY1/gcgc_Nzs_40"
 
 s = sacc.Sacc().load_fits(sacc_path)
 with open(yaml_path+".yml") as f:
