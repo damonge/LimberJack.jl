@@ -25,7 +25,7 @@ using Distributed
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere @model function model(data;
+@everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
@@ -58,7 +58,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data ~ MvNormal(theory ./ errs, cov)
+    data_vector ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6

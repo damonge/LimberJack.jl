@@ -1,5 +1,6 @@
 using Distributed
 
+@everywhere using DynamicHMC
 @everywhere using LinearAlgebra
 @everywhere using Turing
 @everywhere using LimberJack
@@ -116,11 +117,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
+        chain = sample(model(fake_data), DynamicNUTS(), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), #HMC(init_ϵ, steps),
+        chain = sample(model(fake_data), DynamicNUTS(), #HMC(init_ϵ, steps),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  

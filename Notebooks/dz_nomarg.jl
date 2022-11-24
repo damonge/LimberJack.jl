@@ -11,7 +11,7 @@ using Distributed
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere fol = "LSST"
+@everywhere fol = "DESY1"
 @everywhere data_set = "wlwl_Nzs_40"
 @everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
@@ -87,7 +87,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("dz_LSST_nomarg_", "TAP_", TAP)
+folname = string("dz_nomarg_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

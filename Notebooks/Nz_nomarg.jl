@@ -11,7 +11,7 @@ using Distributed
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere fol = "LSST"
+@everywhere fol = "DESY1"
 @everywhere data_set = "wlwl_Nzs_40"
 @everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
@@ -25,7 +25,7 @@ using Distributed
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere @model function model(data;
+@everywhere @model function model(data_vector;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
@@ -58,7 +58,7 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data ~ MvNormal(theory ./ errs, cov)
+    data_vector ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
@@ -78,7 +78,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string("Nzs40_LSST_nomarg_", "TAP_", TAP)
+folname = string("Nzs40_nomarg_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
