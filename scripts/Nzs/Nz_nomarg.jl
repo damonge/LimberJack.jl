@@ -29,7 +29,7 @@ using Distributed
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov=cov_tot, 
+                                  cov=fake_cov, 
                                   files=files) 
     Ωm ~ Uniform(0.2, 0.6)
     s8 ~ Uniform(0.6, 0.9)
