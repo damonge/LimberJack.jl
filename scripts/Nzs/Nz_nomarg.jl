@@ -13,8 +13,8 @@ using Distributed
 
 @everywhere fol = "DESY1"
 @everywhere data_set = "wlwl_Nzs_40"
-@everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
-@everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
+@everywhere meta = np.load(string("../../data/", fol, "/", data_set, "_meta.npz"))
+@everywhere files = npzread(string("../../data/", fol, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
@@ -25,11 +25,11 @@ using Distributed
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere @model function model(data_vector;
+@everywhere @model function model(data;
                                   tracers_names=tracers_names,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov=fake_cov, 
+                                  cov=cov_tot, 
                                   files=files) 
     Ωm ~ Uniform(0.2, 0.6)
     s8 ~ Uniform(0.6, 0.9)
@@ -58,12 +58,12 @@ using Distributed
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory ./ errs, cov)
+    data ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
 steps = 50
-iterations = 100
+iterations = 250
 TAP = 0.60
 adaptation = 100
 init_ϵ = 0.05
@@ -77,7 +77,7 @@ println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
+folpath = "../../chains/Nzs_chains/"
 folname = string("Nzs40_nomarg_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 

@@ -13,8 +13,8 @@ using Distributed
 
 @everywhere fol = "DESY1"
 @everywhere data_set = "wlwl_Nzs_40"
-@everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
-@everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
+@everywhere meta = np.load(string("../../data/", fol, "/", data_set, "_meta.npz"))
+@everywhere files = npzread(string("../../data/", fol, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
@@ -72,7 +72,7 @@ end;
 
 cycles = 6
 steps = 50
-iterations = 100
+iterations = 250
 TAP = 0.60
 adaptation = 100
 init_ϵ = 0.05
@@ -86,7 +86,7 @@ println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
+folpath = "../../chains/Nzs_chains/"
 folname = string("dz_nomarg_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 

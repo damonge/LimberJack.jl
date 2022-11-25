@@ -13,14 +13,14 @@ using Distributed
 
 @everywhere fol = "DESY1"
 @everywhere data_set = "gcgc_Nzs_40"
-@everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
-@everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
+@everywhere meta = np.load(string("../../data/", fol, "/", data_set, "_meta.npz"))
+@everywhere files = npzread(string("../../data/", fol, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = npzread("../data/DESY1/binned_40_nzs/gcgc_cov_marg.npz")["cov_marg"]
+@everywhere cov_tot = npzread("../../data/DESY1/binned_40_nzs/gcgc_cov_marg.npz")["cov_marg"]
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fid_cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81, 
                                              tk_mode="EisHu",
@@ -28,7 +28,7 @@ using Distributed
 @everywhere fid_nui = Dict("DESgc__0_0_b" => 1.21,
                            "DESgc__1_0_b" => 1.30,
                            "DESgc__2_0_b" => 1.48,
-                           "DESgc__3_0_b" => 1.64
+                           "DESgc__3_0_b" => 1.64,
                            "DESgc__4_0_b" => 1.84)
 @everywhere fake_data = Theory(fid_cosmo, tracers_names, pairs,
                                idx, files; Nuisances=fid_nui) ./ errs
@@ -84,7 +84,7 @@ println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
+folpath = "../../chains/Nzs_chains/"
 folname = string("Nzs40_gcgc_b_analytical_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 

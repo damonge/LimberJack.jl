@@ -13,8 +13,8 @@ using Distributed
 
 @everywhere fol = "DESY1"
 @everywhere data_set = "gcgc_Nzs_40"
-@everywhere meta = np.load(string("../data/", fol, "/", data_set, "_meta.npz"))
-@everywhere files = npzread(string("../data/", fol, "/", data_set, "_files.npz"))
+@everywhere meta = np.load(string("../../data/", fol, "/", data_set, "_meta.npz"))
+@everywhere files = npzread(string("../../data/", fol, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
@@ -28,12 +28,13 @@ using Distributed
 @everywhere fid_nui = Dict("DESgc__0_0_b" => 1.21,
                            "DESgc__1_0_b" => 1.30,
                            "DESgc__2_0_b" => 1.48,
-                           "DESgc__3_0_b" => 1.64)
+                           "DESgc__3_0_b" => 1.64,
+                           "DESgc__4_0_b" => 1.84)
 @everywhere fake_data = Theory(fid_cosmo, tracers_names, pairs,
                                idx, files; Nuisances=fid_nui) ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere nz_path = "../data/DESY1/binned_40_nzs/"
+@everywhere nz_path = "../../data/DESY1/binned_40_nzs/"
 @everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESgc__0_0")
 @everywhere zs_k1, nz_k1, cov_k1 = get_nzs(nz_path, "DESgc__1_0")
 @everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, "DESgc__2_0")
@@ -109,7 +110,7 @@ println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
+folpath = "../../chains/Nzs_chains/"
 folname = string("Nzs40_gcgc_b_numerical_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 

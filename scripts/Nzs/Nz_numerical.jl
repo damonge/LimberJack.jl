@@ -25,7 +25,7 @@ using Distributed
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere nz_path = "../data/DESY1/binned_40_nzs/"
+@everywhere nz_path = "../../data/DESY1/binned_40_nzs/"
 @everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESwl__0_e")
 @everywhere zs_k1, nz_k1, cov_k1 = get_nzs(nz_path, "DESwl__1_e")
 @everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, "DESwl__2_e")
@@ -88,7 +88,7 @@ end;
 
 cycles = 6
 steps = 50
-iterations = 100
+iterations = 250
 TAP = 0.60
 adaptation = 100
 init_ϵ = 0.05
@@ -102,7 +102,7 @@ println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
+folpath = "../../chains/Nzs_chains/"
 folname = string("Nzs40_numerical_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
