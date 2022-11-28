@@ -1,5 +1,4 @@
 [deps]
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
-CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
+NPZ = "15e1cf62-19b3-5cfa-8e77-841668bca605"

@@ -39,9 +39,9 @@ test_results["pk_emul"] = ccl.linear_matter_power(cosmo_camb, ks, 1.)
 # =====
 lks = np.linspace(-3, 2, 20)
 ks = np.exp(lks)
-test_results["pk_BBKS_nonlin"] = ccl.linear_matter_power(cosmo_bbks_nonlin, ks, 1.)
-test_results["pk_EisHu_nonlin"] = ccl.linear_matter_power(cosmo_eishu_nonlin, ks, 1.)
-test_results["pk_emul_nonlin"] = ccl.linear_matter_power(cosmo_camb_nonlin, ks, 1.)
+test_results["pk_BBKS_nonlin"] = ccl.nonlin_matter_power(cosmo_bbks_nonlin, ks, 1.)
+test_results["pk_EisHu_nonlin"] = ccl.nonlin_matter_power(cosmo_eishu_nonlin, ks, 1.)
+test_results["pk_emul_nonlin"] = ccl.nonlin_matter_power(cosmo_camb_nonlin, ks, 1.)
 # =====
 z = np.linspace(0., 2., num=256)
 nz = np.exp(-0.5*((z-0.5)/0.05)**2)

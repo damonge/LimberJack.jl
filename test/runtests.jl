@@ -23,9 +23,6 @@ test_results = npzread("test_results.npz")
 
     @testset "BMChi" begin
         cosmo = Cosmology()
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="bbks", 
-                                            matter_power_spectrum="linear",
-                                            Omega_g=0, Omega_k=0)
         ztest = [0.1, 0.5, 1.0, 3.0]
         chi = comoving_radial_distance(cosmo, ztest)
         chi_bm = test_results["Chi"]
@@ -34,9 +31,6 @@ test_results = npzread("test_results.npz")
 
     @testset "BMGrowth" begin
         cosmo = Cosmology()
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="bbks", 
-                                            matter_power_spectrum="linear",
-                                            Omega_g=0, Omega_k=0)
         ztest = [0.1, 0.5, 1.0, 3.0]
         Dz = growth_factor(cosmo, ztest)
         fz = growth_rate(cosmo, ztest)
@@ -114,9 +108,6 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "EisHu_Cℓs" begin
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu", 
-                                            matter_power_spectrum="linear",
-                                            Omega_g=0, Omega_k=0)
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           nk=512, tk_mode="EisHu")
         z = Vector(range(0., stop=2., length=256))
@@ -149,10 +140,6 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "emul_Cℓs" begin
-        cosmo_bm = ccl.Cosmology(Omega_c=0.255, Omega_b=0.045, h=0.67, n_s=0.96, sigma8=0.81,
-                                      Omega_g=0, Omega_k=0,
-                                      transfer_function="boltzmann_camb",
-                                      matter_power_spectrum="linear")
         cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
                           nk=512, tk_mode="emulator")
         z = Vector(range(0., stop=2., length=256))
@@ -185,9 +172,6 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "EisHu_Halo_Cℓs" begin
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu", 
-                                            matter_power_spectrum="halofit",
-                                            Omega_g=0, Omega_k=0)
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0.0, stop=2., length=256))
@@ -218,10 +202,6 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "emul_Halo_Cℓs" begin
-        cosmo_bm = ccl.Cosmology(Omega_c=0.255, Omega_b=0.045, h=0.67, n_s=0.96, sigma8=0.81,
-                                      Omega_g=0, Omega_k=0,
-                                      transfer_function="boltzmann_camb",
-                                      matter_power_spectrum="halofit")
         cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
                           tk_mode="emulator", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
@@ -416,9 +396,6 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "Nuisances" begin
-        cosmo_bm = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu", 
-                                            matter_power_spectrum="halofit",
-                                            Omega_g=0, Omega_k=0)
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0.01, stop=2., length=1024))

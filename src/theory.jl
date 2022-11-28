@@ -12,7 +12,6 @@ function Theory(cosmology::Cosmology,
                 Nuisances=Dict())
 
     ntracers = length(tracers_names)
-    tracers = []
     
     nui_type =  eltype(valtype(Nuisances))
     if !(nui_type <: Float64) & (nui_type != Any)
