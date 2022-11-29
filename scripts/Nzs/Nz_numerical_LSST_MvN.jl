@@ -20,10 +20,16 @@ using Distributed
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_cov_marg_lsst_diag.npz")["cov_marg"]
+@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"])
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
+
+@everywhere nz_path = "../../data/DESY1/binned_40_nzs/"
+@everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESwl__0_e")
+@everywhere zs_k1, nz_k1, cov_k1 = get_nzs(nz_path, "DESwl__1_e")
+@everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, "DESwl__2_e")
+@everywhere zs_k3, nz_k3, cov_k3 = get_nzs(nz_path, "DESwl__3_e")
 
 @everywhere @model function model(data;
                                   tracers_names=tracers_names,
@@ -43,6 +49,17 @@ using Distributed
     
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
+    
+    DESwl__0_e_nz = MvNormal(nz_k0, cov_k0)
+    DESwl__1_e_nz = MvNormal(nz_k1, cov_k1)
+    DESwl__2_e_nz = MvNormal(nz_k2, cov_k2)
+    DESwl__3_e_nz = MvNormal(nz_k3, cov_k3)
+    
+    DESwl__0_e_nz .*= DESwl__0_e_nz > 0
+    DESwl__1_e_nz .*= DESwl__1_e_nz > 0
+    DESwl__2_e_nz .*= DESwl__2_e_nz > 0
+    DESwl__3_e_nz .*= DESwl__3_e_nz > 0
+
     DESwl__0_e_m ~ Normal(0.012, 0.023)
     DESwl__1_e_m ~ Normal(0.012, 0.023)
     DESwl__2_e_m ~ Normal(0.012, 0.023)
@@ -51,6 +68,12 @@ using Distributed
 
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
+
+                     "DESwl__0_e_nz" => DESwl__0_e_nz,
+                     "DESwl__1_e_nz" => DESwl__1_e_nz,
+                     "DESwl__2_e_nz" => DESwl__2_e_nz,
+                     "DESwl__3_e_nz" => DESwl__3_e_nz,
+        
                      "DESwl__0_e_m" => DESwl__0_e_m,
                      "DESwl__1_e_m" => DESwl__1_e_m,
                      "DESwl__2_e_m" => DESwl__2_e_m,
@@ -78,7 +101,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("Nzs40_LSST_analytical_", "TAP_", TAP)
+folname = string("Nzs40_LSST_numerical_MvN_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
