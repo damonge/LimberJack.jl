@@ -33,7 +33,7 @@ test_results = npzread("test_results.npz")
 
     @testset "BMGrowth" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                          nk=300, nz=300, nz_pk=50)
+                          nk=300, nz=300, nz_pk=70)
         ztest = [0.1, 0.5, 1.0, 3.0]
         Dz = growth_factor(cosmo, ztest)
         fz = growth_rate(cosmo, ztest)
@@ -48,11 +48,11 @@ test_results = npzread("test_results.npz")
     
     @testset "linear_Pk" begin
         cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                               nk=300, nz=300, nz_pk=50, tk_mode="BBKS")
+                               nk=300, nz=300, nz_pk=70, tk_mode="BBKS")
         cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                                nk=300, nz=300, nz_pk=50, tk_mode="EisHu")
+                                nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
         cosmo_emul = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81;
-                               nk=300, nz=300, nz_pk=50, tk_mode="emulator")
+                               nk=300, nz=300, nz_pk=70, tk_mode="emulator")
         
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
@@ -71,13 +71,13 @@ test_results = npzread("test_results.npz")
 
     @testset "nonlinear_Pk" begin
         cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                               nk=300, nz=300, nz_pk=50,
+                               nk=300, nz=300, nz_pk=70,
                                tk_mode="BBKS", Pk_mode="Halofit")
         cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                                nk=300, nz=300, nz_pk=50,
+                                nk=300, nz=300, nz_pk=70,
                                 tk_mode="EisHu", Pk_mode="Halofit")
         cosmo_emul = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                               nk=300, nz=300, nz_pk=50,
+                               nk=300, nz=300, nz_pk=70,
                                tk_mode="emulator", Pk_mode="Halofit")
 
         lks = LinRange(-3, 2, 20)
@@ -145,7 +145,7 @@ test_results = npzread("test_results.npz")
 
     @testset "emul_Cℓs" begin
         cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                          nk=300, nz=300, nz_pk=50, tk_mode="emulator")
+                          nk=300, nz=300, nz_pk=70, tk_mode="emulator")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
 
@@ -208,7 +208,7 @@ test_results = npzread("test_results.npz")
 
     @testset "emul_Halo_Cℓs" begin
         cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                          nk=300, nz=300, nz_pk=50,
+                          nk=300, nz=300, nz_pk=70,
                           tk_mode="emulator", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -403,7 +403,7 @@ test_results = npzread("test_results.npz")
 
     @testset "Nuisances" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          nk=300, nz=300, nz_pk=50,
+                          nk=300, nz=300, nz_pk=70,
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0.01, stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
