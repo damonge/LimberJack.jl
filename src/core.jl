@@ -49,6 +49,7 @@ mutable struct Settings
     nk::Int
     tk_mode::String
     Pk_mode::String
+    emul_path::String
     custom_Dz
 end
 
@@ -197,16 +198,16 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Load settings
     cosmo_type = settings.cosmo_type
     nk = settings.nk
-    nz_pk = settings.nz_pk
-    zs_pk = range(0., stop=3., length=nz_pk)
     nz = settings.nz
-    zs = range(0., stop=3., length=nz)
+    nz_pk = settings.nz_pk
+    zs_pk = LinRange(0., 3.0, nz_pk)
+    zs = LinRange(0., 3.0, nz)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     if settings.tk_mode == "emulator"
-        ks_emul, pk0_emul = get_emulated_log_pk0(cpar)
+        ks_emul, pk0_emul = get_emulated_log_pk0(cpar, settings)
         pki_emul = linear_interpolation(log.(ks_emul), log.(pk0_emul),
                                        extrapolation_bc=Line())
         pk0 = exp.(pki_emul(logk))
@@ -240,7 +241,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
 
     if settings.custom_Dz == nothing
         # ODE solution for growth factor
-        x_Dz = LinRange(0, log(1+1100), nz)
+        x_Dz = LinRange(0, log(1+1100), nz_pk)
         dx_Dz = x_Dz[2]-x_Dz[1]
         z_Dz = @.(exp(x_Dz) - 1)
         a_Dz = @.(1/(1+z_Dz))
@@ -248,12 +249,12 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         e = _Ez(cpar, z_Dz)
         ee = reverse(e)
         
-        dd = zeros(settings.cosmo_type, nz)
-        yy = zeros(settings.cosmo_type, nz)
+        dd = zeros(settings.cosmo_type, nz_pk)
+        yy = zeros(settings.cosmo_type, nz_pk)
         dd[1] = aa[1]
         yy[1] = aa[1]^3*ee[end]
         
-        for i in 1:(nz-1)
+        for i in 1:(nz_pk-1)
             A0 = -1.5 * cpar.Ωm / (aa[i]*ee[i])
             B0 = -1. / (aa[i]^2*ee[i])
             A1 = -1.5 * cpar.Ωm / (aa[i+1]*ee[i+1])
@@ -334,10 +335,13 @@ Returns:
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
           θCMB=2.725/2.7, nk=200, nz=200, nz_pk=100,
-          tk_mode="BBKS", Pk_mode="linear", custom_Dz=nothing) = begin
+          tk_mode="BBKS", Pk_mode="linear",
+          emul_path= "../emulator/files.npz",
+          custom_Dz=nothing) = begin
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    settings = Settings(cosmo_type, nz, nz_pk, nk, tk_mode, Pk_mode, custom_Dz)
+    settings = Settings(cosmo_type, nz, nz_pk, nk,
+                        tk_mode, Pk_mode, emul_path, custom_Dz)
     Cosmology(cpar, settings)
 end
 

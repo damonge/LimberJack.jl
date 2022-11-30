@@ -41,8 +41,8 @@ Returns:
 - `emulator::Structure` : emulator structure.
 
 """
-Emulator(; path="../emulator/files.npz") = begin
-    files = npzread(path)
+Emulator(settings) = begin
+    files = npzread(settings.emul_path)
     trans_cosmos = files["trans_cosmos"]
     training_karr = files["training_karr"]
     hypers = files["hypers"]
@@ -98,8 +98,8 @@ Returns:
 - `log_pk0s::Vector{Dual}` : array of emulated log matter power spectrum
 
 """
-function get_emulated_log_pk0(cosmo::CosmoPar)
-    emulator = Emulator()
+function get_emulated_log_pk0(cosmo::CosmoPar, settings)
+    emulator = Emulator(settings)
     cosmotype, params = reparametrize(cosmo) 
     params_t = _x_transformation(emulator, params')
     

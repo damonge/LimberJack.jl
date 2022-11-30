@@ -2,21 +2,23 @@ import numpy as np
 import sacc
 import yaml
 
-def get_type(name, mode="write"):
-    if ('DESwl' in name) or ('KiDS1000' in name):
-        return 'e'
-    elif "PLAcv" in name:
-        if mode=="write":
-            return 'k'
-        if mode=="read":
-            return "0"
-    else:
-        return '0'
+def get_type(sacc_file, tracer_name):
+    return sacc_file.tracers[tracer_name].quantity
 
-sacc_path = "FD/cls_FD_covG.fits"
-yaml_path = "DESY1/gcgc"
-nzs_path = "DESY1/binned_40_nzs/"
-fname = "DESY1/gcgc_Nzs_40"
+def get_spin(sacc_file, tracer_name):
+    tt = sacc_file.tracers[tracer_name].quantity
+    if tt == "galaxy_shear":
+        spin = 'e'
+    elif tt == "galaxy_density":
+        spin = "0"
+    elif tt == "cmb_convergence":
+        spin = "0"
+    return spin
+
+sacc_path = "LSST/cls_covG_lsst_clustering_carlos2.fits"
+yaml_path = "LSST/gcgc_carlos"
+nzs_path = None #"DESY1/binned_40_nzs/"
+fname = "LSST/gcgc_Nzs_40_carlos"
 
 s = sacc.Sacc().load_fits(sacc_path)
 with open(yaml_path+".yml") as f:
@@ -28,9 +30,9 @@ indices = []
 for cl in config['order']:
     t1, t2 = cl['tracers']
     lmin, lmax = cl['ell_cuts']
-    type1 = get_type(t1, mode="read")
-    type2 = get_type(t2, mode="read")
-    cl_name = 'cl_%s%s' % (type1, type2)
+    spin1 = get_spin(s, t1)
+    spin2 = get_spin(s, t2)
+    cl_name = 'cl_%s%s' % (spin1, spin2)
     if cl_name == 'cl_e0':
         cl_name = 'cl_0e'
     ind = s.indices(cl_name, (t1, t2),
@@ -44,9 +46,9 @@ indices = []
 pairs = []
 for cl in config['order']:
     t1, t2 = cl['tracers']
-    type1 = get_type(t1, mode="read")
-    type2 = get_type(t2, mode="read")
-    cl_name = 'cl_%s%s' % (type1, type2)
+    spin1 = get_spin(s, t1)
+    spin2 = get_spin(s, t2)
+    cl_name = 'cl_%s%s' % (spin1, spin2)
     if cl_name == 'cl_e0':
         cl_name = 'cl_0e'
     l, c_ell, ind = s.get_ell_cl(cl_name, t1, t2,
@@ -55,11 +57,9 @@ for cl in config['order']:
     indices += list(ind)
     cls += list(c_ell)
     ls.append(l)
-    type1 = get_type(t1, mode="write")
-    type2 = get_type(t2, mode="write")
-    pairs.append([t1+'_'+type1, t2+'_'+type2])
+    pairs.append([t1, t2])
 
-tracers = np.unique(pairs).flatten()
+names = np.unique(pairs).flatten()
 cov = s.covariance.dense[list(indices)][:, list(indices)]
 w, v = np.linalg.eigh(cov)
 cov = np.dot(v, np.dot(np.diag(np.fabs(w)), v.T))
@@ -70,24 +70,18 @@ lengths = np.array([len(l) for l in ls])
 lengths = np.concatenate([[0], lengths])
 idx  = np.cumsum(lengths)
 
-pairs_ids = []
-for pair in pairs:
-    t1, t2 = pair
-    id1 = list(tracers).index(t1)
-    id2 = list(tracers).index(t2)
-    ids = [id1+1, id2+1]
-    pairs_ids.append(ids)
+types = [get_type(s, name) for name in names]
 
+types = np.array(types)
 indices = np.array(indices)
 pairs = np.array(pairs)
-pairs_ids = np.array(pairs_ids)
 cls = np.array(cls)
 idx = np.array(idx)
 cov = np.array(cov)
 inv_cov = np.array(inv_cov)
 
-dict_save = {'tracers': tracers, 'pairs': pairs,
-             'pairs_ids': pairs_ids, 'cls': cls, 'idx': idx,
+dict_save = {'names': names, 'pairs': pairs,
+             'types': types, 'cls': cls, 'idx': idx,
              'cov': cov, 'inv_cov': inv_cov}
 
 np.savez(fname+"_meta.npz", **dict_save)
@@ -102,8 +96,7 @@ for pair, l in zip(pairs, ls):
     dict_save[f'ls_{t1}_{t2}'] = np.array(l)
 
 for name, tracer in s.tracers.items():
-    name = name+'_'+get_type(name, mode="write")
-    if name in tracers:
+    if name in names:
         if nzs_path is None:
             z=np.array(tracer.z)
             dndz=np.array(tracer.nz)
