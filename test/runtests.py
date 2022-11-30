@@ -11,7 +11,7 @@ cosmo_eishu = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
                                     Omega_g=0, Omega_k=0)
 cosmo_camb = ccl.Cosmology(Omega_c=0.255, Omega_b=0.045, h=0.67, n_s=0.96, sigma8=0.81,
                            Omega_g=0, Omega_k=0,
-                           transfer_function="boltzmann_camb",
+                           transfer_function="boltzmann_class",
                            matter_power_spectrum="linear")
 
 cosmo_bbks_nonlin = ccl.CosmologyVanillaLCDM(transfer_function="bbks",
@@ -22,7 +22,7 @@ cosmo_eishu_nonlin = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
                                               Omega_g=0, Omega_k=0)
 cosmo_camb_nonlin = ccl.Cosmology(Omega_c=0.255, Omega_b=0.045, h=0.67, n_s=0.96, sigma8=0.81,
                                   Omega_g=0, Omega_k=0,
-                                  transfer_function="boltzmann_camb",
+                                  transfer_function="boltzmann_class",
                                   matter_power_spectrum="halofit")
 # =====
 ztest = np.array([0.1, 0.5, 1.0, 3.0])
@@ -32,12 +32,13 @@ ztest = np.array([0.1, 0.5, 1.0, 3.0])
 test_results["Dz"] = ccl.growth_factor(cosmo_bbks, 1 / (1 + ztest))
 test_results["fz"] = ccl.growth_rate(cosmo_bbks, 1 / (1 + ztest))
 # =====
-ks = np.array([0.001, 0.01, 0.1, 1.0, 10.0])
+lks = np.linspace(-3, np.log(7.0), 40)
+ks = np.exp(lks)
 test_results["pk_BBKS"] = ccl.linear_matter_power(cosmo_bbks, ks, 1.)
 test_results["pk_EisHu"] = ccl.linear_matter_power(cosmo_eishu, ks, 1.)
 test_results["pk_emul"] = ccl.linear_matter_power(cosmo_camb, ks, 1.)
 # =====
-lks = np.linspace(-3, 2, 20)
+lks = np.linspace(-3, np.log(7.0), 40)
 ks = np.exp(lks)
 test_results["pk_BBKS_nonlin"] = ccl.nonlin_matter_power(cosmo_bbks_nonlin, ks, 1.)
 test_results["pk_EisHu_nonlin"] = ccl.nonlin_matter_power(cosmo_eishu_nonlin, ks, 1.)

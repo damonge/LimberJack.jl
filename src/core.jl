@@ -203,13 +203,13 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     zs_pk = LinRange(0., 3.0, nz_pk)
     zs = LinRange(0., 3.0, nz)
     # Compute linear power spectrum at z=0.
-    logk = range(log(0.0001), stop=log(100.0), length=nk)
+    logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     if settings.tk_mode == "emulator"
         ks_emul, pk0_emul = get_emulated_log_pk0(cpar, settings)
         pki_emul = linear_interpolation(log.(ks_emul), log.(pk0_emul),
-                                       extrapolation_bc=Line())
+                                        extrapolation_bc=Line())
         pk0 = exp.(pki_emul(logk))
     elseif settings.tk_mode == "EisHu"
         tk = TkEisHu(cpar, ks./ cpar.h)
@@ -225,7 +225,8 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     norm = cpar.σ8^2 / σ8_2_here
     pk0 *= norm
     # OPT: interpolation method
-    pki = linear_interpolation(logk, log.(pk0), extrapolation_bc=Line())
+    pki = linear_interpolation(logk, log.(pk0);
+                               extrapolation_bc=Line())
     # Compute redshift-distance relation
     norm = CLIGHT_HMPC / cpar.h
     chis_integrand = 1 ./ _Ez(cpar, zs)
@@ -288,13 +289,15 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     if settings.Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = linear_interpolation((logk, zs_pk), log.(Pks))
+        Pk = linear_interpolation((logk, zs_pk), log.(Pks);
+                                   extrapolation_bc=Line())
     elseif settings.Pk_mode == "Halofit"
         Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs, cosmo_type)
     else 
         Pks = [@. pk*Dzs^2 for pk in pk0]
         Pks = reduce(vcat, transpose.(Pks))
-        Pk = linear_interpolation((logk, zs_pk), log.(Pks))
+        Pk = linear_interpolation((logk, zs_pk), log.(Pks);
+                                   extrapolation_bc=Line())
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(settings, cpar, ks, pk0, logk, dlogk,
