@@ -8,12 +8,14 @@ test_results = npzread("test_results.npz")
 @testset "All tests" begin
     
     @testset "CreateCosmo" begin
-        cosmo = Cosmology()
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+                          nk=300, nz=300, nz_pk=50)
         @test cosmo.cosmo.Ωm == 0.3
     end
     
     @testset "BMHz" begin
-        cosmo = Cosmology()
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+                          nk=300, nz=300, nz_pk=50)
         c = 299792458.0
         ztest = [0.1, 0.5, 1.0, 3.0]
         H = cosmo.cosmo.h*100*Ez(cosmo, ztest)
@@ -30,7 +32,8 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "BMGrowth" begin
-        cosmo = Cosmology()
+        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+                          nk=300, nz=300, nz_pk=50)
         ztest = [0.1, 0.5, 1.0, 3.0]
         Dz = growth_factor(cosmo, ztest)
         fz = growth_rate(cosmo, ztest)
@@ -40,15 +43,16 @@ test_results = npzread("test_results.npz")
         fs8z_bm = 0.81 .* Dz_bm .* fz_bm
         @test all(@. (abs(Dz/Dz_bm-1.0) < 0.01))
         @test all(@. (abs(fz/fz_bm-1.0) < 0.01))
-        @test all(@. (abs(fs8z/fs8z_bm-1.0) < 0.01))
+        @test all(@. (abs(fs8z/fs8z_bm-1.0) < 0.005))
     end
     
     @testset "linear_Pk" begin
-        cosmo_BBKS = Cosmology()
-        cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                                nk=500, tk_mode="EisHu")
-        cosmo_emul = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                               nk=500, tk_mode="emulator")
+        cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+                               nk=300, nz=300, nz_pk=50, tk_mode="BBKS")
+        cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+                                nk=300, nz=300, nz_pk=50, tk_mode="EisHu")
+        cosmo_emul = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81;
+                               nk=300, nz=300, nz_pk=50, tk_mode="emulator")
         
         ks = [0.001, 0.01, 0.1, 1.0, 10.0]
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
@@ -61,20 +65,20 @@ test_results = npzread("test_results.npz")
         
         # It'd be best if this was < 1E-4...
         #@test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) <  0.05))
-        @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.05))
-        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.05))
+        @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.005))
+        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.005))
     end
 
     @testset "nonlinear_Pk" begin
         cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                               nk=512, tk_mode="BBKS", 
-                               Pk_mode="Halofit")
+                               nk=300, nz=300, nz_pk=50,
+                               tk_mode="BBKS", Pk_mode="Halofit")
         cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                                nk=512, tk_mode="EisHu", 
-                                Pk_mode="Halofit")
+                                nk=300, nz=300, nz_pk=50,
+                                tk_mode="EisHu", Pk_mode="Halofit")
         cosmo_emul = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                               nk=512, tk_mode="emulator", 
-                               Pk_mode="Halofit")
+                               nk=300, nz=300, nz_pk=50,
+                               tk_mode="emulator", Pk_mode="Halofit")
 
         lks = LinRange(-3, 2, 20)
         ks = exp.(lks)
@@ -86,9 +90,9 @@ test_results = npzread("test_results.npz")
         pk_EisHu_bm = test_results["pk_EisHu_nonlin"]
         pk_emul_bm = test_results["pk_emul_nonlin"]
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) < 0.05))
-        @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) < 1E-3))
-        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) < 0.1))
+        @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) < 0.005))
+        @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) < 0.005))
+        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) < 0.005))
     end
 
     @testset "CreateTracer" begin
@@ -109,7 +113,7 @@ test_results = npzread("test_results.npz")
 
     @testset "EisHu_Cℓs" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          nk=512, tk_mode="EisHu")
+                          nk=300, nz=300, nz_pk=50, tk_mode="EisHu")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
 
@@ -131,17 +135,17 @@ test_results = npzread("test_results.npz")
         Cℓ_gk_bm = test_results["cl_gk_eishu"]
         Cℓ_sk_bm = test_results["cl_sk_eishu"]
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
-        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
-        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.05))
-        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.005))
         # The ℓ=10 point is a bit inaccurate for some reason
-        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 3E-3))
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.005))
     end
 
     @testset "emul_Cℓs" begin
         cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                          nk=512, tk_mode="emulator")
+                          nk=300, nz=300, nz_pk=50, tk_mode="emulator")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
 
@@ -163,16 +167,17 @@ test_results = npzread("test_results.npz")
         Cℓ_gk_bm = test_results["cl_gk_camb"]
         Cℓ_sk_bm = test_results["cl_sk_camb"]
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.07))
-        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.07))
-        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.07))
-        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.10))
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.005))
         # The ℓ=10 point is a bit inaccurate for some reason
-        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.07))
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.005))
     end
 
     @testset "EisHu_Halo_Cℓs" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                          nk=300, nz=300, nz_pk=50,
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0.0, stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -194,15 +199,16 @@ test_results = npzread("test_results.npz")
         Cℓ_gk_bm = test_results["cl_gk_eishu_nonlin"]
         Cℓ_sk_bm = test_results["cl_sk_eishu_nonlin"]
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
-        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
-        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.05))
-        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.05))
-        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.005))
     end
 
     @testset "emul_Halo_Cℓs" begin
         cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
+                          nk=300, nz=300, nz_pk=50,
                           tk_mode="emulator", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -224,11 +230,11 @@ test_results = npzread("test_results.npz")
         Cℓ_gk_bm = test_results["cl_gk_camb_nonlin"]
         Cℓ_sk_bm = test_results["cl_sk_camb_nonlin"]
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.07))
-        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.07))
-        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.07))
-        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.07))
-        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.07))
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.005))
     end
 
     @testset "IsBaseDiff" begin
@@ -397,6 +403,7 @@ test_results = npzread("test_results.npz")
 
     @testset "Nuisances" begin
         cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                          nk=300, nz=300, nz_pk=50,
                           tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0.01, stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -413,9 +420,9 @@ test_results = npzread("test_results.npz")
         Cℓ_ss_IA_bm = test_results["cl_ss_IA"]
         
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg_b/Cℓ_gg_b_bm-1.0) < 5E-2))
-        @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 5E-2))
-        @test all(@. (abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0) < 1E-2))
+        @test all(@. (abs(Cℓ_gg_b/Cℓ_gg_b_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_ss_m/Cℓ_ss_m_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_ss_IA/Cℓ_ss_IA_bm-1.0) < 0.005))
     end
 
     @testset "AreNuisancesDiff" begin
