@@ -16,17 +16,19 @@ using Distributed
 @everywhere meta = np.load(string("../../data/", fol, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../../data/", fol, "/", data_set, "_files.npz"))
 
-@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
+@everywhere names = pyconvert(Vector{String}, meta["names"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
+@everywhere types = pyconvert(Vector{Int}, meta["types"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_cov_marg.npz")["cov_marg"]
+@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"])
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
 @everywhere @model function model(data;
-                                  tracers_names=tracers_names,
+                                  names=names,
+                                  types=types,
                                   pairs=pairs,
                                   idx=idx,
                                   cov=fake_cov, 
