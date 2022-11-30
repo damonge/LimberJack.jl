@@ -334,7 +334,7 @@ Returns:
 
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nk=200, nz=200, nz_pk=100,
+          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,
           tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           custom_Dz=nothing) = begin

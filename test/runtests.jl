@@ -41,8 +41,8 @@ test_results = npzread("test_results.npz")
         Dz_bm = test_results["Dz"]
         fz_bm = test_results["fz"]
         fs8z_bm = 0.81 .* Dz_bm .* fz_bm
-        @test all(@. (abs(Dz/Dz_bm-1.0) < 0.01))
-        @test all(@. (abs(fz/fz_bm-1.0) < 0.01))
+        @test all(@. (abs(Dz/Dz_bm-1.0) < 0.005))
+        @test all(@. (abs(fz/fz_bm-1.0) < 0.005))
         @test all(@. (abs(fs8z/fs8z_bm-1.0) < 0.005))
     end
     
