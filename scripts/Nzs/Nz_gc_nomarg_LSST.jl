@@ -48,10 +48,10 @@ using Distributed
     DESwl__2_b ~ Uniform(0.8, 3.0) # = 1.48
     DESwl__3_b ~ Uniform(0.8, 3.0) # = 1.64
 
-    nuisances = Dict("DESwl__0_b" => DESgc__0_b,
-                     "DESwl__1_b" => DESgc__1_b,
-                     "DESwl__2_b" => DESgc__2_b,
-                     "DESwl__3_b" => DESgc__3_b)
+    nuisances = Dict("DESwl__0_b" => DESwl__0_b,
+                     "DESwl__1_b" => DESwl__1_b,
+                     "DESwl__2_b" => DESwl__2_b,
+                     "DESwl__3_b" => DESwl__3_b)
     
     theory = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)

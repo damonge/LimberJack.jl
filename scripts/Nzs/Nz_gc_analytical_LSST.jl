@@ -21,7 +21,7 @@ using Distributed
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere types = pyconvert(Vector{String}, meta["types"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = npzread("../../data/LSST/binned_40_nzs/gcgc_cov_marg.npz")["cov_marg"]
+@everywhere cov_tot = npzread("../../data/DESY1/binned_40_nzs/gcgc_cov_marg_lsst.npz")["cov_marg"]
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
