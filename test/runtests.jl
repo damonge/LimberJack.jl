@@ -54,8 +54,8 @@ test_results = npzread("test_results.npz")
         cosmo_emul = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81;
                                nk=300, nz=300, nz_pk=70, tk_mode="emulator")
         
-        lks = LinRange(-3, np.log(7.0), 40)
-        ks = exp(lks)
+        lks = LinRange(-3, log(7.0), 40)
+        ks = exp.(lks)
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
         pk_emul = nonlin_Pk(cosmo_emul, ks, 0.0)
@@ -126,7 +126,7 @@ test_results = npzread("test_results.npz")
                                mb=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo)
-        ℓs = [10.0, 30.0, 100.0, 300.0]
+        ℓs = [10.0, 30.0, 100.0, 300.0, 1000.0]
         Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
         Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)

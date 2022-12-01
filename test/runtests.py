@@ -46,7 +46,7 @@ test_results["pk_emul_nonlin"] = ccl.nonlin_matter_power(cosmo_camb_nonlin, ks, 
 # =====
 z = np.linspace(0., 2., num=256)
 nz = np.exp(-0.5*((z-0.5)/0.05)**2)
-ℓs = np.array([10.0, 30.0, 100.0, 300.0])
+ℓs = np.array([10.0, 30.0, 100.0, 300.0, 1000.0])
 tg = ccl.NumberCountsTracer(cosmo_eishu, False, dndz=(z, nz), bias=(z, 1 * np.ones_like(z)))
 ts = ccl.WeakLensingTracer(cosmo_eishu, dndz=(z, nz))
 tk = ccl.CMBLensingTracer(cosmo_eishu, z_source=1100)
