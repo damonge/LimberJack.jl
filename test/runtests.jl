@@ -4,67 +4,74 @@ using ForwardDiff
 using NPZ
 
 test_results = npzread("test_results.npz")
+test_output = Dict{String}{Vector}()
+
+cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+                       nk=300, nz=300, nz_pk=70)
+cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+                        nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
+cosmo_emul = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+                       nk=300, nz=300, nz_pk=70, tk_mode="emulator")
+cosmo_BBKS_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                               nk=300, nz=300, nz_pk=70,
+                               Pk_mode="Halofit")
+cosmo_EisHu_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                               nk=300, nz=300, nz_pk=70,
+                               tk_mode="EisHu", Pk_mode="Halofit")
+cosmo_emul_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+                              nk=300, nz=300, nz_pk=70,
+                              tk_mode="emulator", Pk_mode="Halofit")
 
 @testset "All tests" begin
     
     @testset "CreateCosmo" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                          nk=300, nz=300, nz_pk=50)
-        @test cosmo.cosmo.Ωm == 0.3
+        @test cosmo_BBKS.cosmo.Ωm == 0.3
     end
     
     @testset "BMHz" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                          nk=300, nz=300, nz_pk=50)
         c = 299792458.0
         ztest = [0.1, 0.5, 1.0, 3.0]
-        H = cosmo.cosmo.h*100*Ez(cosmo, ztest)
+        H = cosmo_BBKS.cosmo.h*100*Ez(cosmo_BBKS, ztest)
         H_bm = @. 67*sqrt(0.3 * (1+ztest)^3 + (1-0.3-0.69991) * (1+ztest)^4 + 0.69991)
         @test all(@. (abs(H/H_bm-1.0) < 0.0005))
     end
 
     @testset "BMChi" begin
-        cosmo = Cosmology()
         ztest = [0.1, 0.5, 1.0, 3.0]
-        chi = comoving_radial_distance(cosmo, ztest)
+        chi = comoving_radial_distance(cosmo_BBKS, ztest)
         chi_bm = test_results["Chi"]
+        merge!(test_output, Dict("Chi"=> chi))
         @test all(@. (abs(chi/chi_bm-1.0) < 0.0005))
     end
 
     @testset "BMGrowth" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                          nk=300, nz=300, nz_pk=70)
         ztest = [0.1, 0.5, 1.0, 3.0]
-        Dz = growth_factor(cosmo, ztest)
-        fz = growth_rate(cosmo, ztest)
-        fs8z = fs8(cosmo, ztest)
+        Dz = growth_factor(cosmo_BBKS, ztest)
+        fz = growth_rate(cosmo_BBKS, ztest)
+        fs8z = fs8(cosmo_BBKS, ztest)
         Dz_bm = test_results["Dz"]
         fz_bm = test_results["fz"]
         fs8z_bm = 0.81 .* Dz_bm .* fz_bm
+        merge!(test_output, Dict("Dz"=> Dz))
+        merge!(test_output, Dict("fz"=> fz))
+        merge!(test_output, Dict("fs8z"=> fs8z))
         @test all(@. (abs(Dz/Dz_bm-1.0) < 0.005))
         @test all(@. (abs(fz/fz_bm-1.0) < 0.005))
         @test all(@. (abs(fs8z/fs8z_bm-1.0) < 0.005))
     end
     
     @testset "linear_Pk" begin
-        cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                               nk=300, nz=300, nz_pk=70, tk_mode="BBKS")
-        cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                                nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
-        cosmo_emul = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81;
-                               nk=300, nz=300, nz_pk=70, tk_mode="emulator")
-        
         lks = LinRange(-3, log(7.0), 40)
         ks = exp.(lks)
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
         pk_emul = nonlin_Pk(cosmo_emul, ks, 0.0)
-        
         pk_BBKS_bm = test_results["pk_BBKS"]
         pk_EisHu_bm = test_results["pk_EisHu"]
         pk_emul_bm = test_results["pk_emul"]
-        
-        # It'd be best if this was < 1E-4...
+        merge!(test_output, Dict("pk_BBKS"=> pk_BBKS))
+        merge!(test_output, Dict("pk_EisHu"=> pk_EisHu))
+        merge!(test_output, Dict("pk_emul"=> pk_emul))
         #This is problematic
         @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) <  0.1))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.005))
@@ -73,25 +80,17 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "nonlinear_Pk" begin
-        cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                               nk=300, nz=300, nz_pk=70,
-                               tk_mode="BBKS", Pk_mode="Halofit")
-        cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                                nk=300, nz=300, nz_pk=70,
-                                tk_mode="EisHu", Pk_mode="Halofit")
-        cosmo_emul = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                               nk=300, nz=300, nz_pk=70,
-                               tk_mode="emulator", Pk_mode="Halofit")
-
         lks = LinRange(-3, log(7.), 40)
         ks = exp.(lks)
-        pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
-        pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0)
-        pk_emul = nonlin_Pk(cosmo_emul, ks, 0)
-        
+        pk_BBKS = nonlin_Pk(cosmo_BBKS_nonlin, ks, 0.0)
+        pk_EisHu = nonlin_Pk(cosmo_EisHu_nonlin, ks, 0)
+        pk_emul = nonlin_Pk(cosmo_emul_nonlin, ks, 0)
         pk_BBKS_bm = test_results["pk_BBKS_nonlin"]
         pk_EisHu_bm = test_results["pk_EisHu_nonlin"]
         pk_emul_bm = test_results["pk_emul_nonlin"]
+        merge!(test_output, Dict("pk_BBKS_nonlin"=> pk_BBKS))
+        merge!(test_output, Dict("pk_EisHu_nonlin"=> pk_EisHu))
+        merge!(test_output, Dict("pk_emul_nonlin"=> pk_emul))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) < 0.005))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) < 0.005))
@@ -101,43 +100,40 @@ test_results = npzread("test_results.npz")
 
     @testset "CreateTracer" begin
         p_of_z(x) = @. exp(-0.5*((x-0.5)/0.05)^2)
-
         z = Vector(range(0., stop=2., length=200))
         nz = Vector(p_of_z(z))
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          nz=512)
-        t = NumberCountsTracer(cosmo, z, nz, b=1.0)
-
-        wz1 = t.wint(cosmo.chi(0.5))
-        hz = Hmpc(cosmo, 0.5)
+        t = NumberCountsTracer(cosmo_BBKS, z, nz, b=1.0)
+        wz1 = t.wint(cosmo_BBKS.chi(0.5))
+        hz = Hmpc(cosmo_BBKS, 0.5)
         wz2 = p_of_z(0.5)*hz/(sqrt(2π)*0.05)
-
         @test abs(wz2/wz1 - 1) < 0.005
     end
 
     @testset "EisHu_Cℓs" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          nk=300, nz=300, nz_pk=50, tk_mode="EisHu")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-
-        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
-        ts = WeakLensingTracer(cosmo, z, nz;
+        tg = NumberCountsTracer(cosmo_EisHu, z, nz; b=1.0)
+        ts = WeakLensingTracer(cosmo_EisHu, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo)
+        tk = CMBLensingTracer(cosmo_EisHu)
         ℓs = [10.0, 30.0, 100.0, 300.0, 1000.0]
-        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
-        Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
-        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
-        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs)
-        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
-
+        Cℓ_gg = angularCℓs(cosmo_EisHu, tg, tg, ℓs)
+        Cℓ_gs = angularCℓs(cosmo_EisHu, tg, ts, ℓs)
+        Cℓ_ss = angularCℓs(cosmo_EisHu, ts, ts, ℓs)
+        Cℓ_gk = angularCℓs(cosmo_EisHu, tg, tk, ℓs)
+        Cℓ_sk = angularCℓs(cosmo_EisHu, ts, tk, ℓs)
         Cℓ_gg_bm = test_results["cl_gg_eishu"]
         Cℓ_gs_bm = test_results["cl_gs_eishu"]
         Cℓ_ss_bm = test_results["cl_ss_eishu"]
         Cℓ_gk_bm = test_results["cl_gk_eishu"]
         Cℓ_sk_bm = test_results["cl_sk_eishu"]
+        merge!(test_output, Dict("cl_gg_eishu"=> Cℓ_gg))
+        merge!(test_output, Dict("cl_gs_eishu"=> Cℓ_gs))
+        merge!(test_output, Dict("cl_ss_eishu"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gk_eishu"=> Cℓ_sk))
+        merge!(test_output, Dict("cl_sk_eishu"=> Cℓ_ss))
+        
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.005))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.005))
@@ -148,28 +144,29 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "emul_Cℓs" begin
-        cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                          nk=300, nz=300, nz_pk=70, tk_mode="emulator")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-
-        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
-        ts = WeakLensingTracer(cosmo, z, nz;
+        tg = NumberCountsTracer(cosmo_emul, z, nz; b=1.0)
+        ts = WeakLensingTracer(cosmo_emul, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo)
+        tk = CMBLensingTracer(cosmo_emul)
         ℓs = [10.0, 30.0, 100.0, 300.0]
-        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
-        Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs)
-        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs) 
-        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs) 
-        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs) 
-
+        Cℓ_gg = angularCℓs(cosmo_emul, tg, tg, ℓs) 
+        Cℓ_gs = angularCℓs(cosmo_emul, tg, ts, ℓs)
+        Cℓ_ss = angularCℓs(cosmo_emul, ts, ts, ℓs) 
+        Cℓ_gk = angularCℓs(cosmo_emul, tg, tk, ℓs) 
+        Cℓ_sk = angularCℓs(cosmo_emul, ts, tk, ℓs) 
         Cℓ_gg_bm = test_results["cl_gg_camb"]
         Cℓ_gs_bm = test_results["cl_gs_camb"]
         Cℓ_ss_bm = test_results["cl_ss_camb"]
         Cℓ_gk_bm = test_results["cl_gk_camb"]
         Cℓ_sk_bm = test_results["cl_sk_camb"]
+        merge!(test_output, Dict("cl_gg_camb"=> Cℓ_gg))
+        merge!(test_output, Dict("cl_gs_camb"=> Cℓ_gs))
+        merge!(test_output, Dict("cl_ss_camb"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gk_camb"=> Cℓ_gk))
+        merge!(test_output, Dict("cl_sk_camb"=> Cℓ_sk))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.1))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.1))
@@ -180,28 +177,31 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "EisHu_Halo_Cℓs" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          nk=300, nz=300, nz_pk=50,
-                          tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0.0, stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
-        ts = WeakLensingTracer(cosmo, z, nz;
+        tg = NumberCountsTracer(cosmo_EisHu_nonlin, z, nz; b=1.0)
+        ts = WeakLensingTracer(cosmo_EisHu_nonlin, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo)
-        ℓs = [10.0, 30.0, 100.0, 300.0]
-        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
-        Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
-        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs) 
-        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs) 
-        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
+        tk = CMBLensingTracer(cosmo_EisHu_nonlin)
+        ℓs = [10.0, 30.0, 100.0, 300.0, 1000.0]
+        Cℓ_gg = angularCℓs(cosmo_EisHu_nonlin, tg, tg, ℓs)
+        Cℓ_gs = angularCℓs(cosmo_EisHu_nonlin, tg, ts, ℓs) 
+        Cℓ_ss = angularCℓs(cosmo_EisHu_nonlin, ts, ts, ℓs) 
+        Cℓ_gk = angularCℓs(cosmo_EisHu_nonlin, tg, tk, ℓs) 
+        Cℓ_sk = angularCℓs(cosmo_EisHu_nonlin, ts, tk, ℓs)
         
         Cℓ_gg_bm = test_results["cl_gg_eishu_nonlin"]
         Cℓ_gs_bm = test_results["cl_gs_eishu_nonlin"]
         Cℓ_ss_bm = test_results["cl_ss_eishu_nonlin"]
         Cℓ_gk_bm = test_results["cl_gk_eishu_nonlin"]
         Cℓ_sk_bm = test_results["cl_sk_eishu_nonlin"]
+        merge!(test_output, Dict("cl_gg_eishu_nonlin"=> Cℓ_gg))
+        merge!(test_output, Dict("cl_gs_eishu_nonlin"=> Cℓ_gs))
+        merge!(test_output, Dict("cl_ss_eishu_nonlin"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gk_eishu_nonlin"=> Cℓ_sk))
+        merge!(test_output, Dict("cl_sk_eishu_nonlin"=> Cℓ_ss))
+        
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.005))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.005))
@@ -211,28 +211,29 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "emul_Halo_Cℓs" begin
-        cosmo = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81,
-                          nk=300, nz=300, nz_pk=70,
-                          tk_mode="emulator", Pk_mode="Halofit")
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
-        ts = WeakLensingTracer(cosmo, z, nz;
+        tg = NumberCountsTracer(cosmo_emul_nonlin, z, nz; b=1.0)
+        ts = WeakLensingTracer(cosmo_emul_nonlin, z, nz;
                                mb=0.0,
                                IA_params=[0.0, 0.0])
-        tk = CMBLensingTracer(cosmo)
+        tk = CMBLensingTracer(cosmo_emul_nonlin)
         ℓs = [10.0, 30.0, 100.0, 300.0]
-        Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs)
-        Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
-        Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs) 
-        Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs) 
-        Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
-        
+        Cℓ_gg = angularCℓs(cosmo_emul_nonlin, tg, tg, ℓs)
+        Cℓ_gs = angularCℓs(cosmo_emul_nonlin, tg, ts, ℓs) 
+        Cℓ_ss = angularCℓs(cosmo_emul_nonlin, ts, ts, ℓs) 
+        Cℓ_gk = angularCℓs(cosmo_emul_nonlin, tg, tk, ℓs) 
+        Cℓ_sk = angularCℓs(cosmo_emul_nonlin, ts, tk, ℓs)
         Cℓ_gg_bm = test_results["cl_gg_camb_nonlin"]
         Cℓ_gs_bm = test_results["cl_gs_camb_nonlin"]
         Cℓ_ss_bm = test_results["cl_ss_camb_nonlin"]
         Cℓ_gk_bm = test_results["cl_gk_camb_nonlin"]
         Cℓ_sk_bm = test_results["cl_sk_camb_nonlin"]
+        merge!(test_output, Dict("cl_gg_emul_nonlin"=> Cℓ_gg))
+        merge!(test_output, Dict("cl_gs_emul_nonlin"=> Cℓ_gs))
+        merge!(test_output, Dict("cl_ss_emul_nonlin"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gk_emul_nonlin"=> Cℓ_sk))
+        merge!(test_output, Dict("cl_sk_emul_nonlin"=> Cℓ_ss))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.1))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.1))
@@ -406,23 +407,21 @@ test_results = npzread("test_results.npz")
     end
 
     @testset "Nuisances" begin
-        cosmo = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                          nk=300, nz=300, nz_pk=70,
-                          tk_mode="EisHu", Pk_mode="Halofit")
         z = Vector(range(0.01, stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        tg_b = NumberCountsTracer(cosmo, z, nz; b=2.0)
-        ts_m = WeakLensingTracer(cosmo, z, nz; mb=1.0, IA_params=[0.0, 0.0])
-        ts_IA = WeakLensingTracer(cosmo, z, nz; mb=0.0, IA_params=[0.1, 0.1])
+        tg_b = NumberCountsTracer(cosmo_EisHu_nonlin, z, nz; b=2.0)
+        ts_m = WeakLensingTracer(cosmo_EisHu_nonlin, z, nz; mb=1.0, IA_params=[0.0, 0.0])
+        ts_IA = WeakLensingTracer(cosmo_EisHu_nonlin, z, nz; mb=0.0, IA_params=[0.1, 0.1])
         ℓs = [10.0, 30.0, 100.0, 300.0]
-        Cℓ_gg_b = angularCℓs(cosmo, tg_b, tg_b, ℓs)
-        Cℓ_ss_m = angularCℓs(cosmo, ts_m, ts_m, ℓs)
-        Cℓ_ss_IA = angularCℓs(cosmo, ts_IA, ts_IA, ℓs)
-
+        Cℓ_gg_b = angularCℓs(cosmo_EisHu_nonlin, tg_b, tg_b, ℓs)
+        Cℓ_ss_m = angularCℓs(cosmo_EisHu_nonlin, ts_m, ts_m, ℓs)
+        Cℓ_ss_IA = angularCℓs(cosmo_EisHu_nonlin, ts_IA, ts_IA, ℓs)
         Cℓ_gg_b_bm = test_results["cl_gg_b"]
         Cℓ_ss_m_bm = test_results["cl_ss_m"]
         Cℓ_ss_IA_bm = test_results["cl_ss_IA"]
-        
+        merge!(test_output, Dict("cl_gg_b"=> Cℓ_gg_b))
+        merge!(test_output, Dict("cl_ss_m"=> Cℓ_ss_m))
+        merge!(test_output, Dict("cl_ss_IA"=> Cℓ_ss_IA))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg_b/Cℓ_gg_b_bm-1.0) < 0.05))
         # This is problematic
@@ -511,4 +510,5 @@ test_results = npzread("test_results.npz")
         @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 1E-2))
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 1E-2))
     end
+    npzwrite("test_output.npz", test_output)
 end
