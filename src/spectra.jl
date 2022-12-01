@@ -53,7 +53,7 @@ Returns:
 """
 function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
     # OPT: we are not optimizing the limits of integration
-    Cℓs = [trapz(cosmo.logk, Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5)) for ℓ in ℓs]
+    Cℓs = [integrate(cosmo.logk, Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5), SimpsonEven()) for ℓ in ℓs]
     return _get_Fℓ(t1, ℓs) .* _get_Fℓ(t2, ℓs) .* Cℓs
 end
 

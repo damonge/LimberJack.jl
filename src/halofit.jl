@@ -20,7 +20,7 @@ function _get_σ2(lks, ks, pks, R, kind)
     end
     integrand = @. k3 * pre * exp(-x2) * pks
     #integral = sum(@.(0.5*(integrand[2:nlks]+integrand[1:nlks-1])*(lks[2:nlks]-lks[1:nlks-1])))/(2*pi^2)
-    integral = trapz(lks, integrand)/(2*pi^2)
+    integral = integrate(lks, integrand, SimpsonEven())/(2*pi^2)
     return integral
 end
 

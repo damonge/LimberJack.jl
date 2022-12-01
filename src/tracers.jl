@@ -45,7 +45,7 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     nz_int = linear_interpolation(z_n, nz, extrapolation_bc=0)
     z_w = range(0.00001, stop=z_n[end], length=cosmo.settings.nz)
     nz_w = nz_int(z_w)
-    nz_norm = trapz(z_w, nz_w)
+    nz_norm = integrate(z_w, nz_w, SimpsonEven())
     
     chi = cosmo.chi(z_w)
     hz = Hmpc(cosmo, z_w)
@@ -109,7 +109,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     chi = cosmo.chi(z_w)
     
     #nz_norm = sum(0.5 .* (nz_w[1:res-1] .+ nz_w[2:res]) .* dz_w)
-    nz_norm = trapz(z_w, nz_w)
+    nz_norm = integrate(z_w, nz_w, SimpsonEven())
 
     # Calculate chis at which to precalculate the lensing kernel
     # OPT: perhaps we don't need to sample the lensing kernel
