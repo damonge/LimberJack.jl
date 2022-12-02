@@ -16,7 +16,8 @@ using Distributed
 @everywhere meta = np.load(string("../../data/", fol, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../../data/", fol, "/", data_set, "_files.npz"))
 
-@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
+@everywhere names = pyconvert(Vector{String}, meta["names"])
+@everywhere types = pyconvert(Vector{String}, meta["types"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
@@ -26,13 +27,14 @@ using Distributed
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
 @everywhere nz_path = "../../data/DESY1/binned_40_nzs/"
-@everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESwl__0_e")
-@everywhere zs_k1, nz_k1, cov_k1 = get_nzs(nz_path, "DESwl__1_e")
-@everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, "DESwl__2_e")
-@everywhere zs_k3, nz_k3, cov_k3 = get_nzs(nz_path, "DESwl__3_e")
+@everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESwl__0")
+@everywhere zs_k1, nz_k1, cov_k1 = get_nzs(nz_path, "DESwl__1")
+@everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, "DESwl__2")
+@everywhere zs_k3, nz_k3, cov_k3 = get_nzs(nz_path, "DESwl__3")
 
 @everywhere @model function model(data;
-                                  tracers_names=tracers_names,
+                                  names=names,
+                                  types=types,
                                   pairs=pairs,
                                   idx=idx,
                                   cov=fake_cov, 
@@ -51,37 +53,42 @@ using Distributed
     alpha_IA ~ Uniform(-5, 5)
     
     n = length(nz_k0)
-    DESwl__0_e_nz = zeros(cosmology.settings.cosmo_type, n)
-    DESwl__1_e_nz = zeros(cosmology.settings.cosmo_type, n)
-    DESwl__2_e_nz = zeros(cosmology.settings.cosmo_type, n)
-    DESwl__3_e_nz = zeros(cosmology.settings.cosmo_type, n)
+    DESwl__0_nz = zeros(cosmology.settings.cosmo_type, n)
+    DESwl__1_nz = zeros(cosmology.settings.cosmo_type, n)
+    DESwl__2_nz = zeros(cosmology.settings.cosmo_type, n)
+    DESwl__3_nz = zeros(cosmology.settings.cosmo_type, n)
     for i in 1:n
-        DESwl__0_e_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt.(diag(cov_k0))[i], 0.0, 0.2) 
-        DESwl__1_e_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt.(diag(cov_k1))[i], 0.0, 0.2) 
-        DESwl__2_e_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt.(diag(cov_k2))[i], 0.0, 0.2) 
-        DESwl__3_e_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], 0.0, 0.2) 
+        DESwl__0_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt.(diag(cov_k0))[i], -1.0, 1.0) 
+        DESwl__1_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt.(diag(cov_k1))[i], -1.0, 1.0) 
+        DESwl__2_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt.(diag(cov_k2))[i], -1.0, 1.0) 
+        DESwl__3_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], -1.0, 1.0) 
     end
+    
+    DESwl__0_nz .*= DESwl__0_nz .> 0
+    DESwl__1_nz .*= DESwl__1_nz .> 0
+    DESwl__2_nz .*= DESwl__2_nz .> 0
+    DESwl__3_nz .*= DESwl__3_nz .> 0
 
-    DESwl__0_e_m ~ Normal(0.012, 0.023)
-    DESwl__1_e_m ~ Normal(0.012, 0.023)
-    DESwl__2_e_m ~ Normal(0.012, 0.023)
-    DESwl__3_e_m ~ Normal(0.012, 0.023)
+    DESwl__0_m ~ Normal(0.012, 0.023)
+    DESwl__1_m ~ Normal(0.012, 0.023)
+    DESwl__2_m ~ Normal(0.012, 0.023)
+    DESwl__3_m ~ Normal(0.012, 0.023)
 
 
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
 
-                     "DESwl__0_e_nz" => DESwl__0_e_nz,
-                     "DESwl__1_e_nz" => DESwl__1_e_nz,
-                     "DESwl__2_e_nz" => DESwl__2_e_nz,
-                     "DESwl__3_e_nz" => DESwl__3_e_nz,
+                     "DESwl__0_nz" => DESwl__0_nz,
+                     "DESwl__1_nz" => DESwl__1_nz,
+                     "DESwl__2_nz" => DESwl__2_nz,
+                     "DESwl__3_nz" => DESwl__3_nz,
         
-                     "DESwl__0_e_m" => DESwl__0_e_m,
-                     "DESwl__1_e_m" => DESwl__1_e_m,
-                     "DESwl__2_e_m" => DESwl__2_e_m,
-                     "DESwl__3_e_m" => DESwl__3_e_m)
+                     "DESwl__0_m" => DESwl__0_m,
+                     "DESwl__1_m" => DESwl__1_m,
+                     "DESwl__2_m" => DESwl__2_m,
+                     "DESwl__3_m" => DESwl__3_m)
     
-    theory = Theory(cosmology, tracers_names, pairs,
+    theory = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)
     data ~ MvNormal(theory ./ errs, cov)
 end;
@@ -103,7 +110,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("Nzs40_LSST_numerical_2_", "TAP_", TAP)
+folname = string("Nzs40_LSST_numerical_4_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
