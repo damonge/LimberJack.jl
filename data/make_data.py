@@ -15,10 +15,17 @@ def get_spin(sacc_file, tracer_name):
         spin = "0"
     return spin
 
+<<<<<<< HEAD
 sacc_path = "LSST/cls_covG_lsst.fits"
 yaml_path = "DESY1/wlwl"
 nzs_path = "DESY1/binned_40_nzs/"
 fname = "LSST/wlwl_Nzs_40"
+=======
+sacc_path = "FD/cls_FD_covG.fits"
+yaml_path = "DESY1/wlwl"
+nzs_path = "DESY1/binned_40_nzs/"
+fname = "DESY1/wlwl_Nzs_40"
+>>>>>>> 0f62492f28dc0fb4783ca8f5fd8ba65610525816
 
 s = sacc.Sacc().load_fits(sacc_path)
 with open(yaml_path+".yml") as f:
