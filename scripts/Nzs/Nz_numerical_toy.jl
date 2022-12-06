@@ -95,7 +95,7 @@ end;
 
 cycles = 6
 steps = 50
-iterations = 250
+iterations = 100
 TAP = 0.60
 adaptation = 100
 init_ϵ = 0.05

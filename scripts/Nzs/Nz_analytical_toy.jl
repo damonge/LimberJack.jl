@@ -16,7 +16,8 @@ using Distributed
 @everywhere meta = np.load(string("../../data/", fol, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../../data/", fol, "/", data_set, "_files.npz"))
 
-@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
+@everywhere names = pyconvert(Vector{String}, meta["names"])
+@everywhere types = pyconvert(Vector{String}, meta["types"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
@@ -26,7 +27,8 @@ using Distributed
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
 @everywhere @model function model(data;
-                                  tracers_names=tracers_names,
+                                  names=names,
+                                  types=types,
                                   pairs=pairs,
                                   idx=idx,
                                   cov=fake_cov, 
@@ -63,7 +65,7 @@ end;
 
 cycles = 6
 steps = 50
-iterations = 250
+iterations = 100
 TAP = 0.60
 adaptation = 100
 init_ϵ = 0.05
