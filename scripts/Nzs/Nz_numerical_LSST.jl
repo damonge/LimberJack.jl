@@ -41,52 +41,52 @@ using Distributed
                                   files=files) 
     Ωm ~ Uniform(0.2, 0.6)
     s8 ~ Uniform(0.6, 0.9)
-    Ωb ~ Uniform(0.03, 0.07)
-    h ~ Uniform(0.55, 0.91)
-    ns ~ Uniform(0.87, 1.07)
+    Ωb = 0.05 #~ Uniform(0.03, 0.07)
+    h = 0.67 #~ Uniform(0.55, 0.91)
+    ns = 0.96 #~ Uniform(0.87, 1.07)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
+    #A_IA ~ Uniform(-5, 5) 
+    #alpha_IA ~ Uniform(-5, 5)
     
     n = length(nz_k0)
     DESwl__0_nz = zeros(cosmology.settings.cosmo_type, n)
-    DESwl__1_nz = zeros(cosmology.settings.cosmo_type, n)
-    DESwl__2_nz = zeros(cosmology.settings.cosmo_type, n)
-    DESwl__3_nz = zeros(cosmology.settings.cosmo_type, n)
+    #DESwl__1_nz = zeros(cosmology.settings.cosmo_type, n)
+    #DESwl__2_nz = zeros(cosmology.settings.cosmo_type, n)
+    #DESwl__3_nz = zeros(cosmology.settings.cosmo_type, n)
     for i in 1:n
-        DESwl__0_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt.(diag(cov_k0))[i], -1.0, 1.0) 
-        DESwl__1_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt.(diag(cov_k1))[i], -1.0, 1.0) 
-        DESwl__2_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt.(diag(cov_k2))[i], -1.0, 1.0) 
-        DESwl__3_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], -1.0, 1.0) 
+        DESwl__0_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt.(diag(cov_k0))[i], -0.1, 0.3) 
+        #DESwl__1_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt.(diag(cov_k1))[i], -0.1, 0.3) 
+        #DESwl__2_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt.(diag(cov_k2))[i], -0.1, 0.3) 
+        #DESwl__3_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], -0.1, 0.3) 
     end
     
     DESwl__0_nz .*= DESwl__0_nz .> 0
-    DESwl__1_nz .*= DESwl__1_nz .> 0
-    DESwl__2_nz .*= DESwl__2_nz .> 0
-    DESwl__3_nz .*= DESwl__3_nz .> 0
+    #DESwl__1_nz .*= DESwl__1_nz .> 0
+    #DESwl__2_nz .*= DESwl__2_nz .> 0
+    #DESwl__3_nz .*= DESwl__3_nz .> 0
 
-    DESwl__0_m ~ Normal(0.012, 0.023)
-    DESwl__1_m ~ Normal(0.012, 0.023)
-    DESwl__2_m ~ Normal(0.012, 0.023)
-    DESwl__3_m ~ Normal(0.012, 0.023)
+    #DESwl__0_m ~ Normal(0.012, 0.023)
+    #DESwl__1_m ~ Normal(0.012, 0.023)
+    #DESwl__2_m ~ Normal(0.012, 0.023)
+    #DESwl__3_m ~ Normal(0.012, 0.023)
 
 
-    nuisances = Dict("A_IA" => A_IA,
-                     "alpha_IA" => alpha_IA,
+    nuisances = Dict(#"A_IA" => A_IA,
+                     #"alpha_IA" => alpha_IA,
 
                      "DESwl__0_nz" => DESwl__0_nz,
-                     "DESwl__1_nz" => DESwl__1_nz,
-                     "DESwl__2_nz" => DESwl__2_nz,
-                     "DESwl__3_nz" => DESwl__3_nz,
+                     #"DESwl__1_nz" => DESwl__1_nz,
+                     #"DESwl__2_nz" => DESwl__2_nz,
+                     #"DESwl__3_nz" => DESwl__3_nz,
         
-                     "DESwl__0_m" => DESwl__0_m,
-                     "DESwl__1_m" => DESwl__1_m,
-                     "DESwl__2_m" => DESwl__2_m,
-                     "DESwl__3_m" => DESwl__3_m)
+                     #"DESwl__0_m" => DESwl__0_m,
+                     #"DESwl__1_m" => DESwl__1_m,
+                     #"DESwl__2_m" => DESwl__2_m,
+                     #"DESwl__3_m" => DESwl__3_m)
     
     theory = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)
@@ -110,7 +110,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("Nzs40_LSST_numerical_4_", "TAP_", TAP)
+folname = string("Nzs40_LSST_numerical_toy_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
