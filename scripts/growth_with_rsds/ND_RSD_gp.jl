@@ -37,7 +37,7 @@ using Distributed
 @everywhere fid_cosmo = Cosmology()
 @everywhere n = 101
 @everywhere N = 201
-@everywhere latent_x = Vector(range(0., stop=3., length=N))
+@everywhere latent_x = Vector(range(0., stop=3., length=n))
 @everywhere x = Vector(range(0., stop=3., length=N))
 
 @everywhere @model function model(data_vector;
