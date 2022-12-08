@@ -58,7 +58,7 @@ using Distributed
     #                 "DESwl__3_e_m" => DESwl__3_e_m)
     
     theory = Theory(cosmology, tracers_names, pairs,
-                    idx, files; Nuisances=nuisances)
+                    idx, files)
     data ~ MvNormal(theory ./ errs, cov)
 end;
 

@@ -21,7 +21,7 @@ using Distributed
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_cov_marg_toy.npz")["cov_marg"]
+@everywhere cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_cov_marg_lsst_toy.npz")["cov_marg"]
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
@@ -59,7 +59,7 @@ using Distributed
     #                 "DESwl__3_e_m" => DESwl__3_e_m)
  
     theory = Theory(cosmology, tracers_names, pairs,
-                    idx, files; Nuisances=nuisances)
+                    idx, files)
     data ~ MvNormal(theory ./ errs, cov)
 end;
 

@@ -1,6 +1,6 @@
 using Distributed
 
-begin @everywhere
+@everywhere begin
     using Turing
     using LimberJack
     using GaussianProcess

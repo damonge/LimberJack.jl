@@ -74,22 +74,10 @@ using Distributed
     #DESwl__2_m ~ Normal(0.012, 0.023)
     #DESwl__3_m ~ Normal(0.012, 0.023)
 
-
-    nuisances = Dict(#"A_IA" => A_IA,
-                     #"alpha_IA" => alpha_IA,
-
-                     "DESwl__0_nz" => DESwl__0_nz,
-                     #"DESwl__1_nz" => DESwl__1_nz,
-                     #"DESwl__2_nz" => DESwl__2_nz,
-                     #"DESwl__3_nz" => DESwl__3_nz,
-        
-                     #"DESwl__0_m" => DESwl__0_m,
-                     #"DESwl__1_m" => DESwl__1_m,
-                     #"DESwl__2_m" => DESwl__2_m,
-                     #"DESwl__3_m" => DESwl__3_m)
+    nuisances = Dict("DESwl__0_nz" => DESwl__0_nz)
     
     theory = Theory(cosmology, names, types, pairs,
-                    idx, files; Nuisances=nuisances)
+                    idx, files)
     data ~ MvNormal(theory ./ errs, cov)
 end;
 
