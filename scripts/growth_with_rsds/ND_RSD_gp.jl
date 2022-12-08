@@ -16,7 +16,8 @@ using Distributed
 @everywhere meta = np.load(string("../data/", data_set, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../data/", data_set, "/", data_set, "_files.npz"))
 
-@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
+@everywhere names = pyconvert(Vector{String}, meta["names"])
+@everywhere types = pyconvert(Vector{String}, meta["types"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere cls_data = pyconvert(Vector{Float64}, meta["cls"])
@@ -34,12 +35,14 @@ using Distributed
 @everywhere data_vector = [fs8_data ; cls_data];
 
 @everywhere fid_cosmo = Cosmology()
-@everywhere N = 100
-@everywhere latent_x = Vector(0:0.3:3)
+@everywhere n = 101
+@everywhere N = 201
+@everywhere latent_x = Vector(range(0., stop=3., length=N))
 @everywhere x = Vector(range(0., stop=3., length=N))
 
 @everywhere @model function model(data_vector;
-                                  tracers_names=tracers_names,
+                                  names=names,
+                                  types=types,
                                   pairs=pairs,
                                   idx=idx,
                                   cov_tot=cov_tot, 
@@ -123,8 +126,8 @@ using Distributed
                           Pk_mode="Halofit", 
                           custom_Dz=[x, gp])
     
-    cls = Theory(cosmology, tracers_names, pairs,
-                    idx, files; Nuisances=nuisances)
+    cls = Theory(cosmology, names, types, pairs,
+                 idx, files; Nuisances=nuisances)
     
     fs8s = fs8(cosmology, fs8_zs)
     theory = [fs8s; cls]
@@ -149,7 +152,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../chains"
-folname = string(data_set, "_RSD_gp_hp_TAP_", TAP)
+folname = string(data_set, "_RSD_super_gp_hp_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
