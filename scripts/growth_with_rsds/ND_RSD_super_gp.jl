@@ -1,19 +1,33 @@
 using Distributed
 
-being @everywhere
+begin @everywhere
     using Turing
     using LimberJack
     using GaussianProcess
     using CSV
+    using NPZ
 
     println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
     sacc_path = "../../data/FD/cls_FD_covG.fits"
     yaml_path = "../../data/ND/ND.yml"
     meta, files = make_data(sacc_path, yaml_path)
-    errs = sqrt.(diag(meta.cov))
-    data = meta.cls ./ errs
-    fake_cov = Hermitian(meta.cov ./ (errs * errs'));
+    cls_data = meta.cls
+    
+    fs8_meta = npzread("../data/fs8s/fs8s.npz")
+    fs8_zs = fs8_meta["z"]
+    fs8_data = fs8_meta["data"]
+    fs8_cov = fs8_meta["cov"]
+
+    cov_tot = zeros(Float64, length(fs8_data)+length(cls_data), length(fs8_data)+length(cls_data))
+    cov_tot[1:length(fs8_data), 1:length(fs8_data)] = fs8_cov
+    cov_tot[length(fs8_data)+1:(length(fs8_data)+length(cls_data)),
+            length(fs8_data)+1:(length(fs8_data)+length(cls_data))] = cls_cov
+    data_tot = [fs8_data ; cls_data];
+    
+    errs = sqrt.(diag(cov_tot))
+    data = data_tot ./ errs
+    fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
     fid_cosmo = Cosmology()
     n = 101
@@ -106,8 +120,11 @@ being @everywhere
                                          Pk_mode="Halofit";
                                          custom_Dz=[x, gp])
 
-        theory = Theory(cosmology, names, types, pairs,
+        cls = Theory(cosmology, names, types, pairs,
                         idx, files; Nuisances=nuisances)
+        fs8s = fs8(cosmology, fs8_zs)
+        theory = [fs8s; cls]
+        
         data ~ MvNormal(theory ./ errs, cov)
     end
 
@@ -130,7 +147,7 @@ being @everywhere
 
     # Start sampling.
     folpath = "../chains"
-    folname = string(data_set, "_super_gp_TAP_", TAP)
+    folname = string("ND_RSD_super_gp_TAP_", TAP)
     folname = joinpath(folpath, folname)
 
     if isdir(folname)
