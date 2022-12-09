@@ -30,9 +30,9 @@ def get_spin(sacc_file, tracer_name):
         spin = "0"
     return spin
 
-sacc_path = "LSST/cls_covG_lsst.fits"
-yaml_path = "DESY1/wlwl"
-nzs_path = "DESY1/binned_40_nzs/"
+sacc_path = "FD/cls_FD_covG.fits"
+yaml_path = "ND/ND"
+nzs_path = None
 fname = "LSST/wlwl_Nzs_40"
 
 s = sacc.Sacc().load_fits(sacc_path)
