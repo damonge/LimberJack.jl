@@ -99,7 +99,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("Nzs40_gcgc_b_numerical_", "TAP_", TAP)
+folname = string("Nzs40_LSST_gcgc_b_numerical_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
