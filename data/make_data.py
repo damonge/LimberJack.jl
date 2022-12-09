@@ -15,7 +15,8 @@ def apply_scale_cuts(s, config):
         ind = s.indices(cl_name, (t1, t2),
                         ell__gt=lmin, ell__lt=lmax)
         indices += list(ind)
-return s.keep_indices(indices)
+    s.keep_indices(indices)
+    return s
 
 def get_type(sacc_file, tracer_name):
     return sacc_file.tracers[tracer_name].quantity
@@ -33,7 +34,7 @@ def get_spin(sacc_file, tracer_name):
 sacc_path = "FD/cls_FD_covG.fits"
 yaml_path = "ND/ND"
 nzs_path = None
-fname = "LSST/wlwl_Nzs_40"
+fname = "ND/ND"
 
 s = sacc.Sacc().load_fits(sacc_path)
 with open(yaml_path+".yml") as f:
@@ -100,9 +101,10 @@ for pair, l in zip(pairs, ls):
 for name, tracer in s.tracers.items():
     if name in names:
         if nzs_path is None:
-            z=np.array(tracer.z)
-            dndz=np.array(tracer.nz)
-            dict_save[f'nz_{name}'] = np.array([z, dndz])
+            if tracer.quantity != "cmb_convergence":
+                z=np.array(tracer.z)
+                dndz=np.array(tracer.nz)
+                dict_save[f'nz_{name}'] = np.array([z, dndz])
         else:
             nzs = np.load(nzs_path+f'nz_{name}.npz')
             z = nzs["z"]
