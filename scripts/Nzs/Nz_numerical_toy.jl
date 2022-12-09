@@ -64,7 +64,7 @@ using Distributed
         #DESwl__3_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], -0.1, 0.3) 
     end
     
-    DESwl__0_nz .*= DESwl__0_nz .> 0
+    #DESwl__0_nz .*= DESwl__0_nz .> 0
     #DESwl__1_nz .*= DESwl__1_nz .> 0
     #DESwl__2_nz .*= DESwl__2_nz .> 0
     #DESwl__3_nz .*= DESwl__3_nz .> 0
@@ -77,7 +77,7 @@ using Distributed
     nuisances = Dict("DESwl__0_nz" => DESwl__0_nz)
     
     theory = Theory(cosmology, names, types, pairs,
-                    idx, files)
+                    idx, files; Nuisances=nuisances)
     data ~ MvNormal(theory ./ errs, cov)
 end;
 
