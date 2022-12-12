@@ -49,8 +49,8 @@ using Distributed
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    #A_IA ~ Uniform(-5, 5) 
-    #alpha_IA ~ Uniform(-5, 5)
+    A_IA ~ Uniform(-5, 5) 
+    alpha_IA ~ Uniform(-5, 5)
     
     n = length(nz_k0)
     DESwl__0_nz = zeros(cosmology.settings.cosmo_type, n)
