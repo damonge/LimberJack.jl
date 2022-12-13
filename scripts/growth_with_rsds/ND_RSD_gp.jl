@@ -35,7 +35,7 @@ using Distributed
 @everywhere data_vector = [fs8_data ; cls_data];
 
 @everywhere fid_cosmo = Cosmology()
-@everywhere n = 101
+@everywhere n = 31
 @everywhere N = 201
 @everywhere latent_x = Vector(range(0., stop=3., length=n))
 @everywhere x = Vector(range(0., stop=3., length=N))
@@ -152,7 +152,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string(data_set, "_RSD_super_gp_hp_TAP_", TAP)
+folname = string(data_set, "_RSD_gp_hp_2_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
