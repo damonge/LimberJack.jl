@@ -42,10 +42,10 @@ using Distributed
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
     
-    DECALS__0_0_b ~ Uniform(0.8, 3.0)
-    DECALS__1_0_b ~ Uniform(0.8, 3.0)
-    DECALS__2_0_b ~ Uniform(0.8, 3.0)
-    DECALS__3_0_b ~ Uniform(0.8, 3.0)
+    DECALS__0_b ~ Uniform(0.8, 3.0)
+    DECALS__1_b ~ Uniform(0.8, 3.0)
+    DECALS__2_b ~ Uniform(0.8, 3.0)
+    DECALS__3_b ~ Uniform(0.8, 3.0)
     #DECALS__0_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     #DECALS__1_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     #DECALS__2_0_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
@@ -65,10 +65,10 @@ using Distributed
 
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
-                     "DECALS__0_0_b" => DECALS__0_0_b,
-                     "DECALS__1_0_b" => DECALS__1_0_b,
-                     "DECALS__2_0_b" => DECALS__2_0_b,
-                     "DECALS__3_0_b" => DECALS__3_0_b)
+                     "DECALS__0_b" => DECALS__0_b,
+                     "DECALS__1_b" => DECALS__1_b,
+                     "DECALS__2_b" => DECALS__2_b,
+                     "DECALS__3_b" => DECALS__3_b)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
@@ -83,7 +83,7 @@ cycles = 6
 steps = 50
 iterations = 100
 TAP = 0.65
-adaptation = 100
+adaptation = 250
 init_ϵ = 0.005
 nchains = nprocs()
 println("sampling settings: ")
@@ -117,11 +117,13 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), DynamicNUTS(), #HMC(init_ϵ, steps),
+        chain = sample(model(fake_data), Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, :s8, :A_IA, :alpha_IA),
+                                               NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b)),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), DynamicNUTS(), #HMC(init_ϵ, steps),
+        chain = sample(model(fake_data), Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, :s8, :A_IA, :alpha_IA),
+                                               NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b))
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  
