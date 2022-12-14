@@ -1,6 +1,20 @@
 # LimberJack.jl
 
 ## Core
+
+```Core``` performs the main computations of ```LimberJack.jl```. 
+When using ```LimberJack.jl```, the first step is to create an instance of the  ```Cosmology``` structure.
+This is as easy as calling:
+
+```julia
+    using LimberJack
+    cosmology = Cosmology()
+```
+
+This will generate the an instance of ```Cosmology``` given the vanilla $\Lambda$CDM cosmology of ```CCL ```.
+```Cosmology()``` then computes the value of the comoving distance, the growth factor, the growth rate and matter power spectrum at an array of values and generates interpolators for said quantites. 
+The user can acces the value of these interpolator at an arbitrary input using the public functions of the model.
+
 ```@docs
 LimberJack.Settings
 LimberJack.CosmoPar
