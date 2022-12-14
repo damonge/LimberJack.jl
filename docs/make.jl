@@ -6,4 +6,4 @@ makedocs(sitename = "LimberJack.jl",
          pages = ["Home" => "index.md",
                   "API" => "api.md"])
          
-deploydocs(repo = "github.com/Damonge/LimberJack.jl")
+deploydocs(repo = "github.com/JaimeRZP/LimberJack.jl")
