@@ -70,14 +70,3 @@ Once you have installed ```Julia``` you can install ```LimberJack.jl``` by:
 1. Threading parallalization.
 2. GPU implementation.
 3. ```Zygote``` compatibility.
-
-## Contributors
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
