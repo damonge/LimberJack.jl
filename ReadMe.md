@@ -65,6 +65,10 @@ Once you have installed ```Julia``` you can install ```LimberJack.jl``` by:
     cls = angularCℓs(cosmology, tracer, tracer, ls)
 ```
 
+## Benchmarks
+
+![](https://raw.githubusercontent.com/JaimeRZP/LimberJack.jl/main/docs/src/assets/LimberJack_benchmarks.png)
+
 ## Challenges
 
 1. Threading parallalization.
