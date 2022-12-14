@@ -16,6 +16,6 @@ include("emulator.jl")
 include("halofit.jl")
 include("tracers.jl")
 include("spectra.jl")
-include("theory.jl")
+include("turing_utils.jl")
 
 end

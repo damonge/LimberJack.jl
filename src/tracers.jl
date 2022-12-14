@@ -17,8 +17,8 @@ Returns:
 
 """
 struct NumberCountsTracer <: Tracer
-    warr
-    chis
+    warr::Vector{Real}
+    chis::Vector{Real}
     wint::AbstractInterpolation
     b
 end
@@ -72,8 +72,8 @@ Returns:
 
 """
 struct WeakLensingTracer <: Tracer
-    warr
-    chis
+    warr::Vector{Real}
+    chis::Vector{Real}
     wint::AbstractInterpolation
     b
 end
@@ -158,8 +158,8 @@ Returns:
 
 """
 struct CMBLensingTracer <: Tracer
-    warr
-    chis
+    warr::Vector{Real}
+    chis::Vector{Real}
     wint::AbstractInterpolation
 end
 

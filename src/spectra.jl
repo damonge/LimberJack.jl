@@ -13,7 +13,7 @@ Returns:
 function Cℓintegrand(cosmo::Cosmology,
                      t1::Tracer,
                      t2::Tracer,
-                     ℓ)
+                     ℓ::Number)
 
     chis = zeros(cosmo.settings.cosmo_type, cosmo.settings.nk)
     chis[1:cosmo.settings.nk] = (ℓ+0.5) ./ cosmo.ks
@@ -51,13 +51,13 @@ Returns:
 - `Cℓs::Vector{Real}` : angular power spectrum.
 
 """
-function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
+function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector)
     # OPT: we are not optimizing the limits of integration
     Cℓs = [integrate(cosmo.logk, Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5), SimpsonEven()) for ℓ in ℓs]
     return _get_Fℓ(t1, ℓs) .* _get_Fℓ(t2, ℓs) .* Cℓs
 end
 
-function _get_Fℓ(t::Tracer, ℓ)
+function _get_Fℓ(t::Tracer, ℓ::Number)
     if typeof(t) == WeakLensingTracer
         return @. sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2
     elseif typeof(t) == CMBLensingTracer

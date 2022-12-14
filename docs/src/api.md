@@ -26,8 +26,8 @@ LimberJack.get_PKnonlin
 
 ## Spectra
 ```@docs
+LimberJack.Cℓintegrand
 LimberJack.angularCℓs
-LimberJack.angularCℓ
 ```
 
 ## Tracers

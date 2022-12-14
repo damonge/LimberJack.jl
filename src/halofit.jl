@@ -41,7 +41,7 @@ Returns:
 - `pk_NL(logk, z)::Interpolator` : non-linear matter spectrum as a function of log k-scale and redshift
 
 """
-function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
+function get_PKnonlin(cosmo::CosmoPar, z::Vector{Float64}, k::Vector{Float64}, PkLz0, Dzs, cosmo_type::DataType)
     nk = length(k)
     nz = length(z)
     logk = log.(k)
