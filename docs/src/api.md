@@ -23,17 +23,26 @@ LimberJack.Ez
 LimberJack.Hmpc
 LimberJack.comoving_radial_distance
 LimberJack.growth_factor
+LimberJack.growth_rate
+LimberJack.sigma8
+LimberJack.fs8
 LimberJack.lin_Pk
 LimberJack.nonlin_Pk
 ```
 
 ## Emulator
+
+Implements the Mootoovaloo et al 2022 emulator for ```
+
 ```@docs
 LimberJack.Emulator
 LimberJack.get_emulated_log_pk0
 ```
 
 ## Halofit
+
+Implements the Halotfit fitting formula for the non-linear matter power spectrum as described as
+
 ```@docs
 LimberJack.get_PKnonlin
 ```

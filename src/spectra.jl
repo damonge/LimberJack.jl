@@ -57,7 +57,7 @@ function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector)
     return _get_Fℓ(t1, ℓs) .* _get_Fℓ(t2, ℓs) .* Cℓs
 end
 
-function _get_Fℓ(t::Tracer, ℓ::Number)
+function _get_Fℓ(t::Tracer, ℓ::Vector{Float64})
     if typeof(t) == WeakLensingTracer
         return @. sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2
     elseif typeof(t) == CMBLensingTracer
