@@ -21,9 +21,25 @@ Once you have installed ```Julia``` you can install ```LimberJack.jl``` by:
 ## Use
 
 ``` julia
+    # Import
     using LimberJack
-    cosmology = Cosmology()
-    Dz = growth_factor(cosmology, z)
+    
+    Ωm = 0.31
+    s8 = 0.81
+    Ωb = 0.05
+    h = 0.67
+    ns = 0.96
+    
+    # create LimberJack.jl Cosmology instance
+    cosmology = Cosmology(Ωm, Ωb, h, ns, s8;
+                          tk_mode="EisHu",
+                          Pk_mode="Halofit")
+    
+    z = Vector(range(0., stop=2., length=256))
+    nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+    tracer = NumberCountsTracer(cosmology, zs, nz; b=1.0)
+    ls = [10.0, 30.0, 100.0, 300.0]
+    cls = angularCℓs(cosmology, tracer, tracer, ls)
 ```
 
 ## Challenges
