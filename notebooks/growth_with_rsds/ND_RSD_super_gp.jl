@@ -129,7 +129,7 @@ using Distributed
                                      tk_mode="emulator",
                                      Pk_mode="Halofit";
                                      custom_Dz=[x, gp], 
-                                     path_emul="../../emulator/files.npz")
+                                     emul_path="../../emulator/files.npz")
 
     cls = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)

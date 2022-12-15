@@ -53,7 +53,7 @@ using Distributed
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
                                      Pk_mode="Halofit", 
-                                     path_to_emul="../../emulator/files.npz")
+                                     emul_path="../../emulator/files.npz")
     
     theory = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)
