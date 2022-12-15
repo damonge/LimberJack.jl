@@ -1,5 +1,6 @@
 using Distributed
 
+@everywhere using LinearAlgebra
 @everywhere using Turing
 @everywhere using LimberJack
 @everywhere using GaussianProcess

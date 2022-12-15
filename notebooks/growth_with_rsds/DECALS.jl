@@ -104,9 +104,8 @@ for i in (1+last_n):(cycles+last_n)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
         chain = sample(model(fake_data), Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, :s8, :A_IA, :alpha_IA),
-                                               NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b))
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
-                       resume_from=old_chain)
+                                               NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b)),
+                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
