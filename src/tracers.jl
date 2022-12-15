@@ -1,27 +1,3 @@
-abstract type Tracer end
-
-"""
-    NumberCountsTracer(warr, chis, wint, b, lpre)
-
-Number counts tracer structure. 
-
-Arguments:
-- `warr::Vector{Dual}` : radial kernel array. 
-- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
-- `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
-- `b::Dual`: matter-galaxy bias.
-- `lpre::Int` : prefactor mark.
-
-Returns:
-- `NumberCountsTracer::NumberCountsTracer` : Number counts tracer structure.
-
-"""
-struct NumberCountsTracer <: Tracer
-    warr::Vector{Real}
-    chis::Vector{Real}
-    wint::AbstractInterpolation
-    b
-end
 
 """
     NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...)
@@ -37,7 +13,7 @@ Kwargs:
 - `b::Dual = 1` : matter-galaxy bias. 
  
 Returns:
-- `NumberCountsTracer::NumberCountsTracer` : Number counts tracer structure.
+- `kernel::AbstractInterpolation` : kernel interpolator.
 
 """
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
@@ -51,32 +27,10 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     hz = Hmpc(cosmo, z_w)
     
     w_arr = @. (nz_w*hz/nz_norm)
-    wint = linear_interpolation(chi, w_arr, extrapolation_bc=0)
-    
-    NumberCountsTracer(w_arr, chi, wint, kwargs[:b])
+    return linear_interpolation(chi, kwargs[:b]*w_arr, extrapolation_bc=0)
+
 end
 
-"""
-    WeakLensingTracer(warr, chis, wint, b, lpre)
-
-Weak lensing tracer structure. 
-Arguments:
-
-- `warr::Vector{Dual}` : radial kernel array. 
-- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
-- `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
-- `b::Dual`: matter-galaxy bias.
-
-Returns:
-- `WeakLensingTracer::WeakLensingTracer` : Weak lensing tracer structure.
-
-"""
-struct WeakLensingTracer <: Tracer
-    warr::Vector{Real}
-    chis::Vector{Real}
-    wint::AbstractInterpolation
-    b
-end
 
 """
     WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...)
@@ -94,7 +48,7 @@ Kwargs:
 - `IA_params::Vector{Dual} = [A_IA, alpha_IA]`: instrinsic aligment parameters.
  
 Returns:
-- `WeakLensingTracer::WeakLensingTracer` : Weak lensing tracer structure.
+- `kernel::AbstractInterpolation` : kernel interpolator.
 
 """
 WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
@@ -136,32 +90,10 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     # Interpolate
     # Fix first element
     chi[1] = 0.0
-    wint = linear_interpolation(chi, w_arr, extrapolation_bc=0)
-    b = kwargs[:mb]+1.0 
-    WeakLensingTracer(w_arr, chi, wint, b)
+    return linear_interpolation(chi, (kwargs[:mb]+1.0) .* w_arr, extrapolation_bc=0)
+
 end
 
-"""
-    CMBLensingTracer(warr, chis, wint, lpre)
-
-CMB lensing tracer structure. 
-
-Arguments:
-
-- `warr::Vector{Dual}` : radial kernel array. 
-- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
-- `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
-- `lpre::Int` : prefactor mark.
-
-Returns:
-- `CMBLensingTracer::CMBLensingTracer` : CMB lensing tracer structure.
-
-"""
-struct CMBLensingTracer <: Tracer
-    warr::Vector{Real}
-    chis::Vector{Real}
-    wint::AbstractInterpolation
-end
 
 """
     CMBLensingTracer(cosmo::Cosmology; nchi=100)
@@ -176,7 +108,7 @@ Kwargs:
 - `nchi::Int = 100` : number of nodes in the comoving distance array. 
 
 Returns:
-- `CMBLensingTracer::CMBLensingTracer` : CMB lensing tracer structure.
+- `kernel::AbstractInterpolation` : kernel interpolator.
 
 """
 CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
@@ -190,8 +122,7 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
     w_arr = @. lens_prefac*chis*(1-chis/cosmo.chi_LSS)*(1+zs)
 
     # Interpolate
-    wint = linear_interpolation(chis, w_arr, extrapolation_bc=0)
-    CMBLensingTracer(w_arr, chis, wint)
+    return linear_interpolation(chis, w_arr, extrapolation_bc=0)
 end
 
 """

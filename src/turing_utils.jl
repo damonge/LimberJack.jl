@@ -18,7 +18,7 @@ function Theory(cosmology::Cosmology,
         end
     end
     
-    tracers =  Dict{String}{Tracer}()
+    tracers =  Dict{String}{AbstractInterpolation}()
     ntracers = length(names)
     @inbounds for i in 1:ntracers
         name = names[i]
