@@ -58,10 +58,10 @@ using Distributed
     DESwl__2_nz = zeros(cosmology.settings.cosmo_type, n)
     DESwl__3_nz = zeros(cosmology.settings.cosmo_type, n)
     for i in 1:n
-        DESwl__0_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt.(diag(cov_k0))[i], -0.05, 0.5) 
-        DESwl__1_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt.(diag(cov_k1))[i], -0.05, 0.5) 
-        DESwl__2_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt.(diag(cov_k2))[i], -0.05, 0.5) 
-        DESwl__3_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], -0.05, 0.5) 
+        DESwl__0_nz[i] ~ TruncatedNormal(nz_k0[i], sqrt.(diag(cov_k0))[i], -0.07, 0.5) 
+        DESwl__1_nz[i] ~ TruncatedNormal(nz_k1[i], sqrt.(diag(cov_k1))[i], -0.07, 0.5) 
+        DESwl__2_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt.(diag(cov_k2))[i], -0.07, 0.5) 
+        DESwl__3_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], -0.07, 0.5) 
     end
     
     #DESwl__0_nz .*= DESwl__0_nz .> 0
