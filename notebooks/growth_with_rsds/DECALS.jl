@@ -40,10 +40,10 @@ using Distributed
     s8 ~ Uniform(0.6, 0.9)
     ns ~ Uniform(0.84, 1.1)
     
-    DECALS__0_0_b ~ Uniform(0.8, 3.0)
-    DECALS__1_0_b ~ Uniform(0.8, 3.0)
-    DECALS__2_0_b ~ Uniform(0.8, 3.0)
-    DECALS__3_0_b ~ Uniform(0.8, 3.0)
+    DECALS__0_b ~ Uniform(0.8, 3.0)
+    DECALS__1_b ~ Uniform(0.8, 3.0)
+    DECALS__2_b ~ Uniform(0.8, 3.0)
+    DECALS__3_b ~ Uniform(0.8, 3.0)
 
     nuisances = Dict("DECALS__0_b" => DECALS__0_b,
                      "DECALS__1_b" => DECALS__1_b,
