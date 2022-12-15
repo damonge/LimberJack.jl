@@ -34,22 +34,26 @@ using Distributed
         length(fs8_data)+1:(length(fs8_data)+length(cls_data))] = cls_cov
 @everywhere data_vector = [fs8_data ; cls_data];
 
+@everywhere errs = sqrt.(diag(cov_tot))
+@everywhere fake_data = data_vector ./ errs
+@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs')) 
+
 @everywhere fid_cosmo = Cosmology()
 @everywhere n = 31
 @everywhere N = 201
 @everywhere latent_x = Vector(range(0., stop=3., length=n))
 @everywhere x = Vector(range(0., stop=3., length=N))
 
-@everywhere @model function model(;
-                          names=meta.names,
-                          types=meta.types,
-                          pairs=meta.pairs,
-                          idx=meta.idx,
-                          cov=fake_cov, 
-                          files=files,
-                          fid_cosmo=fid_cosmo,
-                          latent_x=latent_x,
-                          x=x)
+@everywhere @model function model(data;
+                                  names=names,
+                                  types=types,
+                                  pairs=pairs,
+                                  idx=idx,
+                                  cov=fake_cov, 
+                                  files=files,
+                                  fid_cosmo=fid_cosmo,
+                                  latent_x=latent_x,
+                                  x=x)
 
     #DESY1 priors
     Ωm ~ Uniform(0.2, 0.6)
@@ -112,7 +116,7 @@ using Distributed
 
     eta ~ Uniform(0.01, 0.1) # = 0.2
     l ~ Uniform(0.1, 4) # = 0.3
-    v ~ filldist(truncated(Normal(0, 1), -3, 3), n)
+    v ~ filldist(truncated(Normal(0, 1), -2, 2), n)
 
     mu = fid_cosmo.Dz(vec(latent_x))
     K = sqexp_cov_fn(latent_x; eta=eta, l=l)
@@ -171,11 +175,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 
