@@ -128,9 +128,10 @@ using Distributed
                       eta=1.0, l=l)
     
     cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
-                          tk_mode="EisHu",
+                          tk_mode="emulator",
                           Pk_mode="Halofit", 
-                          custom_Dz=[x, gp])
+                          custom_Dz=[x, gp],
+                          emul_path="../../emulator/files.npz")
     
     cls = Theory(cosmology, names, types, pairs,
                  idx, files; Nuisances=nuisances)

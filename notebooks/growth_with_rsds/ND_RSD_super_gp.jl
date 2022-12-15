@@ -128,7 +128,8 @@ using Distributed
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
                                      Pk_mode="Halofit";
-                                     custom_Dz=[x, gp])
+                                     custom_Dz=[x, gp], 
+                                     path_emul="../../emulator/files.npz")
 
     cls = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)
