@@ -74,6 +74,8 @@ println("TAP ", TAP)
 println("adaptation ", adaptation)
 println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
+sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, :s8, :A_IA, :alpha_IA),
+                NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b))
 
 # Start sampling.
 folpath = "../../chains"
@@ -98,14 +100,12 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, :s8, :A_IA, :alpha_IA),
-                                               NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b)),
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
+        chain = sample(model(fake_data), sampler, MCMCDistributed(),
+                      iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, :s8, :A_IA, :alpha_IA),
-                                               NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b)),
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
+        chain = sample(model(fake_data), sampler, MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
