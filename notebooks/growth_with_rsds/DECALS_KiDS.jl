@@ -13,8 +13,8 @@ using Distributed
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
 @everywhere data_set = "DECALS_KiDS"
-@everywhere meta = np.load(string("../data/", data_set, "/", data_set, "_meta.npz"))
-@everywhere files = npzread(string("../data/", data_set, "/", data_set, "_files.npz"))
+@everywhere meta = np.load(string("../../data/", data_set, "/", data_set, "_meta.npz"))
+@everywhere files = npzread(string("../../data/", data_set, "/", data_set, "_files.npz"))
 
 @everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
@@ -72,7 +72,8 @@ using Distributed
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
-                                     Pk_mode="Halofit")
+                                     Pk_mode="Halofit", 
+                                     path_to_emul="../../emulator/files.npz")
     
     theory = Theory(cosmology, tracers_names, pairs,
                     idx, files; Nuisances=nuisances)
@@ -95,7 +96,7 @@ println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
+folpath = "../../chains"
 folname = string(data_set, "_TAP_", TAP)
 folname = joinpath(folpath, folname)
 

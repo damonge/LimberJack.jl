@@ -133,19 +133,24 @@ using Distributed
     data ~ MvNormal(theory ./ errs, cov)
 end
 
-@everywhere stat_model = model()|(;data)
-
-@everywhere cycles = 6
-@everywhere iterations = 100
-
-@everywhere TAP = 0.65
-@everywhere adaptation = 100
-@everywhere sampler = NUTS(adaptation, TAP)
-@everywhere nchains = nprocs()
+cycles = 6
+steps = 50
+iterations = 100
+TAP = 0.60
+adaptation = 300
+init_ϵ = 0.05
+nchains = nprocs()
+println("sampling settings: ")
+println("cycles ", cycles)
+println("iterations ", iterations)
+println("TAP ", TAP)
+println("adaptation ", adaptation)
+println("init_ϵ ", init_ϵ)
+println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
-folname = string("ND_RSD_super_gp_TAP_", TAP)
+folpath = "../../chains"
+folname = string(data_set, "_RSD_mega_gp_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -164,17 +169,18 @@ else
     last_n = 0
 end
 
-
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(stat_model, sampler, MCMCDistributed(),
-                       iterations, nchains, progress=true; save_state=true)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(stat_model, sampler, MCMCDistributed(),
-                       iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
+                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
+                       resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
     CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
 end
+

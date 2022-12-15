@@ -12,10 +12,11 @@ using Distributed
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
 @everywhere data_set = "DECALS"
-@everywhere meta = np.load(string("../data/", data_set, "/", data_set, "_meta.npz"))
-@everywhere files = npzread(string("../data/", data_set, "/", data_set, "_files.npz"))
+@everywhere meta = np.load(string("../../data/", data_set, "/", data_set, "_meta.npz"))
+@everywhere files = npzread(string("../../data/", data_set, "/", data_set, "_files.npz"))
 
-@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
+@everywhere names = pyconvert(Vector{String}, meta["names"])
+@everywhere types = pyconvert(Vector{String}, meta["types"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
@@ -25,7 +26,8 @@ using Distributed
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs')) 
 
 @everywhere @model function model(data;
-                                  tracers_names=tracers_names,
+                                  names=names,
+                                  types=types,
                                   pairs=pairs,
                                   idx=idx,
                                   cov=fake_cov, 
@@ -43,16 +45,17 @@ using Distributed
     DECALS__2_0_b ~ Uniform(0.8, 3.0)
     DECALS__3_0_b ~ Uniform(0.8, 3.0)
 
-    nuisances = Dict("DECALS__0_0_b" => DECALS__0_0_b,
-                     "DECALS__1_0_b" => DECALS__1_0_b,
-                     "DECALS__2_0_b" => DECALS__2_0_b,
-                     "DECALS__3_0_b" => DECALS__3_0_b)
+    nuisances = Dict("DECALS__0_b" => DECALS__0_b,
+                     "DECALS__1_b" => DECALS__1_b,
+                     "DECALS__2_b" => DECALS__2_b,
+                     "DECALS__3_b" => DECALS__3_b)
 
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
-                                     Pk_mode="Halofit")
+                                     Pk_mode="Halofit", 
+                                     path_to_emul="../../emulator/files.npz")
     
-    theory = Theory(cosmology, tracers_names, pairs,
+    theory = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)
     data ~ MvNormal(theory ./ errs, cov)
 end;
@@ -73,8 +76,8 @@ println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
-folname = string(data_set, "_TAP_", TAP)
+folpath = "../../chains"
+folname = string(data_set, "Gibbs_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -95,11 +98,13 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), NUTS(adaptation, TAP),
+        chain = sample(model(fake_data), Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, :s8, :A_IA, :alpha_IA),
+                                               NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b)),
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
+        chain = sample(model(fake_data), Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, :s8, :A_IA, :alpha_IA),
+                                               NUTS(adaptation, TAP, :DECALS__0_b, :DECALS__1_b, :DECALS__2_b, :DECALS__3_b))
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end  

@@ -140,7 +140,7 @@ cycles = 6
 steps = 50
 iterations = 100
 TAP = 0.60
-adaptation = 100
+adaptation = 300
 init_ϵ = 0.05
 nchains = nprocs()
 println("sampling settings: ")
@@ -153,7 +153,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string(data_set, "_RSD_gp_hp_2_TAP_", TAP)
+folname = string(data_set, "_RSD_super_gp_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -174,11 +174,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP; init_ϵ=init_ϵ), #HMC(init_ϵ, steps), 
+        chain = sample(model(data_vector), NUTS(adaptation, TAP), 
                        MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
                        resume_from=old_chain)
     end 

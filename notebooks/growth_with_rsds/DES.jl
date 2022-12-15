@@ -12,23 +12,25 @@ using Distributed
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
 @everywhere data_set = "DESY1"
-@everywhere meta = np.load(string("../data/", data_set, "/", "gcgc_gcwl_wlwl", "_meta.npz"))
-@everywhere files = npzread(string("../data/", data_set, "/", "gcgc_gcwl_wlwl", "_files.npz"))
+@everywhere meta = np.load(string("../../data/", data_set, "/", "gcgc_gcwl_wlwl", "_meta.npz"))
+@everywhere files = npzread(string("../../data/", data_set, "/", "gcgc_gcwl_wlwl", "_files.npz"))
 
-@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
+@everywhere names = pyconvert(Vector{String}, meta["names"])
+@everywhere types = pyconvert(Vector{String}, meta["types"])
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"])
-#@everywhere errs = sqrt.(diag(cov_tot))
-#@everywhere fake_data = data_vector ./ errs
-#@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
+@everywhere errs = sqrt.(diag(cov_tot))
+@everywhere fake_data = data_vector ./ errs
+@everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
 @everywhere @model function model(data_vector;
-                                  tracers_names=tracers_names,
+                                  names=names,
+                                  types=types,
                                   pairs=pairs,
                                   idx=idx,
-                                  cov=cov_tot, 
+                                  cov=fake_tot, 
                                   files=files)
     #KiDS priors
     Ωm ~ Uniform(0.1, 0.9)
@@ -37,63 +39,57 @@ using Distributed
     s8 ~ Uniform(0.6, 0.9)
     ns ~ Uniform(0.87, 1.07)
     
-    DESgc__0_0_b ~ Uniform(0.8, 3.0)
-    DESgc__1_0_b ~ Uniform(0.8, 3.0)
-    DESgc__2_0_b ~ Uniform(0.8, 3.0)
-    DESgc__3_0_b ~ Uniform(0.8, 3.0)
-    DESgc__4_0_b ~ Uniform(0.8, 3.0)
-    DESgc__0_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-    DESgc__1_0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-    DESgc__2_0_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
-    DESgc__3_0_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-    DESgc__4_0_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-    
+    DESgc__0_b ~ Uniform(0.8, 3.0)
+    DESgc__1_b ~ Uniform(0.8, 3.0)
+    DESgc__2_b ~ Uniform(0.8, 3.0)
+    DESgc__3_b ~ Uniform(0.8, 3.0)
+    DESgc__4_b ~ Uniform(0.8, 3.0)
+    DESgc__0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    DESgc__1_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    DESgc__2_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
+    DESgc__3_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    DESwl__4_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    DESwl__0_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
+    DESwl__1_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
+    DESwl__2_dz ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
+    DESwl__3_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
+    DESwl__0_m ~ Normal(0.012, 0.023)
+    DESwl__1_m ~ Normal(0.012, 0.023)
+    DESwl__2_m ~ Normal(0.012, 0.023)
+    DESwl__3_m ~ Normal(0.012, 0.023)
     A_IA ~ Uniform(-5, 5) 
     alpha_IA ~ Uniform(-5, 5)
 
-    DESwl__0_e_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
-    DESwl__1_e_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
-    DESwl__2_e_dz ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
-    DESwl__3_e_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
-    DESwl__0_e_m ~ Normal(0.012, 0.023)
-    DESwl__1_e_m ~ Normal(0.012, 0.023)
-    DESwl__2_e_m ~ Normal(0.012, 0.023)
-    DESwl__3_e_m ~ Normal(0.012, 0.023)
-    
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
-
-    nuisances = Dict("DESgc__0_0_b" => DESgc__0_0_b,
-                     "DESgc__1_0_b" => DESgc__1_0_b,
-                     "DESgc__2_0_b" => DESgc__2_0_b,
-                     "DESgc__3_0_b" => DESgc__3_0_b,
-                     "DESgc__4_0_b" => DESgc__4_0_b,
-                     "DESgc__0_0_dz" => DESgc__0_0_dz,
-                     "DESgc__1_0_dz" => DESgc__1_0_dz,
-                     "DESgc__2_0_dz" => DESgc__2_0_dz,
-                     "DESgc__3_0_dz" => DESgc__3_0_dz,
-                     "DESgc__4_0_dz" => DESgc__4_0_dz,
+    nuisances = Dict("DESgc__0_b" => DESgc__0_b,
+                     "DESgc__1_b" => DESgc__1_b,
+                     "DESgc__2_b" => DESgc__2_b,
+                     "DESgc__3_b" => DESgc__3_b,
+                     "DESgc__4_b" => DESgc__4_b,
+                     "DESgc__0_dz" => DESgc__0_dz,
+                     "DESgc__1_dz" => DESgc__1_dz,
+                     "DESgc__2_dz" => DESgc__2_dz,
+                     "DESgc__3_dz" => DESgc__3_dz,
+                     "DESgc__4_dz" => DESgc__4_dz,
         
                      "A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
 
-                     "DESwl__0_e_dz" => DESwl__0_e_dz,
-                     "DESwl__1_e_dz" => DESwl__1_e_dz,
-                     "DESwl__2_e_dz" => DESwl__2_e_dz,
-                     "DESwl__3_e_dz" => DESwl__3_e_dz,
-                     "DESwl__0_e_m" => DESwl__0_e_m,
-                     "DESwl__1_e_m" => DESwl__1_e_m,
-                     "DESwl__2_e_m" => DESwl__2_e_m,
-                     "DESwl__3_e_m" => DESwl__3_e_m)
+                     "DESwl__0_dz" => DESwl__0_dz,
+                     "DESwl__1_dz" => DESwl__1_dz,
+                     "DESwl__2_dz" => DESwl__2_dz,
+                     "DESwl__3_dz" => DESwl__3_dz,
+                     "DESwl__0_m" => DESwl__0_m,
+                     "DESwl__1_m" => DESwl__1_m,
+                     "DESwl__2_m" => DESwl__2_m,
+                     "DESwl__3_m" => DESwl__3_m)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = Theory(cosmology, tracers_names, pairs,
+    theory = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)
-    #data_vector ~ MvNormal(theory ./ errs, cov)
-    data_vector ~ MvNormal(theory, cov)
+    data_vector ~ MvNormal(theory ./ errs, cov)
 end;
 
 cycles = 6
@@ -112,7 +108,7 @@ println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../chains"
+folpath = "../../chains"
 folname = string(data_set, "_EisHu_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
@@ -134,11 +130,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(data_vector), NUTS(adaptation, TAP), MCMCDistributed(),
+        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
