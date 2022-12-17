@@ -236,7 +236,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         chis[i] = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
     end
     # OPT: tolerances, interpolation method
-    chii = linear_interpolation(zs, chis, extrapolation_bc=Line())
+    chii = cubic_spline_interpolation(zs, chis, extrapolation_bc=Line())
     zi = linear_interpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
     #chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
@@ -341,7 +341,7 @@ Returns:
 
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70, nz_t=100,
+          θCMB=2.725/2.7, nk=300, nz=250, nz_t=200, nz_pk=70, 
           tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           custom_Dz=nothing) = begin

@@ -326,7 +326,6 @@ cosmo_emul_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
 
 """
     @testset "IsemulHalofitDiff" begin
-
         zs = 0.02:0.02:1.0
         ks = [0.001, 0.01, 0.1, 1.0, 7.0]
         
@@ -337,13 +336,10 @@ cosmo_emul_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
             pk = LimberJack.nonlin_Pk(cosmo, ks, 0)
             return pk
         end
-
         Ωm0 = 0.3
         dΩm = 0.0005
-
         Halofit_autodiff = ForwardDiff.derivative(Halofit, Ωm0)
         Halofit_anal = (Halofit(Ωm0+dΩm)-Halofit(Ωm0-dΩm))/2dΩm
-
         @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 0.5))
     end
 """
