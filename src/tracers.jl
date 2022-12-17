@@ -43,7 +43,7 @@ Returns:
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
 
     nz_int = linear_interpolation(z_n, nz, extrapolation_bc=0)
-    z_w = range(0.00001, stop=z_n[end], length=cosmo.settings.nz)
+    z_w = range(0.00001, stop=z_n[end], length=cosmo.settings.nz_t)
     nz_w = nz_int(z_w)
     nz_norm = integrate(z_w, nz_w, SimpsonEven())
     
@@ -102,7 +102,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     nz_int = linear_interpolation(z_n, nz, extrapolation_bc=0)
     
     cosmo_type = cosmo.settings.cosmo_type
-    res = cosmo.settings.nz
+    res = cosmo.settings.nz_t
     z_w = range(0.00001, stop=z_n[end], length=res)
     dz_w = (z_w[end]-z_w[1])/res
     nz_w = nz_int(z_w)
@@ -118,7 +118,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     w_itg(chii) = @.(nz_w*(1-chii/chi))
     w_arr = zeros(cosmo_type, res)
     @inbounds for i in 1:res
-        w_arr[i] = trapz(z_w[i:res], w_itg(chi[i])[i:res])
+        w_arr[i] = integrate(z_w[i:res], w_itg(chi[i])[i:res], SimpsonEven())
     end
     
     # Normalize
