@@ -4,16 +4,14 @@ abstract type Tracer end
     NumberCountsTracer(warr, chis, wint, b, lpre)
 Number counts tracer structure. 
 Arguments:
-- `warr::Vector{Dual}` : radial kernel array. 
-- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
 - `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
-- `b::Dual`: matter-galaxy bias.
-- `lpre::Int` : prefactor mark.
+- `F::Function` : prefactor.
 Returns:
 - `NumberCountsTracer::NumberCountsTracer` : Number counts tracer structure.
 """
 struct NumberCountsTracer <: Tracer
     wint::AbstractInterpolation
+    F::Function
 end
 
 """
@@ -40,24 +38,23 @@ NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     hz = Hmpc(cosmo, z_w)
     
     w_arr = @. (nz_w*hz/nz_norm)
-    wint = linear_interpolation(chi, kwargs[:b]*w_arr, extrapolation_bc=0)
-    
-    NumberCountsTracer(wint)
+    wint = linear_interpolation(chi, kwargs[:b].*w_arr, extrapolation_bc=0)
+    F::Function = ℓ -> 1
+    NumberCountsTracer(wint, F)
 end
 
 """
     WeakLensingTracer(warr, chis, wint, b, lpre)
 Weak lensing tracer structure. 
 Arguments:
-- `warr::Vector{Dual}` : radial kernel array. 
-- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
 - `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
-- `b::Dual`: matter-galaxy bias.
+- `F::Function` : prefactor.
 Returns:
 - `WeakLensingTracer::WeakLensingTracer` : Weak lensing tracer structure.
 """
 struct WeakLensingTracer <: Tracer
     wint::AbstractInterpolation
+    F::Function
 end
 
 """
@@ -114,23 +111,23 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     # Fix first element
     chi[1] = 0.0
     b = kwargs[:mb]+1.0
-    wint = linear_interpolation(chi, b*w_arr, extrapolation_bc=0) 
-    WeakLensingTracer(wint)
+    wint = linear_interpolation(chi, b.*w_arr, extrapolation_bc=0)
+    F::Function = ℓ -> @.(sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2)
+    WeakLensingTracer(wint, F)
 end
 
 """
     CMBLensingTracer(warr, chis, wint, lpre)
 CMB lensing tracer structure. 
 Arguments:
-- `warr::Vector{Dual}` : radial kernel array. 
-- `chis::Vector{Dual}` : comoving distances array of the radial kernel.
 - `wint::Interpolation` : interpolation of the radial kernel over comoving distance.
-- `lpre::Int` : prefactor mark.
+- `F::Function` : prefactor.
 Returns:
 - `CMBLensingTracer::CMBLensingTracer` : CMB lensing tracer structure.
 """
 struct CMBLensingTracer <: Tracer
     wint::AbstractInterpolation
+    F::Function
 end
 
 """
@@ -155,7 +152,8 @@ CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
 
     # Interpolate
     wint = linear_interpolation(chis, w_arr, extrapolation_bc=0)
-    CMBLensingTracer(wint)
+    F::Function = ℓ -> @.((ℓ+1)*ℓ/(ℓ+0.5)^2)
+    CMBLensingTracer(wint, F)
 end
 
 """
