@@ -69,3 +69,18 @@ function Theory(cosmology::Cosmology,
     
     return cls
 end
+
+function Theory(cosmology::Cosmology,
+                instructions, files;
+                Nuisances=Dict())
+    
+    names = instructions.names
+    types = instructions.types
+    pairs = instructions.pairs
+    idx = instructions.idx
+    
+    return function Theory(cosmology::Cosmology,
+                           names, types, pairs,
+                           idx, files;
+                           Nuisances=Dict())
+ end
