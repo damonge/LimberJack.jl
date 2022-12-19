@@ -30,7 +30,7 @@ Returns:
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     
     z_range = range(z_n[1], stop=z_n[end], length=length(z_n))
-    nz_int = cubic_spline_interpolation(z_n, nz, extrapolation_bc=0)
+    nz_int = cubic_spline_interpolation(z_range, nz, extrapolation_bc=0)
     
     res = cosmo.settings.nz_t
     z_w = range(0.00001, stop=z_n[end], length=res)
@@ -77,7 +77,7 @@ Returns:
 WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     
     z_range = range(z_n[1], stop=z_n[end], length=length(z_n))
-    nz_int = cubic_spline_interpolation(z_n, nz, extrapolation_bc=0)
+    nz_int = cubic_spline_interpolation(z_range, nz, extrapolation_bc=0)
     
     cosmo_type = cosmo.settings.cosmo_type
     res = cosmo.settings.nz_t
