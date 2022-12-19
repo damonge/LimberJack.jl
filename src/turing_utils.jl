@@ -79,8 +79,8 @@ function Theory(cosmology::Cosmology,
     pairs = instructions.pairs
     idx = instructions.idx
     
-    return function Theory(cosmology::Cosmology,
-                           names, types, pairs,
-                           idx, files;
-                           Nuisances=Dict())
+    return Theory(cosmology::Cosmology,
+                  names, types, pairs,
+                  idx, files;
+                  Nuisances=Dict())
  end
