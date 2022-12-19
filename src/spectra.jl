@@ -11,8 +11,8 @@ Returns:
 - `integrand::Vector{Real}` : integrand of the angular power spectrum.
 """
 function Cℓintegrand(cosmo::Cosmology,
-                     t1::Tracer,
-                     t2::Tracer,
+                     t1::AbstractInterpolation,
+                     t2::AbstractInterpolation,
                      ℓ::Number)
 
     chis = zeros(cosmo.settings.cosmo_type, cosmo.settings.nk)
@@ -20,41 +20,28 @@ function Cℓintegrand(cosmo::Cosmology,
     chis .*= (chis .< cosmo.chi_max)
     z = cosmo.z_of_chi(chis)
 
-    w1 = t1.wint(chis) # *t1.b
-    w2 = t2.wint(chis) # *t2.b
-
-    if typeof(t1) in [NumberCountsTracer, WeakLensingTracer]
-        w1 .*= t1.b
-    end
-
-    if typeof(t2) in [NumberCountsTracer, WeakLensingTracer]
-        w2 .*= t2.b
-    end
-
+    w1 = t1(chis)
+    w2 = t2(chis)
     pk = nonlin_Pk(cosmo, cosmo.ks, z)
+
     return @. (cosmo.ks*w1*w2*pk)
 end
 
 """
     angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs)
-
 Returns the angular power spectrum. 
-
 Arguments:
-
 - `cosmo::Cosmology` : cosmology structure.
 - `t1::Tracer` : tracer structure.
 - `t2::Tracer` : tracer structure.
 - `ℓs::Vector{Float}` : multipole array.
-
 Returns:
 - `Cℓs::Vector{Real}` : angular power spectrum.
-
 """
 function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector)
     # OPT: we are not optimizing the limits of integration
-    Cℓs = [integrate(cosmo.logk, Cℓintegrand(cosmo, t1, t2, ℓ)/(ℓ+0.5), SimpsonEven()) for ℓ in ℓs]
-    return _get_Fℓ(t1, ℓs) .* _get_Fℓ(t2, ℓs) .* Cℓs
+    Cℓs = [integrate(cosmo.logk, Cℓintegrand(cosmo, t1.wint, t2.wint, ℓ)/(ℓ+0.5), SimpsonEven()) for ℓ in ℓs]
+    return t1.F(ℓs) .* t2.F(ℓs) .* Cℓs
 end
 
 function _get_Fℓ(t::Tracer, ℓ::Vector{Float64})
