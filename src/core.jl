@@ -46,6 +46,7 @@ mutable struct Settings
     cosmo_type::DataType
     nz::Int
     nz_pk::Int
+    nz_t::Int
     nk::Int
     tk_mode::String
     Pk_mode::String
@@ -340,13 +341,13 @@ Returns:
 
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,
+          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,  nz_t=200,
           tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           custom_Dz=nothing) = begin
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    settings = Settings(cosmo_type, nz, nz_pk, nk,
+    settings = Settings(cosmo_type, nz, nz_pk, nz_t, nk,
                         tk_mode, Pk_mode, emul_path, custom_Dz)
     Cosmology(cpar, settings)
 end
