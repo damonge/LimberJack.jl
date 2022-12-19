@@ -208,8 +208,8 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     if settings.tk_mode == "emulator"
-        ks_emul, pk0_emul = get_emulated_log_pk0(cpar, settings)
-        pki_emul = linear_interpolation(log.(ks_emul), log.(pk0_emul),
+        lks_emul, pk0_emul = get_emulated_log_pk0(cpar, settings)
+        pki_emul = cubic_spline_interpolation(lks_emul, log.(pk0_emul),
                                         extrapolation_bc=Line())
         pk0 = exp.(pki_emul(logk))
     elseif settings.tk_mode == "EisHu"
