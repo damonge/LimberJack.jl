@@ -79,7 +79,7 @@ using Distributed
 
     DESwl__0_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
     DESwl__1_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
-    DESwl__2_dz ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
+    DESwl__2_dz ~ TruncatedNormal(0.009, 0.011, -0.2, 0.2)
     DESwl__3_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
     DESwl__0_m ~ Normal(0.012, 0.023)
     DESwl__1_m ~ Normal(0.012, 0.023)
@@ -116,8 +116,8 @@ using Distributed
                      "eBOSS__1_b" => eBOSS__1_b)
 
 
-    eta ~ Uniform(0.001, 0.3) # = 0.2
-    l ~ Uniform(0.001, 3) # = 0.3
+    eta = 0.2
+    l = 0.3
     latent_N = length(latent_x)
     v ~ filldist(truncated(Normal(0, 1), -2, 2), latent_N)
     
@@ -149,6 +149,14 @@ TAP = 0.60
 adaptation = 300
 init_ϵ = 0.05
 nchains = nprocs()
+sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, 
+                     :DESgc__0_b, :DESgc__1_b, :DESgc__2_b, :DESgc__3_b, :DESgc__4_b,
+                     :DESgc__0_dz, :DESgc__1_dz, :DESgc__2_dz, :DESgc__3_dz, :DESgc__4_dz,
+                     :A_IA, :alpha_IA,
+                     :DESwl__0_b, :DESwl__1_b, :DESwl__2_b, :DESwl__3_b,
+                     :DESwl__0_dz, :DESwl__1_dz, :DESwl__2_dz, :DESwl__3_dz,
+                     :eBOSS__0_b, :eBOSS__1_b),
+                NUTS(adaptation, TAP, :v))
 println("sampling settings: ")
 println("cycles ", cycles)
 println("iterations ", iterations)
@@ -159,7 +167,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string(data_set, "_RSD_super_gp_TAP_", TAP)
+folname = string(data_set, "_Gibbs_RSD_super_gp_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
@@ -180,13 +188,12 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true)
+        chain = sample(model(fake_data), sammpler, MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), 
-                       MCMCDistributed(), iterations, nchains, progress=true; save_state=true,
-                       resume_from=old_chain)
+        chain = sample(model(fake_data), sampler, MCMCDistributed(),
+                       iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end 
     write(joinpath(folname, string("chain_", i,".jls")), chain)
     CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)

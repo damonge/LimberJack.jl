@@ -33,11 +33,11 @@ using Distributed
                                   cov=fake_tot, 
                                   files=files)
     #KiDS priors
-    Ωm ~ Uniform(0.1, 0.9)
-    Ωb ~ Uniform(0.03, 0.07)
-    h ~ Uniform(0.55, 0.91)
+    Ωm ~ Uniform(0.2, 0.6)
+    Ωb ~ Uniform(0.028, 0.065)
+    h ~ Uniform(0.64, 0.82)
     s8 ~ Uniform(0.6, 0.9)
-    ns ~ Uniform(0.87, 1.07)
+    ns ~ Uniform(0.84, 1.1)
     
     DESgc__0_b ~ Uniform(0.8, 3.0)
     DESgc__1_b ~ Uniform(0.8, 3.0)
@@ -51,7 +51,7 @@ using Distributed
     DESwl__4_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
     DESwl__0_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
     DESwl__1_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
-    DESwl__2_dz ~ TruncatedNormal(-0.009, 0.011, -0.2, 0.2)
+    DESwl__2_dz ~ TruncatedNormal(0.009, 0.011, -0.2, 0.2)
     DESwl__3_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
     DESwl__0_m ~ Normal(0.012, 0.023)
     DESwl__1_m ~ Normal(0.012, 0.023)
@@ -96,7 +96,7 @@ cycles = 6
 steps = 50
 iterations = 250
 TAP = 0.65
-adaptation = 100
+adaptation = 250
 init_ϵ = 0.05
 nchains = nprocs()
 println("sampling settings: ")
@@ -109,7 +109,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string(data_set, "_EisHu_TAP_", TAP)
+folname = string("DESY1_k1k_priors_EisHu_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
