@@ -11,31 +11,25 @@ using Distributed
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-@everywhere data_set = "DESY1"
-@everywhere meta = np.load(string("../../data/", data_set, "/", "gcgc_gcwl_wlwl", "_meta.npz"))
-@everywhere files = npzread(string("../../data/", data_set, "/", "gcgc_gcwl_wlwl", "_files.npz"))
+@everywhere sacc_path = "../../data/FD/cls_FD_covG.fits"
+@everywhere yaml_path = "../../data/DESY1/gcgc_gcwl_wlwl.npz"
+@everywhere meta, files = make_data(sacc_path, yaml_path)
 
-@everywhere names = pyconvert(Vector{String}, meta["names"])
-@everywhere types = pyconvert(Vector{String}, meta["types"])
-@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
-@everywhere idx = pyconvert(Vector{Int}, meta["idx"])
-@everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"])
+
+@everywhere data_vector = meta.cls
+@everywhere cov_tot = meta.cov
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
-@everywhere @model function model(data_vector;
-                                  names=names,
-                                  types=types,
-                                  pairs=pairs,
-                                  idx=idx,
-                                  cov=fake_tot, 
+@everywhere @model function model(data;
+                                  cov=fake_cov,
+                                  meta=meta, 
                                   files=files)
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
-    h ~ Uniform(0.64, 0.82)
+    h ~ TruncatedNormal(72, 5, 0.64, 0.82)
     s8 ~ Uniform(0.6, 0.9)
     ns ~ Uniform(0.84, 1.1)
     
@@ -87,18 +81,22 @@ using Distributed
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    theory = Theory(cosmology, names, types, pairs,
-                    idx, files; Nuisances=nuisances)
-    data_vector ~ MvNormal(theory ./ errs, cov)
+    theory = Theory(cosmology, meta, files; Nuisances=nuisances)
+    data ~ MvNormal(theory ./ errs, cov)
 end;
 
+
 cycles = 6
-steps = 50
 iterations = 250
-TAP = 0.65
-adaptation = 250
-init_ϵ = 0.05
 nchains = nprocs()
+
+adaptation = 250
+TAP = 0.65
+init_ϵ = 0.05
+
+stats_model = model(fake_data)
+sampler = NUTS(adaptation, TAP)
+
 println("sampling settings: ")
 println("cycles ", cycles)
 println("iterations ", iterations)
@@ -114,12 +112,13 @@ folname = joinpath(folpath, folname)
 
 if isdir(folname)
     fol_files = readdir(folname)
-    println("Found existing file")
+    println("Found existing file ", folname)
     if length(fol_files) != 0
         last_chain = last([file for file in fol_files if occursin("chain", file)])
         last_n = parse(Int, last_chain[7])
         println("Restarting chain")
     else
+        println("Starting new chain")
         last_n = 0
     end
 else
@@ -130,11 +129,11 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
+        chain = sample(stats_model, sampler, MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(model(fake_data), NUTS(adaptation, TAP), MCMCDistributed(),
+        chain = sample(stats_model, sampler, MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
     end  
     write(joinpath(folname, string("chain_", i,".jls")), chain)
