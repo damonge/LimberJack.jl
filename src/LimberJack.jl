@@ -7,9 +7,14 @@ export get_PKnonlin
 export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer
 export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
 export Theory, get_nzs
+export make_data
 
 using Interpolations, OrdinaryDiffEq, ForwardDiff 
 using LinearAlgebra, Statistics, Trapz, QuadGK, NPZ, NumericalIntegration
+using PythonCall, CondaPkg
+CondaPkg.add("sacc")
+CondaPkg.add("yaml")
+CondaPkg.add("numpy")
 
 include("core.jl")
 include("emulator.jl")
@@ -17,5 +22,6 @@ include("halofit.jl")
 include("tracers.jl")
 include("spectra.jl")
 include("turing_utils.jl")
+include("data_utils.jl")
 
 end
