@@ -10,15 +10,16 @@ cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
                        nk=300, nz=300, nz_pk=70)
 cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
                         nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
-cosmo_emul = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
+cosmo_emul = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81;
                        nk=300, nz=300, nz_pk=70, tk_mode="emulator")
+
 cosmo_BBKS_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                                nk=300, nz=300, nz_pk=70,
                                Pk_mode="Halofit")
 cosmo_EisHu_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
                                nk=300, nz=300, nz_pk=70,
                                tk_mode="EisHu", Pk_mode="Halofit")
-cosmo_emul_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
+cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81,
                               nk=300, nz=300, nz_pk=70,
                               tk_mode="emulator", Pk_mode="Halofit")
 
@@ -61,8 +62,7 @@ cosmo_emul_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
     end
     
     @testset "linear_Pk" begin
-        lks = LinRange(-3, log(7.0), 40)
-        ks = exp.(lks)
+        ks = npzread("../emulator/files.npz")["training_karr"]
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
         pk_emul = nonlin_Pk(cosmo_emul, ks, 0.0)
@@ -76,12 +76,11 @@ cosmo_emul_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
         @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) <  0.1))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.005))
         #This is problematic
-        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.1))
+        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.05))
     end
 
     @testset "nonlinear_Pk" begin
-        lks = LinRange(-3, log(7.), 40)
-        ks = exp.(lks)
+        ks = npzread("../emulator/files.npz")["training_karr"]
         pk_BBKS = nonlin_Pk(cosmo_BBKS_nonlin, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu_nonlin, ks, 0)
         pk_emul = nonlin_Pk(cosmo_emul_nonlin, ks, 0)
@@ -95,7 +94,7 @@ cosmo_emul_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
         @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) < 0.005))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) < 0.005))
         # This is problematic
-        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) < 0.1))
+        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) < 0.05))
     end
 
     @testset "CreateTracer" begin

@@ -28,9 +28,12 @@ Returns:
 - `NumberCountsTracer::NumberCountsTracer` : Number counts tracer structure.
 """
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
-
-    nz_int = linear_interpolation(z_n, nz, extrapolation_bc=0)
-    z_w = range(0.00001, stop=z_n[end], length=cosmo.settings.nz)
+    
+    z_range = range(z_n[1], stop=z_n[end], length=length(z_n))
+    nz_int = cubic_spline_interpolation(z_range, nz, extrapolation_bc=0)
+    
+    res = cosmo.settings.nz_t
+    z_w = range(0.00001, stop=z_n[end], length=res)
     nz_w = nz_int(z_w)
     nz_norm = integrate(z_w, nz_w, SimpsonEven())
     
@@ -73,10 +76,11 @@ Returns:
 """
 WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     
-    nz_int = linear_interpolation(z_n, nz, extrapolation_bc=0)
+    z_range = range(z_n[1], stop=z_n[end], length=length(z_n))
+    nz_int = cubic_spline_interpolation(z_range, nz, extrapolation_bc=0)
     
     cosmo_type = cosmo.settings.cosmo_type
-    res = cosmo.settings.nz
+    res = cosmo.settings.nz_t
     z_w = range(0.00001, stop=z_n[end], length=res)
     dz_w = (z_w[end]-z_w[1])/res
     nz_w = nz_int(z_w)
@@ -91,8 +95,8 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     # Calculate integral at each chi
     w_itg(chii) = @.(nz_w*(1-chii/chi))
     w_arr = zeros(cosmo_type, res)
-    @inbounds for i in 1:res
-        w_arr[i] = trapz(z_w[i:res], w_itg(chi[i])[i:res])
+    @inbounds for i in 1:res-3
+        w_arr[i] = integrate(z_w[i:res], w_itg(chi[i])[i:res], SimpsonEven())
     end
     
     # Normalize
@@ -140,9 +144,9 @@ Kwargs:
 Returns:
 - `CMBLensingTracer::CMBLensingTracer` : CMB lensing tracer structure.
 """
-CMBLensingTracer(cosmo::Cosmology; nchi=100) = begin
+CMBLensingTracer(cosmo::Cosmology) = begin
     # chi array
-    chis = range(0.0, stop=cosmo.chi_max, length=nchi)
+    chis = range(0.0, stop=cosmo.chi_max, length=cosmo.settings.nz_t)
     zs = cosmo.z_of_chi(chis)
     # Prefactor
     H0 = cosmo.cosmo.h/CLIGHT_HMPC

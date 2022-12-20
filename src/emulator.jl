@@ -44,7 +44,8 @@ Returns:
 Emulator(settings) = begin
     files = npzread(settings.emul_path)
     trans_cosmos = files["trans_cosmos"]
-    training_karr = files["training_karr"]
+    karr = files["training_karr"]
+    training_karr = range(log(karr[1]), stop=log(karr[end]), length=length(karr))
     hypers = files["hypers"]
     alphas = files["alphas"]
     inv_chol_cosmos = files["inv_chol_cosmos"]
