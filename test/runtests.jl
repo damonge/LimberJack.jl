@@ -2,6 +2,7 @@ using Test
 using LimberJack
 using ForwardDiff
 using NPZ
+using Statistics
 
 test_results = npzread("test_results.npz")
 test_output = Dict{String}{Vector}()
@@ -167,12 +168,12 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         merge!(test_output, Dict("cl_gk_camb"=> Cℓ_gk))
         merge!(test_output, Dict("cl_sk_camb"=> Cℓ_sk))
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.1))
-        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.1))
-        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.1))
-        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.1))
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.05))
         # The ℓ=10 point is a bit inaccurate for some reason
-        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.1))
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.05))
     end
 
     @testset "EisHu_Halo_Cℓs" begin
@@ -234,11 +235,11 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         merge!(test_output, Dict("cl_gk_emul_nonlin"=> Cℓ_sk))
         merge!(test_output, Dict("cl_sk_emul_nonlin"=> Cℓ_ss))
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.1))
-        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.1))
-        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.1))
-        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.1))
-        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.1))
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.05))
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.05))
     end
 
     @testset "IsBaseDiff" begin
@@ -257,95 +258,95 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
 
         dΩm = 0.02
         g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
-        @test all(@. (abs(g/g1-1) < 1E-3))
+        @test all(@. (abs(g/g1-1) < 0.005))
     end
 
     @testset "IsLinPkDiff" begin
-        zs = 0.02:0.02:1.0
-        ks = [0.001, 0.01, 0.1, 1.0, 7.0]
-        
-        function BBKS(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81)
+        ks = npzread("../emulator/files.npz")["training_karr"]
+                                                
+        function lin_BBKS(Ωm)
+            cosmo = Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81;
+                              tk_mode="BBKS", Pk_mode="linear")
             pk = lin_Pk(cosmo, ks, 0.)
             return pk
         end
 
-        function EisHu(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81, tk_mode="EisHu")
-            pk = lin_Pk(cosmo, ks, 0.)
-            return pk
-        end
-        
-        function emul(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.04, 0.67, 0.96, 0.81, tk_mode="emulator")
+        function lin_EisHu(Ωm)
+            cosmo = Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81;
+                              tk_mode="EisHu", Pk_mode="linear")
             pk = lin_Pk(cosmo, ks, 0.)
             return pk
         end
 
-        Ωm0 = 0.3
-        dΩm = 0.001
+        function lin_emul(Ωm)
+            cosmo = Cosmology(Ωm, 0.04, 0.75, 1.0, 0.81;
+                              tk_mode="emulator", Pk_mode="linear")
+            pk = lin_Pk(cosmo, ks, 0.)
+            return pk
+        end
 
-        BBKS_autodiff = ForwardDiff.derivative(BBKS, Ωm0)
-        EisHu_autodiff = ForwardDiff.derivative(EisHu, Ωm0)
-        emul_autodiff = ForwardDiff.derivative(emul, Ωm0)
-        BBKS_anal = (BBKS(Ωm0+dΩm)-BBKS(Ωm0-dΩm))/2dΩm
-        EisHu_anal = (EisHu(Ωm0+dΩm)-EisHu(Ωm0-dΩm))/2dΩm
-        emul_anal = (emul(Ωm0+dΩm)-emul(Ωm0-dΩm))/2*0.005
+        Ωm0 = 0.25
+        dΩm = 0.01
+        ddΩm = 0.015
 
-        @test all(@. (abs(BBKS_autodiff/BBKS_anal-1) < 1E-3))
-        @test all(@. (abs(EisHu_autodiff/EisHu_anal-1) < 1E-3))
-        #@test all(@. (abs(emul_autodiff/emul_anal-1) < 0.5))
+        lin_BBKS_autodiff = abs.(ForwardDiff.derivative(lin_BBKS, Ωm0))
+        lin_EisHu_autodiff = abs.(ForwardDiff.derivative(lin_EisHu, Ωm0))
+        lin_emul_autodiff = abs.(ForwardDiff.derivative(lin_emul, Ωm0))
+        lin_BBKS_num = abs.((lin_BBKS(Ωm0+dΩm)-lin_BBKS(Ωm0-dΩm))/(2dΩm))
+        lin_EisHu_num = abs.((lin_EisHu(Ωm0+dΩm)-lin_EisHu(Ωm0-dΩm))/(2dΩm))
+        lin_emul_num = abs.((lin_emul(Ωm0+ddΩm)-lin_emul(Ωm0-ddΩm))/(2ddΩm))
+
+        # Mean needed since errors shoot up when derivatieve
+        # crosses zero
+        @test mean(lin_BBKS_autodiff./lin_BBKS_num.-1) < 0.05
+        @test mean(lin_EisHu_autodiff./lin_EisHu_num.-1) < 0.05
+        @test mean(lin_emul_autodiff./lin_emul_num.-1) < 0.05
     end
     
 
-    @testset "IsEisHuHalofitDiff" begin
-
-        zs = 0.02:0.02:1.0
-        ks = [0.001, 0.01, 0.1, 1.0, 7.0]
-        
-        function Halofit(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
-            pk = LimberJack.nonlin_Pk(cosmo, ks, 0)
+    @testset "IsNonlinPkDiff" begin
+        ks = npzread("../emulator/files.npz")["training_karr"]
+                                                
+        function nonlin_BBKS(Ωm)
+            cosmo = Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81;
+                              tk_mode="BBKS", Pk_mode="Halofit")
+            pk = nonlin_Pk(cosmo, ks, 0.)
             return pk
         end
 
-        Ωm0 = 0.3
-        dΩm = 0.001
-
-        Halofit_autodiff = ForwardDiff.derivative(Halofit, Ωm0)
-        Halofit_anal = (Halofit(Ωm0+dΩm)-Halofit(Ωm0-dΩm))/2dΩm
-
-        @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 2E-2))
-    end
-
-"""
-    @testset "IsemulHalofitDiff" begin
-
-        zs = 0.02:0.02:1.0
-        ks = [0.001, 0.01, 0.1, 1.0, 7.0]
-        
-        function Halofit(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.045, 0.67, 0.96, 0.81,
-                                         tk_mode="emulator", Pk_mode="Halofit")
-            pk = LimberJack.nonlin_Pk(cosmo, ks, 0)
+        function nonlin_EisHu(Ωm)
+            cosmo = Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81;
+                              tk_mode="EisHu", Pk_mode="Halofit")
+            pk = nonlin_Pk(cosmo, ks, 0.)
             return pk
         end
 
-        Ωm0 = 0.3
-        dΩm = 0.0005
+        function nonlin_emul(Ωm)
+            cosmo = Cosmology(Ωm, 0.04, 0.75, 1.0, 0.81;
+                              tk_mode="emulator", Pk_mode="Halofit")
+            pk = nonlin_Pk(cosmo, ks, 0.)
+            return pk
+        end
 
-        Halofit_autodiff = ForwardDiff.derivative(Halofit, Ωm0)
-        Halofit_anal = (Halofit(Ωm0+dΩm)-Halofit(Ωm0-dΩm))/2dΩm
+        Ωm0 = 0.25
+        dΩm = 0.01
+        ddΩm = 0.02
 
-        @test all(@. (abs(Halofit_autodiff/Halofit_anal-1) < 0.5))
+        nonlin_BBKS_autodiff = abs.(ForwardDiff.derivative(nonlin_BBKS, Ωm0))
+        nonlin_EisHu_autodiff = abs.(ForwardDiff.derivative(nonlin_EisHu, Ωm0))
+        nonlin_emul_autodiff = abs.(ForwardDiff.derivative(nonlin_emul, Ωm0))
+        nonlin_BBKS_num = abs.((nonlin_BBKS(Ωm0+dΩm)-nonlin_BBKS(Ωm0-dΩm))/(2dΩm))
+        nonlin_EisHu_num = abs.((nonlin_EisHu(Ωm0+dΩm)-nonlin_EisHu(Ωm0-dΩm))/(2dΩm))
+        nonlin_emul_num = abs.((nonlin_emul(Ωm0+ddΩm)-nonlin_emul(Ωm0-ddΩm))/(2ddΩm));
+
+        # Mean needed since errors shoot up when derivatieve
+        # crosses zero
+        @test mean(nonlin_BBKS_autodiff./nonlin_BBKS_num.-1) < 0.1
+        @test mean(nonlin_EisHu_autodiff./nonlin_EisHu_num.-1) < 0.1
+        @test mean(nonlin_emul_autodiff./nonlin_emul_num.-1) < 0.1
     end
-"""
+    
+
 
     @testset "AreClsDiff" begin
         
@@ -400,7 +401,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         Cl_sk_autodiff = ForwardDiff.derivative(Cl_sk, Ωm0)
         Cl_sk_anal = (Cl_sk(Ωm0+dΩm)-Cl_sk(Ωm0-dΩm))/2dΩm
 
-        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_anal-1) < 0.10))
+        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_anal-1) < 0.05))
         @test all(@. (abs(Cl_ss_autodiff/Cl_ss_anal-1) < 0.05))
         @test all(@. (abs(Cl_sk_autodiff/Cl_sk_anal-1) < 0.05))
     end
@@ -503,11 +504,11 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         IA_alpha_autodiff = ForwardDiff.derivative(IA_alpha, 0.1)
         IA_alpha_anal = (IA_alpha(0.1+d)-IA_alpha(0.1-d))/2d
 
-        @test all(@. (abs(b_autodiff/b_anal-1) < 1E-2))
-        @test all(@. (abs(dz_autodiff/dz_anal-1) < 1E-1))
-        @test all(@. (abs(mb_autodiff/mb_anal-1) < 1E-2))
-        @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 1E-2))
-        @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 1E-2))
+        @test all(@. (abs(b_autodiff/b_anal-1) < 0.05))
+        @test all(@. (abs(dz_autodiff/dz_anal-1) < 0.05))
+        @test all(@. (abs(mb_autodiff/mb_anal-1) < 0.05))
+        @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 0.05))
+        @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 0.05))
     end
     npzwrite("test_output.npz", test_output)
 end
