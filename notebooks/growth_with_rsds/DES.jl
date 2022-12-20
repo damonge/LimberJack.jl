@@ -35,7 +35,7 @@ using Distributed
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
-    h ~ Uniform(0.64, 0.82)
+    h ~ TruncatedNormal(74, 5, 65, 84)
     s8 ~ Uniform(0.6, 0.9)
     ns ~ Uniform(0.84, 1.1)
     
