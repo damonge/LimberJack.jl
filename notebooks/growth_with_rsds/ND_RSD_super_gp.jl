@@ -129,8 +129,7 @@ end
                           custom_Dz=[x, gp],
                           emul_path="../../emulator/files.npz")
     
-    cls = Theory(cosmology, names, types, pairs,
-                 idx, files; Nuisances=nuisances)
+    cls = Theory(cosmology, meta, files; Nuisances=nuisances)
     
     fs8s = fs8(cosmology, fs8_zs)
     theory = [fs8s; cls]

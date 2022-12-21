@@ -118,8 +118,7 @@ end
                           custom_Dz=[x, gp],
                           emul_path="../../emulator/files.npz")
     
-    theory = Theory(cosmology, names, types, pairs,
-                    idx, files; Nuisances=nuisances)
+    theory = Theory(cosmology, meta, files; Nuisances=nuisances)
     
     data ~ MvNormal(theory ./ errs, cov)
 end;
