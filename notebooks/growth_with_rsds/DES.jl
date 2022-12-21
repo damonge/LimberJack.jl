@@ -17,7 +17,7 @@ using Distributed
     yaml_file = YAML.load_file(yaml_path)
     meta, files = make_data(sacc_file, yaml_file)
 
-    data_vector = meta.cls
+    data_vector = meta.data
     cov_tot = meta.cov
     errs = sqrt.(diag(cov_tot))
     fake_data = data_vector ./ errs
