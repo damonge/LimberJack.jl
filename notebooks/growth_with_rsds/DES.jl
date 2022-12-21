@@ -4,10 +4,6 @@ using Distributed
 @everywhere using Turing
 @everywhere using LimberJack
 @everywhere using CSV
-@everywhere using NPZ
-@everywhere using FITSIO
-@everywhere using PythonCall
-@everywhere np = pyimport("numpy")
 
 @everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
