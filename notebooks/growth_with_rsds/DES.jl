@@ -32,7 +32,7 @@ end
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
     h ~ TruncatedNormal(72, 5, 0.64, 0.82)
-    s8 ~ Uniform(0.6, 1.05)
+    s8 ~ Uniform(0.4, 1.2)
     ns ~ Uniform(0.84, 1.1)
 
     DESgc__0_b ~ Uniform(0.8, 3.0)

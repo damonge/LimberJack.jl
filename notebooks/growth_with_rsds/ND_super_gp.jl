@@ -19,26 +19,15 @@ using Distributed
     yaml_file = YAML.load_file(yaml_path)
     meta, files = make_data(sacc_file, yaml_file)
     
-    cls_data = meta.data
-    cls_cov = meta.cov
-
-    fs8_meta = npzread("../../data/fs8s/fs8s.npz")
-    fs8_zs = fs8_meta["z"]
-    fs8_data = fs8_meta["data"]
-    fs8_cov = fs8_meta["cov"]
-
-    cov_tot = zeros(Float64, length(fs8_data)+length(cls_data), length(fs8_data)+length(cls_data))
-    cov_tot[1:length(fs8_data), 1:length(fs8_data)] = fs8_cov
-    cov_tot[length(fs8_data)+1:(length(fs8_data)+length(cls_data)),
-            length(fs8_data)+1:(length(fs8_data)+length(cls_data))] = cls_cov
-    data_vector = [fs8_data ; cls_data];
+    data_vector = meta.data
+    cov_tot = meta.cov
 
     errs = sqrt.(diag(cov_tot))
     fake_data = data_vector ./ errs
     fake_cov = Hermitian(cov_tot ./ (errs * errs')) 
 
     fid_cosmo = Cosmology()
-    n = 31
+    n = 101
     N = 201
     latent_x = Vector(range(0., stop=3., length=n))
     x = Vector(range(0., stop=3., length=N))
@@ -59,31 +48,31 @@ end
     ns ~ Uniform(0.84, 1.1)
     s8 = 0.811
     
-    DESgc__0_b ~ Uniform(0.8, 3.0)
-    DESgc__1_b ~ Uniform(0.8, 3.0)
-    DESgc__2_b ~ Uniform(0.8, 3.0)
-    DESgc__3_b ~ Uniform(0.8, 3.0)
-    DESgc__4_b ~ Uniform(0.8, 3.0)
-    DESgc__0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-    DESgc__1_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-    DESgc__2_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
-    DESgc__3_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-    DESgc__4_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    DESgc__0_b = 1.48 #~ Uniform(0.8, 3.0)
+    DESgc__1_b = 1.81 #~ Uniform(0.8, 3.0)
+    DESgc__2_b = 1.78 #~ Uniform(0.8, 3.0)
+    DESgc__3_b = 2.17 #~ Uniform(0.8, 3.0)
+    DESgc__4_b = 2.21 #~ Uniform(0.8, 3.0)
+    DESgc__0_dz = -0.005 #~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    DESgc__1_dz = -0.008 #~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    DESgc__2_dz = -0.0001 #~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
+    DESgc__3_dz = 0.001 #~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    DESgc__4_dz = -0.004 #~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
 
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
+    A_IA = 0.27 #~ Uniform(-5, 5) 
+    alpha_IA = -2.41 #~ Uniform(-5, 5)
 
-    DESwl__0_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
-    DESwl__1_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
-    DESwl__2_dz ~ TruncatedNormal(0.009, 0.011, -0.2, 0.2)
-    DESwl__3_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
-    DESwl__0_m ~ Normal(0.012, 0.023)
-    DESwl__1_m ~ Normal(0.012, 0.023)
-    DESwl__2_m ~ Normal(0.012, 0.023)
-    DESwl__3_m ~ Normal(0.012, 0.023)
+    DESwl__0_dz = -0.018 #~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
+    DESwl__1_dz = 0.001 #~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
+    DESwl__2_dz = 0.004 #~ TruncatedNormal(0.009, 0.011, -0.2, 0.2)
+    DESwl__3_dz = 0.014 #~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
+    DESwl__0_m = 0.049 #~ Normal(0.012, 0.023)
+    DESwl__1_m = 0.026 #~ Normal(0.012, 0.023)
+    DESwl__2_m = 0.026 #~ Normal(0.012, 0.023)
+    DESwl__3_m = -0.008 #~ Normal(0.012, 0.023)
 
-    eBOSS__0_b ~ Uniform(0.8, 5.0)
-    eBOSS__1_b ~ Uniform(0.8, 5.0)
+    eBOSS__0_b = 2.444 #~ Uniform(0.8, 5.0)
+    eBOSS__1_b = 2.630 #~ Uniform(0.8, 5.0)
 
     nuisances = Dict("DESgc__0_b" => DESgc__0_b,
                      "DESgc__1_b" => DESgc__1_b,
@@ -129,11 +118,8 @@ end
                           custom_Dz=[x, gp],
                           emul_path="../../emulator/files.npz")
     
-    cls = Theory(cosmology, names, types, pairs,
-                 idx, files; Nuisances=nuisances)
-    
-    fs8s = fs8(cosmology, fs8_zs)
-    theory = [fs8s; cls]
+    theory = Theory(cosmology, names, types, pairs,
+                    idx, files; Nuisances=nuisances)
     
     data ~ MvNormal(theory ./ errs, cov)
 end;
@@ -145,13 +131,7 @@ nchains = nprocs()
 TAP = 0.60
 adaptation = 300
 
-sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns, 
-                     :DESgc__0_b, :DESgc__1_b, :DESgc__2_b, :DESgc__3_b, :DESgc__4_b,
-                     :DESgc__0_dz, :DESgc__1_dz, :DESgc__2_dz, :DESgc__3_dz, :DESgc__4_dz,
-                     :A_IA, :alpha_IA,
-                     :DESwl__0_b, :DESwl__1_b, :DESwl__2_b, :DESwl__3_b,
-                     :DESwl__0_dz, :DESwl__1_dz, :DESwl__2_dz, :DESwl__3_dz,
-                     :eBOSS__0_b, :eBOSS__1_b),
+sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns),
                 NUTS(adaptation, TAP, :v))
 
 println("sampling settings: ")
