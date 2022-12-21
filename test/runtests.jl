@@ -296,11 +296,11 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         lin_EisHu_num = abs.((lin_EisHu(Ωm0+dΩm)-lin_EisHu(Ωm0-dΩm))/(2dΩm))
         lin_emul_num = abs.((lin_emul(Ωm0+ddΩm)-lin_emul(Ωm0-ddΩm))/(2ddΩm))
 
-        # Mean needed since errors shoot up when derivatieve
+        # Median needed since errors shoot up when derivatieve
         # crosses zero
-        @test mean(lin_BBKS_autodiff./lin_BBKS_num.-1) < 0.05
-        @test mean(lin_EisHu_autodiff./lin_EisHu_num.-1) < 0.05
-        @test mean(lin_emul_autodiff./lin_emul_num.-1) < 0.05
+        @test median(lin_BBKS_autodiff./lin_BBKS_num.-1) < 0.05
+        @test median(lin_EisHu_autodiff./lin_EisHu_num.-1) < 0.05
+        @test median(lin_emul_autodiff./lin_emul_num.-1) < 0.05
     end
     
 
@@ -339,11 +339,11 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         nonlin_EisHu_num = abs.((nonlin_EisHu(Ωm0+dΩm)-nonlin_EisHu(Ωm0-dΩm))/(2dΩm))
         nonlin_emul_num = abs.((nonlin_emul(Ωm0+ddΩm)-nonlin_emul(Ωm0-ddΩm))/(2ddΩm));
 
-        # Mean needed since errors shoot up when derivatieve
+        # Median needed since errors shoot up when derivatieve
         # crosses zero
-        @test mean(nonlin_BBKS_autodiff./nonlin_BBKS_num.-1) < 0.1
-        @test mean(nonlin_EisHu_autodiff./nonlin_EisHu_num.-1) < 0.1
-        @test mean(nonlin_emul_autodiff./nonlin_emul_num.-1) < 0.1
+        @test median(nonlin_BBKS_autodiff./nonlin_BBKS_num.-1) < 0.1
+        @test median(nonlin_EisHu_autodiff./nonlin_EisHu_num.-1) < 0.1
+        @test median(nonlin_emul_autodiff./nonlin_emul_num.-1) < 0.1
     end
     
 
