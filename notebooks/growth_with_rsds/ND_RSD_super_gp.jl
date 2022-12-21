@@ -153,7 +153,6 @@ println("cycles ", cycles)
 println("iterations ", iterations)
 println("TAP ", TAP)
 println("adaptation ", adaptation)
-println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.

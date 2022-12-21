@@ -94,7 +94,6 @@ nchains = nprocs()
 
 adaptation = 250
 TAP = 0.65
-init_ϵ = 0.05
 
 stats_model = model(fake_data)
 sampler = NUTS(adaptation, TAP)
@@ -104,7 +103,6 @@ println("cycles ", cycles)
 println("iterations ", iterations)
 println("TAP ", TAP)
 println("adaptation ", adaptation)
-println("init_ϵ ", init_ϵ)
 println("nchains ", nchains)
 
 # Start sampling.
