@@ -12,7 +12,7 @@ using Distributed
     println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
     sacc_path = "../../data/FD/cls_FD_covG.fits"
-    yaml_path = "../../data/DESY1/gcgc_gcwl_wlwl.npz"
+    yaml_path = "../../data/DESY1/gcgc_gcwl_wlwl.yml"
     sacc_file = sacc.Sacc().load_fits(sacc_path)
     yaml_file = YAML.load_file(yaml_path)
     meta, files = make_data(sacc_file, yaml_file)
