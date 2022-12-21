@@ -1,15 +1,16 @@
-struct meta
-    namess
-    pairss
+struct Meta
+    names
+    pairs
     types
-    cls
     idx
+    data
     cov 
     inv_cov
 end
 
 function _get_type(sacc_file, tracer_name)
-    return sacc_file.tracers[tracer_name].quantity
+    typ = sacc_file.tracers[tracer_name].quantity
+    return pyconvert(String, typ)
 end
 
 function _get_spin(sacc_file, tracer_name)
@@ -56,7 +57,7 @@ function make_data(sacc_file, yaml_file; nzs_path="")
     cls = Vector{Float64}([])
     ls = []
     indices = Vector{Int}([])
-    pairss = []
+    pairs = []
     for cl in yaml_file["order"]
         t1, t2 = cl["tracers"]
         cl_name = _get_cl_name(s, t1, t2)
@@ -65,10 +66,10 @@ function make_data(sacc_file, yaml_file; nzs_path="")
         append!(indices, pyconvert(Vector{Int}, ind))
         append!(cls, pyconvert(Vector{Float64}, c_ell))
         push!(ls, pyconvert(Vector{Float64}, l))
-        push!(pairss, pyconvert(Vector{String}, [t1, t2]))
+        push!(pairs, pyconvert(Vector{String}, [t1, t2]))
     end
     
-    namess = unique(vcat(pairss...))
+    names = unique(vcat(pairs...))
     cov = pyconvert(Vector{Vector{Float64}}, s.covariance.dense)
     cov = permutedims(hcat(cov...))[indices.+1, :][:, indices.+1]
     cov = Hermitian(cov)
@@ -76,16 +77,16 @@ function make_data(sacc_file, yaml_file; nzs_path="")
     lengths = [length(l) for l in ls]
     lengths = vcat([0], lengths)
     idx  = cumsum(lengths)
-    types = [_get_type(s, name) for name in namess]
+    types = [_get_type(s, name) for name in names]
     
     # build struct
-    metaa = meta(namess, pairss, types, cls, idx,
-                 cov, inv_cov)
+    meta = Meta(names, pairs, types, idx,
+                cls, cov, inv_cov)
     
     # Initialize
     files = Dict{String}{Vector}()
     # Load in l's
-    for (pair, l) in zip(pairss, ls)
+    for (pair, l) in zip(pairs, ls)
         t1, t2 = pair
         println(t1, " ", t2, " ", length(l))
         merge!(files, Dict(string("ls_", t1, "_", t2)=> l))
@@ -93,7 +94,7 @@ function make_data(sacc_file, yaml_file; nzs_path="")
     
     # Load in nz's
     for (name, tracer) in s.tracers.items()
-        if string(name) in namess
+        if string(name) in names
             if nzs_path == ""
                 z=pyconvert(Vector{Float64}, tracer.z)
                 nz=pyconvert(Vector{Float64}, tracer.nz)
@@ -107,5 +108,5 @@ function make_data(sacc_file, yaml_file; nzs_path="")
         end
     end
     
-    return metaa, files
+    return meta, files
 end 
