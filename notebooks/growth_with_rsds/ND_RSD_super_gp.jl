@@ -145,6 +145,7 @@ nchains = nprocs()
 TAP = 0.60
 adaptation = 300
 
+stats_model = model(fake_data)
 sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns),
                 NUTS(adaptation, TAP, :v))
 
@@ -179,7 +180,7 @@ end
 
 for i in (1+last_n):(cycles+last_n)
     if i == 1
-        chain = sample(stas_model, sampler, MCMCDistributed(),
+        chain = sample(stats_model, sampler, MCMCDistributed(),
                        iterations, nchains, progress=true; save_state=true)
     else
         old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
