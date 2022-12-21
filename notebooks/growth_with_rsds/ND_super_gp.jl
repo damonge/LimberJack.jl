@@ -29,8 +29,8 @@ using Distributed
     fid_cosmo = Cosmology()
     n = 101
     N = 201
-    latent_x = Vector(range(0., stop=3., length=n))
-    x = Vector(range(0., stop=3., length=N))
+    latent_x = range(0., stop=3., length=n)
+    x = range(0., stop=3., length=N)
 end
             
 @everywhere @model function model(data;

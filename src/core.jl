@@ -202,7 +202,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     nz = settings.nz
     nz_pk = settings.nz_pk
     zs_pk = LinRange(0., 3.0, nz_pk)
-    zs = LinRange(0., 3.0, nz)
+    zs = range(0., stop=3.0, length=nz)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
@@ -236,7 +236,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         chis[i] = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
     end
     # OPT: tolerances, interpolation method
-    chii = linear_interpolation(zs, chis, extrapolation_bc=Line())
+    chii = cubic_spline_interpolation(zs, chis, extrapolation_bc=Line())
     zi = linear_interpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
     #chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
@@ -279,12 +279,12 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         zs_c, Dzs_c = settings.custom_Dz
         d = zs_c[2]-zs_c[1]
 
-        Dzi = linear_interpolation(zs_c, Dzs_c, extrapolation_bc=Line())
+        Dzi = cubic_spline_interpolation(zs_c, Dzs_c, extrapolation_bc=Line())
         dDzs_mid = (Dzs_c[2:end].-Dzs_c[1:end-1])/d
         zs_mid = (zs_c[2:end].+zs_c[1:end-1])./2
         dDzi = linear_interpolation(zs_mid, dDzs_mid, extrapolation_bc=Line())
         dDzs_c = dDzi(zs_c)
-        fs8zi = linear_interpolation(zs_c, -cpar.σ8 .* (1 .+ zs_c) .* dDzs_c,
+        fs8zi = cubic_spline_interpolation(zs_c, -cpar.σ8 .* (1 .+ zs_c) .* dDzs_c,
                                      extrapolation_bc=Line())
 
         Dzs = Dzi(zs_pk)
