@@ -44,7 +44,7 @@ end
     DESgc__1_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
     DESgc__2_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
     DESgc__3_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-    DESwl__4_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    DESgc__4_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
     DESwl__0_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
     DESwl__1_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
     DESwl__2_dz ~ TruncatedNormal(0.009, 0.011, -0.2, 0.2)
@@ -79,10 +79,10 @@ end
                      "DESwl__2_m" => DESwl__2_m,
                      "DESwl__3_m" => DESwl__3_m)
 
-    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
-                                     tk_mode="emul",
-                                     Pk_mode="Halofit",
-                                     emul_path="../../emulator/files.npz")
+    cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
+                         tk_mode="emul",
+                         Pk_mode="Halofit",
+                         emul_path="../../emulator/files.npz")
 
     theory = Theory(cosmology, meta, files; Nuisances=nuisances)
     data ~ MvNormal(theory ./ errs, cov)
