@@ -18,15 +18,15 @@ function Theory(cosmology::Cosmology,
         end
     end
     
-    tracers =  Dict{String}{AbstractInterpolation}()
+    tracers =  Dict{String}{Tracer}()
     ntracers = length(names)
     @inbounds for i in 1:ntracers
         name = names[i]
         t_type = types[i]
         if t_type == "galaxy_density"
-            nzs = files[string("nz_", name)]
-            nzs = [nzs[i,:] for i in 1:size(nzs,1)]
-            zs_mean, nz_mean = nzs[1], nzs[2]
+            #nzs = files[string("nz_", name)]
+            #nzs = [nzs[i,:] for i in 1:size(nzs,1)]
+            zs_mean, nz_mean = files[string("nz_", name)]
 
             b = get(Nuisances, string(name, "_", "b"), 1.0)
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
@@ -34,9 +34,9 @@ function Theory(cosmology::Cosmology,
             tracer = NumberCountsTracer(cosmology, zs, nz;
                                         b=b)
         elseif t_type == "galaxy_shear"
-            nzs = files[string("nz_", name)]
-            nzs = [nzs[i,:] for i in 1:size(nzs,1)]
-            zs_mean, nz_mean = nzs[1], nzs[2]
+            #nzs = files[string("nz_", name)]
+            #nzs = [nzs[i,:] for i in 1:size(nzs,1)]
+            zs_mean, nz_mean = files[string("nz_", name)]
 
             mb = get(Nuisances, string(name, "_", "mb"), 0.0)
             IA_params = [get(Nuisances, "A_IA", 0.0),

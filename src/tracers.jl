@@ -28,7 +28,6 @@ Returns:
 - `NumberCountsTracer::NumberCountsTracer` : Number counts tracer structure.
 """
 NumberCountsTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
-    
     z_range = range(z_n[1], stop=z_n[end], length=length(z_n))
     nz_int = cubic_spline_interpolation(z_range, nz, extrapolation_bc=0)
     
@@ -75,7 +74,6 @@ Returns:
 - `WeakLensingTracer::WeakLensingTracer` : Weak lensing tracer structure.
 """
 WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
-    
     z_range = range(z_n[1], stop=z_n[end], length=length(z_n))
     nz_int = cubic_spline_interpolation(z_range, nz, extrapolation_bc=0)
     
