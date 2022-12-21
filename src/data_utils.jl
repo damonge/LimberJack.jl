@@ -99,9 +99,11 @@ function make_data(sacc_file, yaml_file; nzs_path="")
     for (name, tracer) in s.tracers.items()
         if string(name) in names
             if nzs_path == ""
-                z=pyconvert(Vector{Float64}, tracer.z)
-                nz=pyconvert(Vector{Float64}, tracer.nz)
-                merge!(files, Dict(string("nz_", name)=>[z, nz]))
+                if string(tracer.quantity) != "cmb_convergence"
+                    z=pyconvert(Vector{Float64}, tracer.z)
+                    nz=pyconvert(Vector{Float64}, tracer.nz)
+                    merge!(files, Dict(string("nz_", name)=>[z, nz]))
+                end
             else
                 nzs = np.load(nzs_path+string("nz_", name)+".npz")
                 z = nzs["z"]
