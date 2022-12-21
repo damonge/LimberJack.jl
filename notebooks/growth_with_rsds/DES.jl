@@ -11,7 +11,6 @@ using Distributed
 @everywhere yaml_path = "../../data/DESY1/gcgc_gcwl_wlwl.npz"
 @everywhere meta, files = make_data(sacc_path, yaml_path)
 
-
 @everywhere data_vector = meta.cls
 @everywhere cov_tot = meta.cov
 @everywhere errs = sqrt.(diag(cov_tot))

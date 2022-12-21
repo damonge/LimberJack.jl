@@ -11,10 +11,7 @@ export make_data
 
 using Interpolations, OrdinaryDiffEq, ForwardDiff 
 using LinearAlgebra, Statistics, Trapz, QuadGK, NPZ, NumericalIntegration
-using PythonCall, CondaPkg
-CondaPkg.add("sacc")
-CondaPkg.add("yaml")
-CondaPkg.add("numpy")
+using PythonCall
 
 include("core.jl")
 include("emulator.jl")
