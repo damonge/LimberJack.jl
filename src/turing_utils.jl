@@ -28,7 +28,8 @@ function Theory(cosmology::Cosmology,
             b = get(Nuisances, string(name, "_", "b"), 1.0)
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
             zs = get(Nuisances, string(name, "_", "zs"), zs_mean)
-            tracer = NumberCountsTracer(cosmology, zs, nz;
+            dz = get(Nuisances, string(name, "_", "dz"), 0.0)
+            tracer = NumberCountsTracer(cosmology, zs.+dz, nz;
                                         b=b)
         elseif t_type == "galaxy_shear"
             zs_mean, nz_mean = files[string("nz_", name)]
@@ -37,7 +38,8 @@ function Theory(cosmology::Cosmology,
                          get(Nuisances, "alpha_IA", 0.0)]
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
             zs = get(Nuisances, string(name, "_", "zs"), zs_mean)
-            tracer = WeakLensingTracer(cosmology, zs, nz;
+            dz = get(Nuisances, string(name, "_", "dz"), 0.0)
+            tracer = WeakLensingTracer(cosmology, zs.+dz, nz;
                                        mb=mb, IA_params=IA_params)
             
         elseif t_type == "cmb_convergence"
