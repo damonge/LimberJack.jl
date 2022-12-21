@@ -22,70 +22,70 @@ using Distributed
     errs = sqrt.(diag(cov_tot))
     fake_data = data_vector ./ errs
     fake_cov = Hermitian(cov_tot ./ (errs * errs'));
+end 
 
-    @model function model(data;
+@everywhere @model function model(data;
                                   cov=fake_cov,
                                   meta=meta, 
                                   files=files)
-        #KiDS priors
-        Ωm ~ Uniform(0.2, 0.6)
-        Ωb ~ Uniform(0.028, 0.065)
-        h ~ TruncatedNormal(72, 5, 0.64, 0.82)
-        s8 ~ Uniform(0.6, 0.9)
-        ns ~ Uniform(0.84, 1.1)
+    #KiDS priors
+    Ωm ~ Uniform(0.2, 0.6)
+    Ωb ~ Uniform(0.028, 0.065)
+    h ~ TruncatedNormal(72, 5, 0.64, 0.82)
+    s8 ~ Uniform(0.6, 0.9)
+    ns ~ Uniform(0.84, 1.1)
 
-        DESgc__0_b ~ Uniform(0.8, 3.0)
-        DESgc__1_b ~ Uniform(0.8, 3.0)
-        DESgc__2_b ~ Uniform(0.8, 3.0)
-        DESgc__3_b ~ Uniform(0.8, 3.0)
-        DESgc__4_b ~ Uniform(0.8, 3.0)
-        DESgc__0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-        DESgc__1_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
-        DESgc__2_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
-        DESgc__3_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-        DESwl__4_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
-        DESwl__0_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
-        DESwl__1_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
-        DESwl__2_dz ~ TruncatedNormal(0.009, 0.011, -0.2, 0.2)
-        DESwl__3_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
-        DESwl__0_m ~ Normal(0.012, 0.023)
-        DESwl__1_m ~ Normal(0.012, 0.023)
-        DESwl__2_m ~ Normal(0.012, 0.023)
-        DESwl__3_m ~ Normal(0.012, 0.023)
-        A_IA ~ Uniform(-5, 5) 
-        alpha_IA ~ Uniform(-5, 5)
+    DESgc__0_b ~ Uniform(0.8, 3.0)
+    DESgc__1_b ~ Uniform(0.8, 3.0)
+    DESgc__2_b ~ Uniform(0.8, 3.0)
+    DESgc__3_b ~ Uniform(0.8, 3.0)
+    DESgc__4_b ~ Uniform(0.8, 3.0)
+    DESgc__0_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    DESgc__1_dz ~ TruncatedNormal(0.0, 0.007, -0.2, 0.2)
+    DESgc__2_dz ~ TruncatedNormal(0.0, 0.006, -0.2, 0.2)
+    DESgc__3_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    DESwl__4_dz ~ TruncatedNormal(0.0, 0.01, -0.2, 0.2)
+    DESwl__0_dz ~ TruncatedNormal(-0.001, 0.016, -0.2, 0.2)
+    DESwl__1_dz ~ TruncatedNormal(-0.019, 0.013, -0.2, 0.2)
+    DESwl__2_dz ~ TruncatedNormal(0.009, 0.011, -0.2, 0.2)
+    DESwl__3_dz ~ TruncatedNormal(-0.018, 0.022, -0.2, 0.2)
+    DESwl__0_m ~ Normal(0.012, 0.023)
+    DESwl__1_m ~ Normal(0.012, 0.023)
+    DESwl__2_m ~ Normal(0.012, 0.023)
+    DESwl__3_m ~ Normal(0.012, 0.023)
+    A_IA ~ Uniform(-5, 5) 
+    alpha_IA ~ Uniform(-5, 5)
 
-        nuisances = Dict("DESgc__0_b" => DESgc__0_b,
-                         "DESgc__1_b" => DESgc__1_b,
-                         "DESgc__2_b" => DESgc__2_b,
-                         "DESgc__3_b" => DESgc__3_b,
-                         "DESgc__4_b" => DESgc__4_b,
-                         "DESgc__0_dz" => DESgc__0_dz,
-                         "DESgc__1_dz" => DESgc__1_dz,
-                         "DESgc__2_dz" => DESgc__2_dz,
-                         "DESgc__3_dz" => DESgc__3_dz,
-                         "DESgc__4_dz" => DESgc__4_dz,
+    nuisances = Dict("DESgc__0_b" => DESgc__0_b,
+                     "DESgc__1_b" => DESgc__1_b,
+                     "DESgc__2_b" => DESgc__2_b,
+                     "DESgc__3_b" => DESgc__3_b,
+                     "DESgc__4_b" => DESgc__4_b,
+                     "DESgc__0_dz" => DESgc__0_dz,
+                     "DESgc__1_dz" => DESgc__1_dz,
+                     "DESgc__2_dz" => DESgc__2_dz,
+                     "DESgc__3_dz" => DESgc__3_dz,
+                     "DESgc__4_dz" => DESgc__4_dz,
 
-                         "A_IA" => A_IA,
-                         "alpha_IA" => alpha_IA,
+                     "A_IA" => A_IA,
+                     "alpha_IA" => alpha_IA,
 
-                         "DESwl__0_dz" => DESwl__0_dz,
-                         "DESwl__1_dz" => DESwl__1_dz,
-                         "DESwl__2_dz" => DESwl__2_dz,
-                         "DESwl__3_dz" => DESwl__3_dz,
-                         "DESwl__0_m" => DESwl__0_m,
-                         "DESwl__1_m" => DESwl__1_m,
-                         "DESwl__2_m" => DESwl__2_m,
-                         "DESwl__3_m" => DESwl__3_m)
+                     "DESwl__0_dz" => DESwl__0_dz,
+                     "DESwl__1_dz" => DESwl__1_dz,
+                     "DESwl__2_dz" => DESwl__2_dz,
+                     "DESwl__3_dz" => DESwl__3_dz,
+                     "DESwl__0_m" => DESwl__0_m,
+                     "DESwl__1_m" => DESwl__1_m,
+                     "DESwl__2_m" => DESwl__2_m,
+                     "DESwl__3_m" => DESwl__3_m)
 
-        cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
-                                         tk_mode="EisHu",
-                                         Pk_mode="Halofit")
+    cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
+                                     tk_mode="EisHu",
+                                     Pk_mode="Halofit")
 
-        theory = Theory(cosmology, meta, files; Nuisances=nuisances)
-        data ~ MvNormal(theory ./ errs, cov)
-    end
-end;
+    theory = Theory(cosmology, meta, files; Nuisances=nuisances)
+    data ~ MvNormal(theory ./ errs, cov)
+end
 
 cycles = 6
 iterations = 250
