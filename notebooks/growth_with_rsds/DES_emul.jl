@@ -32,7 +32,7 @@ end
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
     h ~ TruncatedNormal(72, 5, 0.64, 0.82)
-    s8 ~ Uniform(0.6, 0.9)
+    s8 ~ Uniform(0.6, 1.05)
     ns ~ Uniform(0.84, 1.1)
 
     DESgc__0_b ~ Uniform(0.8, 3.0)
@@ -80,7 +80,7 @@ end
                      "DESwl__3_m" => DESwl__3_m)
 
     cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
-                         tk_mode="emul",
+                         tk_mode="emulator",
                          Pk_mode="Halofit",
                          emul_path="../../emulator/files.npz")
 
