@@ -345,7 +345,16 @@ Cosmology(Ωm, Ωb, h, n_s, σ8;
           tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           custom_Dz=nothing) = begin
+    
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
+    if custom_Dz != nothing
+        _, Dz = custom_Dz
+        Dz_type = eltype(Dz)
+        if !(Dz_type <: Float64)
+            cosmo_type = Dz_type
+        end
+    end
+    
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
     settings = Settings(cosmo_type, nz, nz_pk, nz_t, nk,
                         tk_mode, Pk_mode, emul_path, custom_Dz)

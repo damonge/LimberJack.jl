@@ -11,12 +11,12 @@ function Theory(cosmology::Cosmology,
                 idx, files;
                 Nuisances=Dict())
     
-    #nui_type =  eltype(valtype(Nuisances))
-    #if !(nui_type <: Float64) & (nui_type != Any)
-    #    if nui_type != Real
-    #        cosmology.settings.cosmo_type = nui_type
-    #    end
-    #end
+    nui_type =  eltype(valtype(Nuisances))
+    if !(nui_type <: Float64) & (nui_type != Any)
+        if nui_type != Real
+            cosmology.settings.cosmo_type = nui_type
+        end
+    end
     
     tracers =  Dict{String}{Tracer}()
     ntracers = length(names)
