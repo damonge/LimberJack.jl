@@ -239,10 +239,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     chii = cubic_spline_interpolation(zs, chis, extrapolation_bc=Line())
     zi = linear_interpolation(chis, zs, extrapolation_bc=Line())
     # Distance to LSS
-    #chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
-    zs_LSS = exp.(LinRange(0.0, 7, nz)).-1
-    chis_integrand_LSS = 1 ./ _Ez(cpar, zs_LSS)
-    chi_LSS = trapz(zs_LSS, chis_integrand_LSS) * norm
+    chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
     if settings.custom_Dz == nothing
         # ODE solution for growth factor
