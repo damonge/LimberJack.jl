@@ -24,23 +24,27 @@ function Theory(cosmology::Cosmology,
         name = names[i]
         t_type = types[i]
         if t_type == "galaxy_density"
-            zs_mean, nz_mean = files[string("nz_", name)]
+            #zs_mean, nz_mean = files[string("nz_", name)]
+            dndz = files[string("nz_", name)]
+            zs_mean, nz_mean = dndz[1,:], dndz[2,:]
             b = get(Nuisances, string(name, "_", "b"), 1.0)
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
             zs = get(Nuisances, string(name, "_", "zs"), zs_mean)
             dz = get(Nuisances, string(name, "_", "dz"), 0.0)
-            tracer = NumberCountsTracer(cosmology, zs.+dz, nz;
+            tracer = NumberCountsTracer(cosmology, zs.-dz, nz;
                                         b=b)
         elseif t_type == "galaxy_shear"
-            zs_mean, nz_mean = files[string("nz_", name)]
-            mb = get(Nuisances, string(name, "_", "mb"), 0.0)
+            #zs_mean, nz_mean = files[string("nz_", name)]
+            dndz = files[string("nz_", name)]
+            zs_mean, nz_mean = dndz[1,:], dndz[2,:]
+            m = get(Nuisances, string(name, "_", "m"), 0.0)
             IA_params = [get(Nuisances, "A_IA", 0.0),
                          get(Nuisances, "alpha_IA", 0.0)]
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
             zs = get(Nuisances, string(name, "_", "zs"), zs_mean)
             dz = get(Nuisances, string(name, "_", "dz"), 0.0)
-            tracer = WeakLensingTracer(cosmology, zs.+dz, nz;
-                                       mb=mb, IA_params=IA_params)
+            tracer = WeakLensingTracer(cosmology, zs.-dz, nz;
+                                       m=m, IA_params=IA_params)
             
         elseif t_type == "cmb_convergence"
             tracer = CMBLensingTracer(cosmology)
@@ -78,5 +82,5 @@ function Theory(cosmology::Cosmology,
     return Theory(cosmology::Cosmology,
                   names, types, pairs,
                   idx, files;
-                  Nuisances=Dict())
+                  Nuisances=Nuisances)
  end

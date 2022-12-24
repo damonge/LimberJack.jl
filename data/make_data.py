@@ -32,9 +32,9 @@ def get_spin(sacc_file, tracer_name):
     return spin
 
 sacc_path = "FD/cls_FD_covG.fits"
-yaml_path = "DECALS_KiDS/DECALS_KiDS"
+yaml_path = "DESY1/gcgc_gcwl_wlwl"
 nzs_path = None
-fname = "DECALS_KiDS/DECALS_KiDS"
+fname = "DESY1/gcgc_gcwl_wlwl"
 
 s = sacc.Sacc().load_fits(sacc_path)
 with open(yaml_path+".yml") as f:

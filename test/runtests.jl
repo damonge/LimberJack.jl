@@ -5,6 +5,8 @@ using NPZ
 using Statistics
 
 test_results = npzread("test_results.npz")
+test_cls = npzread("test_cls.npz")["cls"]
+test_cls_files = npzread("test_cls_files.npz")
 test_output = Dict{String}{Vector}()
 
 cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
@@ -25,7 +27,6 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
                               tk_mode="emulator", Pk_mode="Halofit")
 
 @testset "All tests" begin
-    
     @testset "CreateCosmo" begin
         @test cosmo_BBKS.cosmo.Ωm == 0.3
     end
@@ -114,7 +115,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg = NumberCountsTracer(cosmo_EisHu, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo_EisHu, z, nz;
-                               mb=0.0,
+                               m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_EisHu)
         ℓs = [10.0, 30.0, 100.0, 300.0, 1000.0]
@@ -148,7 +149,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg = NumberCountsTracer(cosmo_emul, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo_emul, z, nz;
-                               mb=0.0,
+                               m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_emul)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -181,7 +182,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg = NumberCountsTracer(cosmo_EisHu_nonlin, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo_EisHu_nonlin, z, nz;
-                               mb=0.0,
+                               m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_EisHu_nonlin)
         ℓs = [10.0, 30.0, 100.0, 300.0, 1000.0]
@@ -215,7 +216,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg = NumberCountsTracer(cosmo_emul_nonlin, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo_emul_nonlin, z, nz;
-                               mb=0.0,
+                               m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_emul_nonlin)
         ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -369,7 +370,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             ts = WeakLensingTracer(cosmo, z, nz;
-                                   mb=0.0,
+                                   m=0.0,
                                    IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
@@ -383,7 +384,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             ts = WeakLensingTracer(cosmo, z, nz;
-                                   mb=0.0,
+                                   m=0.0,
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
             ℓs = [10.0, 30.0, 100.0, 300.0]
@@ -410,8 +411,8 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         z = Vector(range(0.01, stop=2., length=1024))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
         tg_b = NumberCountsTracer(cosmo_EisHu_nonlin, z, nz; b=2.0)
-        ts_m = WeakLensingTracer(cosmo_EisHu_nonlin, z, nz; mb=1.0, IA_params=[0.0, 0.0])
-        ts_IA = WeakLensingTracer(cosmo_EisHu_nonlin, z, nz; mb=0.0, IA_params=[0.1, 0.1])
+        ts_m = WeakLensingTracer(cosmo_EisHu_nonlin, z, nz; m=1.0, IA_params=[0.0, 0.0])
+        ts_IA = WeakLensingTracer(cosmo_EisHu_nonlin, z, nz; m=0.0, IA_params=[0.1, 0.1])
         ℓs = [10.0, 30.0, 100.0, 300.0]
         Cℓ_gg_b = angularCℓs(cosmo_EisHu_nonlin, tg_b, tg_b, ℓs)
         Cℓ_ss_m = angularCℓs(cosmo_EisHu_nonlin, ts_m, ts_m, ℓs)
@@ -462,7 +463,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz; mb=p, IA_params=[0.0, 0.0])
+            ts = WeakLensingTracer(cosmo, z, nz; m=p, IA_params=[0.0, 0.0])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_sk
@@ -474,7 +475,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz; mb=2, IA_params=[p, 0.1])
+            ts = WeakLensingTracer(cosmo, z, nz; m=2, IA_params=[p, 0.1])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
@@ -486,7 +487,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-            ts = WeakLensingTracer(cosmo, z, nz; mb=2, IA_params=[0.3, p])
+            ts = WeakLensingTracer(cosmo, z, nz; m=2, IA_params=[0.3, p])
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
@@ -509,6 +510,65 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         @test all(@. (abs(mb_autodiff/mb_anal-1) < 0.05))
         @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 0.05))
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 0.05))
+    end
+
+    @testset "turing_utils" begin
+            
+    names = ["DESgc__0", "DESgc__1", "DESgc__2", "DESgc__3", "DESgc__4",
+             "DESwl__0", "DESwl__1", "DESwl__2", "DESwl__3"]
+    types = ["galaxy_density", "galaxy_density", "galaxy_density", "galaxy_density", "galaxy_density",
+             "galaxy_shear", "galaxy_shear", "galaxy_shear", "galaxy_shear"]
+    pairs = [["DESgc__0", "DESgc__0"], ["DESgc__1", "DESgc__1"], ["DESgc__2", "DESgc__2"], 
+             ["DESgc__3", "DESgc__3"], ["DESgc__4", "DESgc__4"], ["DESgc__0", "DESwl__0"], 
+             ["DESgc__0", "DESwl__1"], ["DESgc__0", "DESwl__2"], ["DESgc__0", "DESwl__3"], 
+             ["DESgc__1", "DESwl__0"], ["DESgc__1", "DESwl__1"], ["DESgc__1", "DESwl__2"],
+             ["DESgc__1", "DESwl__3"], ["DESgc__2", "DESwl__0"], ["DESgc__2", "DESwl__1"],
+             ["DESgc__2", "DESwl__2"], ["DESgc__2", "DESwl__3"], ["DESgc__3", "DESwl__0"],
+             ["DESgc__3", "DESwl__1"], ["DESgc__3", "DESwl__2"], ["DESgc__3", "DESwl__3"],
+             ["DESgc__4", "DESwl__0"], ["DESgc__4", "DESwl__1"], ["DESgc__4", "DESwl__2"],
+             ["DESgc__4", "DESwl__3"], ["DESwl__0", "DESwl__0"], ["DESwl__0", "DESwl__1"],
+             ["DESwl__0", "DESwl__2"], ["DESwl__0", "DESwl__3"], ["DESwl__1", "DESwl__1"],
+             ["DESwl__1", "DESwl__2"], ["DESwl__1", "DESwl__3"], ["DESwl__2", "DESwl__2"],
+             ["DESwl__2", "DESwl__3"], ["DESwl__3", "DESwl__3"]]
+    idx = [0, 5, 13, 23, 34, 47, 52, 57, 62, 67, 75, 83, 91, 99, 109, 119, 129, 139, 150, 
+           161, 172, 183, 196, 209, 222, 235, 259, 283, 307, 331, 355, 379, 403, 427, 451, 475]
+    pars = [4.426868e-02,     2.093138e-01,     8.963611e-01,     8.495440e-01,
+             1.343888e+00,    1.639047e+00,      1.597174e+00,     1.944583e+00,     2.007245e+00,
+            -4.679383e-03,   -2.839996e-03,      1.771571e-03,     1.197051e-03,    -5.199799e-03,
+             2.389208e-01,   -6.435288e-01, 
+             1.802722e-03,   -5.508994e-03,     1.952514e-02,    -1.117726e-03,
+            -1.744083e-02,    6.777779e-03,    -1.097939e-03,    -4.912315e-03,
+             8.536883e-01,    2.535825e-01]
+   nuisances = Dict("DESgc__0_b" => pars[5],
+                 "DESgc__1_b" => pars[6],
+                 "DESgc__2_b" => pars[7],
+                 "DESgc__3_b" => pars[8],
+                 "DESgc__4_b" => pars[9],
+                 "DESgc__0_dz" => pars[10],
+                 "DESgc__1_dz" => pars[11],
+                 "DESgc__2_dz" => pars[12],
+                 "DESgc__3_dz" => pars[13],
+                 "DESgc__4_dz" => pars[14],
+                 "A_IA" => pars[15],
+                 "alpha_IA" => pars[16],
+                 "DESwl__0_dz" => pars[21],
+                 "DESwl__1_dz" => pars[22],
+                 "DESwl__2_dz" => pars[23],
+                 "DESwl__3_dz" => pars[24],
+                 "DESwl__0_m" => pars[17],
+                 "DESwl__1_m" => pars[18],
+                 "DESwl__2_m" => pars[19],
+                 "DESwl__3_m" => pars[20])
+
+    cosmology = Cosmology(pars[end], pars[1], pars[4], pars[3], pars[end-1], 
+                          tk_mode="EisHu", Pk_mode="Halofit")
+
+    t = Theory(cosmology, names, types, pairs, idx, test_cls_files;
+               Nuisances=nuisances)
+    merge!(test_output, Dict("DES_cls"=> t))
+                         
+    comp = @.(abs(test_cls-t)/test_cls)
+    @test median(comp) < 0.003                                                      
     end
     npzwrite("test_output.npz", test_output)
 end

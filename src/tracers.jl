@@ -112,7 +112,7 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     # Interpolate
     # Fix first element
     chi[1] = 0.0
-    b = kwargs[:mb]+1.0
+    b = kwargs[:m]+1.0
     wint = linear_interpolation(chi, b.*w_arr, extrapolation_bc=0)
     F::Function = ℓ -> @.(sqrt((ℓ+2)*(ℓ+1)*ℓ*(ℓ-1))/(ℓ+0.5)^2)
     WeakLensingTracer(wint, F)

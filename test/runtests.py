@@ -101,5 +101,5 @@ ts_IA = ccl.WeakLensingTracer(cosmo_eishu_nonlin, dndz=(z, nz), ia_bias=(z, IA_c
 test_results["cl_gg_b"] = ccl.angular_cl(cosmo_eishu_nonlin, tg_b, tg_b, ℓs)
 test_results["cl_ss_m"] = (1.0 + 1.0)**2  * ccl.angular_cl(cosmo_eishu_nonlin, ts_m, ts_m, ℓs)
 test_results["cl_ss_IA"] = ccl.angular_cl(cosmo_eishu_nonlin, ts_IA, ts_IA, ℓs)
-
+# =====
 np.savez("test_results.npz", **test_results)
