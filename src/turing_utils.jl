@@ -17,9 +17,7 @@ function Theory(cosmology::Cosmology,
         name = names[i]
         t_type = types[i]
         if t_type == "galaxy_density"
-            #zs_mean, nz_mean = files[string("nz_", name)]
-            dndz = files[string("nz_", name)]
-            zs_mean, nz_mean = dndz[1,:], dndz[2,:]
+            zs_mean, nz_mean = files[string("nz_", name)]
             b = get(Nuisances, string(name, "_", "b"), 1.0)
             nz = get(Nuisances, string(name, "_", "nz"), nz_mean)
             zs = get(Nuisances, string(name, "_", "zs"), zs_mean)
@@ -27,9 +25,7 @@ function Theory(cosmology::Cosmology,
             tracer = NumberCountsTracer(cosmology, zs .- dz, nz;
                                         b=b)
         elseif t_type == "galaxy_shear"
-            #zs_mean, nz_mean = files[string("nz_", name)]
-            dndz = files[string("nz_", name)]
-            zs_mean, nz_mean = dndz[1,:], dndz[2,:]
+            zs_mean, nz_mean = files[string("nz_", name)]
             m = get(Nuisances, string(name, "_", "m"), 0.0)
             IA_params = [get(Nuisances, "A_IA", 0.0),
                          get(Nuisances, "alpha_IA", 0.0)]
