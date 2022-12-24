@@ -226,8 +226,8 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     norm = cpar.σ8^2 / σ8_2_here
     pk0 *= norm
     # OPT: interpolation method
-    pki = linear_interpolation(logk, log.(pk0);
-                               extrapolation_bc=Line())
+    pki = cubic_spline_interpolation(logk, log.(pk0);
+                                     extrapolation_bc=Line())
     # Compute redshift-distance relation
     norm = CLIGHT_HMPC / cpar.h
     chis = zeros(cosmo_type, nz)
