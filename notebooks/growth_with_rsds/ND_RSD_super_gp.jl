@@ -40,8 +40,8 @@ using Distributed
     fid_cosmo = Cosmology()
     n = 101
     N = 201
-    latent_x = Vector(range(0., stop=3., length=n))
-    x = Vector(range(0., stop=3., length=N))
+    latent_x = range(0., stop=3., length=n)
+    x = range(0., stop=3., length=N)
 end
             
 @everywhere @model function model(data;
@@ -117,7 +117,7 @@ end
     latent_N = length(latent_x)
     v ~ filldist(truncated(Normal(0, 1), -2, 2), latent_N)
     
-    mu = fid_cosmo.Dz(vec(latent_x))
+    mu = fid_cosmo.Dz(latent_x)
     K = sqexp_cov_fn(latent_x; eta=eta, l=l)
     latent_gp = latent_GP(mu, v, K)
     gp = conditional(latent_x, x, latent_gp, sqexp_cov_fn;
@@ -157,7 +157,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("ND_RSD_super_gp_Gibbs_TAP_", TAP)
+folname = string("ND_RSD_super_gp_Gibbs_2_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
