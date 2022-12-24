@@ -9,8 +9,12 @@ export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
 export Theory, get_nzs
 export make_data
 
-using Interpolations, LinearAlgebra, NPZ, NumericalIntegration
-using Statistics, QuadGK, PythonCall
+#using Interpolations, LinearAlgebra, NPZ, NumericalIntegration
+#using Statistics, QuadGK, PythonCall
+
+using Interpolations, OrdinaryDiffEq, ForwardDiff
+using LinearAlgebra, Statistics, Trapz, QuadGK, NPZ, NumericalIntegration
+using PythonCall
 
 include("core.jl")
 include("emulator.jl")
