@@ -5,8 +5,6 @@ using NPZ
 using Statistics
 
 test_results = npzread("test_results.npz")
-test_cls = npzread("test_cls.npz")["cls"]
-test_cls_files = npzread("test_cls_files.npz")
 test_output = Dict{String}{Vector}()
 
 cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
