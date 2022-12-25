@@ -511,7 +511,8 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 0.05))
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 0.05))
     end
-
+    #=
+    # Needs a way of also testing make_data
     @testset "turing_utils" begin
             
     names = ["DESgc__0", "DESgc__1", "DESgc__2", "DESgc__3", "DESgc__4",
@@ -570,5 +571,6 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
     comp = @.(abs(test_cls-t)/test_cls)
     @test median(comp) < 0.003                                                      
     end
+    =#
     npzwrite("test_output.npz", test_output)
 end
