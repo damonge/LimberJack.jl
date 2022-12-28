@@ -129,10 +129,12 @@ nchains = nprocs()
 
 TAP = 0.60
 adaptation = 300
+init_ϵ1 = 0.005
+init_ϵ2 = 0.005
 
 stats_model = model(fake_data)
-sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns),
-                NUTS(adaptation, TAP, :v))
+sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns; init_ϵ=init_ϵ1),
+                NUTS(adaptation, TAP, :v; init_ϵ=init_ϵ2))
 
 println("sampling settings: ")
 println("cycles ", cycles)
