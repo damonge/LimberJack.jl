@@ -20,7 +20,7 @@ function get_gp(chain;
 
     n = 101
     N = 201
-    vs = zeros(Float64, nx, nsamples)
+    vs = zeros(Float64, n, nsamples)
     for i in 1:n
         vs[i, :] = chain[!, string("v[", i ,"]")]
     end
