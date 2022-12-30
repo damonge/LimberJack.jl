@@ -9,27 +9,29 @@ using Interpolations
 np = pyimport("numpy")
 
 function get_gp(chain;
-                   fid_cosmo=LimberJack.Cosmology(),
-                   latent_x=Vector(0:0.3:3))
+                fid_cosmo=LimberJack.Cosmology())
     ###
+    n = 101
+    N = 201
+    latent_x = range(0., stop=3., length=n)
+    x = range(0., stop=3., length=N)
+
     nsamples = length(chain[!, "h"])
     mu = fid_cosmo.Dz(vec(latent_x))
     eta = 0.2 * ones(nsamples)
     l = 0.3 * ones(nsamples)
     σ8 = 0.81 * ones(nsamples)
 
-    n = 101
-    N = 201
+
     vs = zeros(Float64, n, nsamples)
     for i in 1:n
         vs[i, :] = chain[!, string("v[", i ,"]")]
     end
     ###
-    latent_x = range(0., stop=3., length=n)
-    x = range(0., stop=3., length=N)
+
     d = x[2] - x[1]
     gps = similar(vs)
-    fs8s = zeros(Float64, 100, nsamples)
+    fs8s = zeros(Float64, N, nsamples)
     for i in 1:length(l)
         K = sqexp_cov_fn(latent_x; eta=eta[i], l=l[i])
         gp = latent_GP(mu, vs[:, i], K)
