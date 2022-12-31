@@ -53,8 +53,7 @@ using Distributed
                      "DESwl__2_b" => DESwl__2_b,
                      "DESwl__3_b" => DESwl__3_b)
     
-    theory = Theory(cosmology, names, types, pairs,
-                    idx, files; Nuisances=nuisances)
+    theory = Theory(cosmology, meta, files; Nuisances=nuisances)
     data ~ MvNormal(theory ./ errs, cov)
 end;
 

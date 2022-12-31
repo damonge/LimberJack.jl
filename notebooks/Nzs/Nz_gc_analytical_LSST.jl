@@ -1,15 +1,23 @@
 using Distributed
 
-@everywhere using Turing
-@everywhere using LimberJack
-@everywhere using CSV
-@everywhere using NPZ
-@everywhere using FITSIO
-@everywhere using LinearAlgebra
-@everywhere using PythonCall
-@everywhere np = pyimport("numpy")
+@everywhere begin
+    using LinearAlgebra
+    using Turing
+    using LimberJack
+    using GaussianProcess
+    using CSV
+    using NPZ
+    using YAML
+    using PythonCall
+    sacc = pyimport("sacc");
 
-@everywhere println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
+    println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
+
+    sacc_path = "../../data/LSST/cls_FD_covG.fits"
+    yaml_path = "../../data/LSST/gcgc_Nzs_40.yml"
+    sacc_file = sacc.Sacc().load_fits(sacc_path)
+    yaml_file = YAML.load_file(yaml_path)
+    meta, files = make_data(sacc_file, yaml_file)
 
 @everywhere fol = "LSST"
 @everywhere data_set = "gcgc_Nzs_40"
@@ -37,7 +45,7 @@ using Distributed
     Ωm ~ Uniform(0.2, 0.6)
     s8 = 0.81 #~ Uniform(0.6, 0.9)
     Ωb ~ Uniform(0.03, 0.07)
-    h = 0.67 #~ Uniform(0.55, 0.91)
+    h ~ Uniform(0.55, 0.91)
     ns ~ Uniform(0.87, 1.07)
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
@@ -76,7 +84,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("Nzs40_LSST_gcgc_b_h_analytical_", "TAP_", TAP)
+folname = string("Nzs40_LSST_gcgc_b_analytical_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

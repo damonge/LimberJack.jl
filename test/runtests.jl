@@ -297,6 +297,10 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         lin_EisHu_num = abs.((lin_EisHu(Ωm0+dΩm)-lin_EisHu(Ωm0-dΩm))/(2dΩm))
         lin_emul_num = abs.((lin_emul(Ωm0+ddΩm)-lin_emul(Ωm0-ddΩm))/(2ddΩm))
 
+        merge!(test_output, Dict("lin_EisHu_autodiff"=> lin_EisHu_autodiff))
+        merge!(test_output, Dict("lin_emul_autodiff"=> lin_emul_autodiff))
+        merge!(test_output, Dict("lin_EisHu_num"=> lin_EisHu_num))
+        merge!(test_output, Dict("lin_emul_num"=> lin_emul_num))         
         # Median needed since errors shoot up when derivatieve
         # crosses zero
         @test median(lin_BBKS_autodiff./lin_BBKS_num.-1) < 0.05
@@ -339,7 +343,11 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         nonlin_BBKS_num = abs.((nonlin_BBKS(Ωm0+dΩm)-nonlin_BBKS(Ωm0-dΩm))/(2dΩm))
         nonlin_EisHu_num = abs.((nonlin_EisHu(Ωm0+dΩm)-nonlin_EisHu(Ωm0-dΩm))/(2dΩm))
         nonlin_emul_num = abs.((nonlin_emul(Ωm0+ddΩm)-nonlin_emul(Ωm0-ddΩm))/(2ddΩm));
-
+                                                
+        merge!(test_output, Dict("lin_EisHu_autodiff"=> lin_EisHu_autodiff))
+        merge!(test_output, Dict("lin_emul_autodiff"=> lin_emul_autodiff))
+        merge!(test_output, Dict("lin_EisHu_num"=> lin_EisHu_num))
+        merge!(test_output, Dict("lin_emul_num"=> lin_emul_num)) 
         # Median needed since errors shoot up when derivatieve
         # crosses zero
         @test median(nonlin_BBKS_autodiff./nonlin_BBKS_num.-1) < 0.1
