@@ -49,7 +49,11 @@ function _apply_scale_cuts(s, yaml_file)
     return s
 end
 
-function make_data(sacc_file, yaml_file; nzs_path="")
+function make_data(sacc_file, yaml_file; kwargs...)
+
+    kwargs=Dict(kwargs)
+    kwargs_keys = [string(i) for i in collect(keys(kwargs))]
+
     #cut
     s = _apply_scale_cuts(sacc_file, yaml_file)
         
@@ -98,17 +102,18 @@ function make_data(sacc_file, yaml_file; nzs_path="")
     # Load in nz's
     for (name, tracer) in s.tracers.items()
         if string(name) in names
-            if nzs_path == ""
+            if string("nz_", name) in kwargs_keys
+                println(string("using custom nz for ", string("nz_", name)))
+                nzs = kwargs[Symbol("nz_", name)]
+                z= pyconvert(Vector{Float64}, nzs["z"])
+                nz=pyconvert(Vector{Float64}, nzs["dndz"])
+                merge!(files, Dict(string("nz_", name)=>[z, nz]))
+            else
                 if string(tracer.quantity) != "cmb_convergence"
                     z=pyconvert(Vector{Float64}, tracer.z)
                     nz=pyconvert(Vector{Float64}, tracer.nz)
                     merge!(files, Dict(string("nz_", name)=>[z, nz]))
                 end
-            else
-                nzs = np.load(nzs_path+string("nz_", name)+".npz")
-                z = nzs["z"]
-                dndz = nzs["dndz"]
-                merge!(files, Dict(string("nz_", name)=>[z, nz]))
             end
         end
     end
