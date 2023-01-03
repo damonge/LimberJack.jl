@@ -230,11 +230,11 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         Cℓ_ss_bm = test_results["cl_ss_camb_nonlin"]
         Cℓ_gk_bm = test_results["cl_gk_camb_nonlin"]
         Cℓ_sk_bm = test_results["cl_sk_camb_nonlin"]
-        merge!(test_output, Dict("cl_gg_emul_nonlin"=> Cℓ_gg))
-        merge!(test_output, Dict("cl_gs_emul_nonlin"=> Cℓ_gs))
-        merge!(test_output, Dict("cl_ss_emul_nonlin"=> Cℓ_ss))
-        merge!(test_output, Dict("cl_gk_emul_nonlin"=> Cℓ_sk))
-        merge!(test_output, Dict("cl_sk_emul_nonlin"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gg_camb_nonlin"=> Cℓ_gg))
+        merge!(test_output, Dict("cl_gs_camb_nonlin"=> Cℓ_gs))
+        merge!(test_output, Dict("cl_ss_camb_nonlin"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gk_camb_nonlin"=> Cℓ_sk))
+        merge!(test_output, Dict("cl_sk_camb_nonlin"=> Cℓ_ss))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
@@ -288,14 +288,13 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
 
         Ωm0 = 0.25
         dΩm = 0.01
-        ddΩm = 0.015
 
         lin_BBKS_autodiff = abs.(ForwardDiff.derivative(lin_BBKS, Ωm0))
         lin_EisHu_autodiff = abs.(ForwardDiff.derivative(lin_EisHu, Ωm0))
         lin_emul_autodiff = abs.(ForwardDiff.derivative(lin_emul, Ωm0))
         lin_BBKS_num = abs.((lin_BBKS(Ωm0+dΩm)-lin_BBKS(Ωm0-dΩm))/(2dΩm))
         lin_EisHu_num = abs.((lin_EisHu(Ωm0+dΩm)-lin_EisHu(Ωm0-dΩm))/(2dΩm))
-        lin_emul_num = abs.((lin_emul(Ωm0+ddΩm)-lin_emul(Ωm0-ddΩm))/(2ddΩm))
+        lin_emul_num = abs.((lin_emul(Ωm0+dΩm)-lin_emul(Ωm0-dΩm))/(2dΩm))
 
         merge!(test_output, Dict("lin_EisHu_autodiff"=> lin_EisHu_autodiff))
         merge!(test_output, Dict("lin_emul_autodiff"=> lin_emul_autodiff))
@@ -335,14 +334,13 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
 
         Ωm0 = 0.25
         dΩm = 0.01
-        ddΩm = 0.02
 
         nonlin_BBKS_autodiff = abs.(ForwardDiff.derivative(nonlin_BBKS, Ωm0))
         nonlin_EisHu_autodiff = abs.(ForwardDiff.derivative(nonlin_EisHu, Ωm0))
         nonlin_emul_autodiff = abs.(ForwardDiff.derivative(nonlin_emul, Ωm0))
         nonlin_BBKS_num = abs.((nonlin_BBKS(Ωm0+dΩm)-nonlin_BBKS(Ωm0-dΩm))/(2dΩm))
         nonlin_EisHu_num = abs.((nonlin_EisHu(Ωm0+dΩm)-nonlin_EisHu(Ωm0-dΩm))/(2dΩm))
-        nonlin_emul_num = abs.((nonlin_emul(Ωm0+ddΩm)-nonlin_emul(Ωm0-ddΩm))/(2ddΩm));
+        nonlin_emul_num = abs.((nonlin_emul(Ωm0+dΩm)-nonlin_emul(Ωm0-dΩm))/(2dΩm));
                                                 
         merge!(test_output, Dict("nonlin_EisHu_autodiff"=> nonlin_EisHu_autodiff))
         merge!(test_output, Dict("nonlin_emul_autodiff"=> nonlin_emul_autodiff))
@@ -371,6 +369,21 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             return Cℓ_gg
         end
         
+        function Cl_gs(p::T)::Array{T,1} where T<:Real
+            Ωm = p
+            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
+                                         tk_mode="EisHu", Pk_mode="Halofit")
+            z = Vector(range(0., stop=2., length=256))
+            nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
+            tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
+            ts = WeakLensingTracer(cosmo, z, nz;
+                                   m=0.0,
+                                   IA_params=[0.0, 0.0])                                        
+            ℓs = [10.0, 30.0, 100.0, 300.0]
+            Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
+            return Cℓ_gs
+        end
+                                                
         function Cl_ss(p::T)::Array{T,1} where T<:Real
             Ωm = p
             cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
@@ -398,6 +411,21 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             ℓs = [10.0, 30.0, 100.0, 300.0]
             Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
+        end
+                                                
+        function Cl_gk(p::T)::Array{T,1} where T<:Real
+            Ωm = p
+            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
+                                         tk_mode="EisHu", Pk_mode="Halofit")
+            z = range(0., stop=2., length=256)
+            nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+            ts = WeakLensingTracer(cosmo, z, nz;
+                                   m=0.0,
+                                   IA_params=[0.0, 0.0])
+            tk = CMBLensingTracer(cosmo)
+            ℓs = [10.0, 30.0, 100.0, 300.0]
+            Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
+            return Cℓ_gk
         end
 
         Ωm0 = 0.3
