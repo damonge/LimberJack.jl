@@ -424,7 +424,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
             ℓs = [10.0, 30.0, 100.0, 300.0]
-            Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
+            Cℓ_gk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_gk
         end
 
