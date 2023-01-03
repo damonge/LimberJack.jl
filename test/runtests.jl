@@ -432,15 +432,32 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         dΩm = 0.0001
 
         Cl_gg_autodiff = ForwardDiff.derivative(Cl_gg, Ωm0)
-        Cl_gg_anal = (Cl_gg(Ωm0+dΩm)-Cl_gg(Ωm0-dΩm))/2dΩm
+        Cl_gg_num = (Cl_gg(Ωm0+dΩm)-Cl_gg(Ωm0-dΩm))/2dΩm
+        Cl_gs_autodiff = ForwardDiff.derivative(Cl_gs, Ωm0)
+        Cl_gs_num = (Cl_gs(Ωm0+dΩm)-Cl_gs(Ωm0-dΩm))/2dΩm
         Cl_ss_autodiff = ForwardDiff.derivative(Cl_ss, Ωm0)
-        Cl_ss_anal = (Cl_ss(Ωm0+dΩm)-Cl_ss(Ωm0-dΩm))/2dΩm
+        Cl_ss_num = (Cl_ss(Ωm0+dΩm)-Cl_ss(Ωm0-dΩm))/2dΩm
         Cl_sk_autodiff = ForwardDiff.derivative(Cl_sk, Ωm0)
-        Cl_sk_anal = (Cl_sk(Ωm0+dΩm)-Cl_sk(Ωm0-dΩm))/2dΩm
+        Cl_sk_num = (Cl_sk(Ωm0+dΩm)-Cl_sk(Ωm0-dΩm))/2dΩm
+        Cl_gk_autodiff = ForwardDiff.derivative(Cl_gk, Ωm0)
+        Cl_gk_num = (Cl_gk(Ωm0+dΩm)-Cl_gk(Ωm0-dΩm))/2dΩm
+                                                
+        merge!(test_output, Dict("Cl_gg_autodiff"=> Cl_gg_autodiff))
+        merge!(test_output, Dict("Cl_gs_autodiff"=> Cl_gs_autodiff))
+        merge!(test_output, Dict("Cl_ss_autodiff"=> Cl_ss_autodiff))
+        merge!(test_output, Dict("Cl_sk_autodiff"=> Cl_sk_autodiff))
+        merge!(test_output, Dict("Cl_gk_autodiff"=> Cl_gk_autodiff))
+        merge!(test_output, Dict("Cl_gg_num"=> Cl_gg_num))
+        merge!(test_output, Dict("Cl_gs_num"=> Cl_gs_num))
+        merge!(test_output, Dict("Cl_ss_num"=> Cl_ss_num))
+        merge!(test_output, Dict("Cl_sk_num"=> Cl_sk_num))
+        merge!(test_output, Dict("Cl_gk_num"=> Cl_gk_num)) 
 
-        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_anal-1) < 0.05))
-        @test all(@. (abs(Cl_ss_autodiff/Cl_ss_anal-1) < 0.05))
-        @test all(@. (abs(Cl_sk_autodiff/Cl_sk_anal-1) < 0.05))
+        @test all(@. (abs(Cl_gg_autodiff/Cl_gg_num-1) < 0.05))
+        @test all(@. (abs(Cl_gs_autodiff/Cl_gs_num-1) < 0.05))
+        @test all(@. (abs(Cl_ss_autodiff/Cl_ss_num-1) < 0.05))
+        @test all(@. (abs(Cl_sk_autodiff/Cl_sk_num-1) < 0.05))
+        @test all(@. (abs(Cl_gk_autodiff/Cl_gk_num-1) < 0.05))                                                
     end
 
     @testset "Nuisances" begin
