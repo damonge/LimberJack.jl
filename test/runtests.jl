@@ -219,7 +219,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
                                m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_emul_nonlin)
-        ℓs = LinRange(10, 300, 30)
+        ℓs = vec(LinRange(10, 300, 30))
         Cℓ_gg = angularCℓs(cosmo_emul_nonlin, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo_emul_nonlin, tg, ts, ℓs) 
         Cℓ_ss = angularCℓs(cosmo_emul_nonlin, ts, ts, ℓs) 
@@ -364,7 +364,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
-            ℓs = LinRange(10, 300, 30)
+            ℓs = vec(LinRange(10, 300, 30))
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
         end
@@ -379,7 +379,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             ts = WeakLensingTracer(cosmo, z, nz;
                                    m=0.0,
                                    IA_params=[0.0, 0.0])                                        
-            ℓs = LinRange(10, 300, 30)
+            ℓs = vec(LinRange(10, 300, 30))
             Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
             return Cℓ_gs
         end
@@ -393,7 +393,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
             ts = WeakLensingTracer(cosmo, z, nz;
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
-            ℓs = LinRange(10, 300, 30)
+            ℓs = vec(LinRange(10, 300, 30))
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
         end
@@ -408,7 +408,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
-            ℓs = LinRange(10, 300, 30)
+            ℓs = vec(LinRange(10, 300, 30))
             Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
         end
@@ -423,7 +423,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
-            ℓs = LinRange(10, 300, 30)
+            ℓs = vec(LinRange(10, 300, 30))
             Cℓ_gk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_gk
         end
