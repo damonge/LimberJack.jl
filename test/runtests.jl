@@ -233,8 +233,8 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         merge!(test_output, Dict("cl_gg_camb_nonlin"=> Cℓ_gg))
         merge!(test_output, Dict("cl_gs_camb_nonlin"=> Cℓ_gs))
         merge!(test_output, Dict("cl_ss_camb_nonlin"=> Cℓ_ss))
-        merge!(test_output, Dict("cl_gk_camb_nonlin"=> Cℓ_sk))
-        merge!(test_output, Dict("cl_sk_camb_nonlin"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gk_camb_nonlin"=> Cℓ_gk))
+        merge!(test_output, Dict("cl_sk_camb_nonlin"=> Cℓ_sk))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
