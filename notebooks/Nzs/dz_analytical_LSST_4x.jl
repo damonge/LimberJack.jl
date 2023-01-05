@@ -36,27 +36,27 @@ end
     s8 ~ Uniform(0.4, 1.2)
     ns ~ Uniform(0.84, 1.1)
 
-    DESwl__0_e_dz = 0 #~ TruncatedNormal(0.0, 4*0.017, -0.8, 0.8)
-    DESwl__1_e_dz = 0 #~ TruncatedNormal(0.0, 4*0.017, -0.8, 0.8)
-    DESwl__2_e_dz = 0 #~ TruncatedNormal(0.0, 4*0.013, -0.8, 0.8)
-    DESwl__3_e_dz = 0 #~ TruncatedNormal(0.0, 4*0.015, -0.8, 0.8)
-    DESwl__0_e_m ~ Normal(0.012, 0.023)
-    DESwl__1_e_m ~ Normal(0.012, 0.023)
-    DESwl__2_e_m ~ Normal(0.012, 0.023)
-    DESwl__3_e_m ~ Normal(0.012, 0.023)
+    DESwl__0_dz = 0 #~ TruncatedNormal(0.0, 4*0.017, -0.8, 0.8)
+    DESwl__1_dz = 0 #~ TruncatedNormal(0.0, 4*0.017, -0.8, 0.8)
+    DESwl__2_dz = 0 #~ TruncatedNormal(0.0, 4*0.013, -0.8, 0.8)
+    DESwl__3_dz = 0 #~ TruncatedNormal(0.0, 4*0.015, -0.8, 0.8)
+    DESwl__0_m ~ Normal(0.012, 0.023)
+    DESwl__1_m ~ Normal(0.012, 0.023)
+    DESwl__2_m ~ Normal(0.012, 0.023)
+    DESwl__3_m ~ Normal(0.012, 0.023)
     A_IA ~ Uniform(-5, 5)
     alpha_IA ~ Uniform(-5, 5)
 
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
-                     "DESwl__0_e_dz" => DESwl__0_e_dz,
-                     "DESwl__1_e_dz" => DESwl__1_e_dz,
-                     "DESwl__2_e_dz" => DESwl__2_e_dz,
-                     "DESwl__3_e_dz" => DESwl__3_e_dz,
-                     "DESwl__0_e_m" => DESwl__0_e_m,
-                     "DESwl__1_e_m" => DESwl__1_e_m,
-                     "DESwl__2_e_m" => DESwl__2_e_m,
-                     "DESwl__3_e_m" => DESwl__3_e_m)
+                     "DESwl__0_dz" => DESwl__0_dz,
+                     "DESwl__1_dz" => DESwl__1_dz,
+                     "DESwl__2_dz" => DESwl__2_dz,
+                     "DESwl__3_dz" => DESwl__3_dz,
+                     "DESwl__0_m" => DESwl__0_m,
+                     "DESwl__1_m" => DESwl__1_m,
+                     "DESwl__2_m" => DESwl__2_m,
+                     "DESwl__3_m" => DESwl__3_m)
 
     cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
                           tk_mode="EisHu",
