@@ -89,7 +89,7 @@ end
 end
 
 cycles = 6
-iterations = 250
+iterations = 1000
 nchains = nprocs()
 
 adaptation = 250
@@ -97,7 +97,7 @@ TAP = 0.65
 init_ϵ = 0.005
 
 stats_model = model(fake_data)
-sampler = NUTS(adaptation, TAP; init_ϵ=init_ϵ)
+sampler = MH(adaptation)
 
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -108,7 +108,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("DESY1_k1k_priors_emul_TAP_", TAP, "_init_ϵ_", init_ϵ)
+folname = string("DESY1_k1k_priors_emul_MH")
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

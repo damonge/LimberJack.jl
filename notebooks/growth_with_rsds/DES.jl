@@ -88,14 +88,14 @@ end
 end
 
 cycles = 6
-iterations = 250
+iterations = 1000
 nchains = nprocs()
 
 adaptation = 250
 TAP = 0.65
 
 stats_model = model(fake_data)
-sampler = NUTS(adaptation, TAP)
+sampler = MH(adaptation)
 
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -106,7 +106,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("DESY1_k1k_priors_EisHu_TAP_", TAP)
+folname = string("DESY1_k1k_priors_EisHu_MH")
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
