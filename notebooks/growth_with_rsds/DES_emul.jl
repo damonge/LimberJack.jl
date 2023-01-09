@@ -97,7 +97,7 @@ TAP = 0.65
 init_ϵ = 0.005
 
 stats_model = model(fake_data)
-sampler = MH(adaptation)
+sampler = MH()
 
 println("sampling settings: ")
 println("cycles ", cycles)
