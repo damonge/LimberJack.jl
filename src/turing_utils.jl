@@ -1,3 +1,11 @@
+function get_nzs(nz_path, tracer_type, bin)
+    nzs = npzread(string(nz_path, "nz_", tracer_type, bin, ".npz"))
+    zs = nzs["z"]
+    nz = nzs["dndz"]
+    cov = get(nzs, "cov", zeros(length(zs)))
+    return zs, nz, cov
+end
+
 function Theory(cosmology::Cosmology,
                 names, types, pairs,
                 idx, files;

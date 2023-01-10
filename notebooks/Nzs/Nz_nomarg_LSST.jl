@@ -16,8 +16,9 @@ using Distributed
 @everywhere meta = np.load(string("../../data/", fol, "/", data_set, "_meta.npz"))
 @everywhere files = npzread(string("../../data/", fol, "/", data_set, "_files.npz"))
 
-@everywhere tracers_names = pyconvert(Vector{String}, meta["tracers"])
-@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
+@everywhere names = pyconvert(Vector{String}, meta["names"])
+@everywhere types = pyconvert(Vector{String}, meta["types"])
+@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"])
@@ -26,7 +27,8 @@ using Distributed
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
 @everywhere @model function model(data;
-                                  tracers_names=tracers_names,
+                                  names=names,
+                                  types=types,
                                   pairs=pairs,
                                   idx=idx,
                                   cov=fake_cov, 
@@ -56,7 +58,7 @@ using Distributed
                      "DESwl__2_e_m" => DESwl__2_e_m,
                      "DESwl__3_e_m" => DESwl__3_e_m)
     
-    theory = Theory(cosmology, tracers_names, pairs,
+    theory = Theory(cosmology, names, types, pairs,
                     idx, files; Nuisances=nuisances)
     data ~ MvNormal(theory ./ errs, cov)
 end;

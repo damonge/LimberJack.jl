@@ -18,7 +18,7 @@ using Distributed
 
 @everywhere names = pyconvert(Vector{String}, meta["names"])
 @everywhere types = pyconvert(Vector{String}, meta["types"])
-@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
+@everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"])
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
 @everywhere cov_tot = pyconvert(Matrix{Float64}, meta["cov"])
