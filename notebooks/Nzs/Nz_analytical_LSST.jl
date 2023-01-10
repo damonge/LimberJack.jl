@@ -27,7 +27,7 @@ using Distributed
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
 @everywhere @model function model(data;
-                                  names=tracers,
+                                  names=names,
                                   types=types,
                                   pairs=pairs,
                                   idx=idx,
