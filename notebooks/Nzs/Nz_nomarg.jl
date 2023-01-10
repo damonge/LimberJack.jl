@@ -41,12 +41,12 @@ using Distributed
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
-    DESwl__0_e_m ~ Normal(0.012, 0.023)
-    DESwl__1_e_m ~ Normal(0.012, 0.023)
-    DESwl__2_e_m ~ Normal(0.012, 0.023)
-    DESwl__3_e_m ~ Normal(0.012, 0.023)
+    A_IA = 0.0 #~ Uniform(-5, 5)
+    alpha_IA = 0.0 #~ Uniform(-5, 5)
+    DESwl__0_e_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__1_e_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__2_e_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__3_e_m = 0.012 #~ Normal(0.012, 0.023)
 
 
     nuisances = Dict("A_IA" => A_IA,

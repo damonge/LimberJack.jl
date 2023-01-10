@@ -20,7 +20,7 @@ using Distributed
 @everywhere pairs = pyconvert(Vector{Vector{String}}, meta["pairs"]);
 @everywhere idx = pyconvert(Vector{Int}, meta["idx"])
 @everywhere data_vector = pyconvert(Vector{Float64}, meta["cls"])
-@everywhere cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_cov_marg_lsst_diag.npz")["cov_marg"]
+@everywhere cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_cov_marg_lsst.npz")["cov_marg"]
 @everywhere errs = sqrt.(diag(cov_tot))
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
@@ -41,12 +41,12 @@ using Distributed
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
-    DESwl__0_e_m ~ Normal(0.012, 0.023)
-    DESwl__1_e_m ~ Normal(0.012, 0.023)
-    DESwl__2_e_m ~ Normal(0.012, 0.023)
-    DESwl__3_e_m ~ Normal(0.012, 0.023)
+    A_IA = 0.0 #~ Uniform(-5, 5)
+    alpha_IA = 0.0 #~ Uniform(-5, 5)
+    DESwl__0_e_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__1_e_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__2_e_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__3_e_m = 0.012 #~ Normal(0.012, 0.023)
 
 
     nuisances = Dict("A_IA" => A_IA,
@@ -78,7 +78,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("Nzs40_LSST_analytical_diag_", "TAP_", TAP)
+folname = string("Nzs40_LSST_lite_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

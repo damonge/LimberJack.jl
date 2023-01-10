@@ -49,8 +49,8 @@ using Distributed
                                      tk_mode="EisHu",
                                      Pk_mode="Halofit")
     
-    A_IA ~ Uniform(-5, 5) 
-    alpha_IA ~ Uniform(-5, 5)
+    A_IA = 0.0 #~ Uniform(-5, 5)
+    alpha_IA = 0.0 #~ Uniform(-5, 5)
     
     n = length(nz_k0)
     DESwl__0_nz = zeros(cosmology.settings.cosmo_type, n)
@@ -63,16 +63,11 @@ using Distributed
         DESwl__2_nz[i] ~ TruncatedNormal(nz_k2[i], sqrt.(diag(cov_k2))[i], -0.07, 0.5) 
         DESwl__3_nz[i] ~ TruncatedNormal(nz_k3[i], sqrt.(diag(cov_k3))[i], -0.07, 0.5) 
     end
-    
-    #DESwl__0_nz .*= DESwl__0_nz .> 0
-    #DESwl__1_nz .*= DESwl__1_nz .> 0
-    #DESwl__2_nz .*= DESwl__2_nz .> 0
-    #DESwl__3_nz .*= DESwl__3_nz .> 0
 
-    DESwl__0_m ~ Normal(0.012, 0.023)
-    DESwl__1_m ~ Normal(0.012, 0.023)
-    DESwl__2_m ~ Normal(0.012, 0.023)
-    DESwl__3_m ~ Normal(0.012, 0.023)
+    DESwl__0_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__1_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__2_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__3_m = 0.012 #~ Normal(0.012, 0.023)
 
 
     nuisances = Dict("A_IA" => A_IA,
@@ -110,7 +105,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("Nzs40_LSST_num_neg_trunc_", "TAP_", TAP)
+folname = string("Nzs40_LSST_lite_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
