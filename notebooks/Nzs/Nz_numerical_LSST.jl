@@ -73,6 +73,10 @@ using Distributed
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
 
+                     "DESwl__0_zs" => zs_k0,
+                     "DESwl__1_zs" => zs_k1,
+                     "DESwl__2_zs" => zs_k2,
+                     "DESwl__3_zs" => zs_k3,
                      "DESwl__0_nz" => DESwl__0_nz,
                      "DESwl__1_nz" => DESwl__1_nz,
                      "DESwl__2_nz" => DESwl__2_nz,

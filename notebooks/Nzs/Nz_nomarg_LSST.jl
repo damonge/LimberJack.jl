@@ -26,6 +26,12 @@ using Distributed
 @everywhere fake_data = data_vector ./ errs
 @everywhere fake_cov = Hermitian(cov_tot ./ (errs * errs'));
 
+@everywhere nz_path = "../../data/DESY1/binned_40_nzs/"
+@everywhere zs_k0, nz_k0, cov_k0 = get_nzs(nz_path, "DESwl__0")
+@everywhere zs_k1, nz_k1, cov_k1 = get_nzs(nz_path, "DESwl__1")
+@everywhere zs_k2, nz_k2, cov_k2 = get_nzs(nz_path, "DESwl__2")
+@everywhere zs_k3, nz_k3, cov_k3 = get_nzs(nz_path, "DESwl__3")
+
 @everywhere @model function model(data;
                                   names=names,
                                   types=types,
@@ -53,6 +59,14 @@ using Distributed
 
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
+                     "DESwl__0_zs" => zs_k0,
+                     "DESwl__1_zs" => zs_k1,
+                     "DESwl__2_zs" => zs_k2,
+                     "DESwl__3_zs" => zs_k3,
+                     "DESwl__0_nz" => nz_k0,
+                     "DESwl__1_nz" => nz_k1,
+                     "DESwl__2_nz" => nz_k2,
+                     "DESwl__3_nz" => nz_k3,
                      "DESwl__0_e_m" => DESwl__0_e_m,
                      "DESwl__1_e_m" => DESwl__1_e_m,
                      "DESwl__2_e_m" => DESwl__2_e_m,
