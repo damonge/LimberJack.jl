@@ -1,6 +1,6 @@
 function get_nzs(nz_path, tracer_name)
     nzs = npzread(string(nz_path, "nz_", tracer_name, ".npz"))
-    zs = nzs["z"]
+    zs = range(nzs["z"][1], stop=nzs["z"][end], length=length(nzs["z"])) :
     nz = nzs["dndz"]
     cov = get(nzs, "cov", zeros(length(zs)))
     return zs, nz, cov
