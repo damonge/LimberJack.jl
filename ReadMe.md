@@ -61,7 +61,8 @@ If this happens, run the following commands from ```LimberJack``` repository fol
 ```
 This essentially updates the ```Interpolations``` installations inside and outside the ```LimberJack``` environment.
 
-## Replicated DESY1 3x2 analysis
+
+## Use
 
 ``` julia
     # Import
@@ -84,6 +85,7 @@ This essentially updates the ```Interpolations``` installations inside and outsi
     ls = [10.0, 30.0, 100.0, 300.0]
     cls = angularCℓs(cosmology, tracer, tracer, ls)
 ```
+
 
 ## Benchmarks
 
