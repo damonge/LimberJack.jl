@@ -14,6 +14,7 @@ using Distributed
 
     sacc_path = "../../data/LSST/cls_covG_lsst.fits"
     yaml_path = "../../data/DESY1/wlwl.yml"
+    nz_path = "../../data/DESY1/binned_40_nzs/"
     sacc_file = sacc.Sacc().load_fits(sacc_path)
     yaml_file = YAML.load_file(yaml_path)
     nz_DESwl__0 = npzread(string(nz_path, "DESwl__0"))
