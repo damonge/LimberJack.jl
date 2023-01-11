@@ -5,7 +5,7 @@
 
 ![](https://raw.githubusercontent.com/JaimeRZP/LimberJack.jl/main/docs/src/assets/LimberJack_logo.png)
 
-A differentiable cosmological code in Julia.
+<p align="center"> A differentiable cosmological code in Julia. </p>
 
 ## Design Philosophy
 
@@ -16,23 +16,27 @@ A differentiable cosmological code in Julia.
 | ```core.jl```    | Performs the computation of the fundamental theoretical predictions   |
 | ```tracers.jl``` | Computes the kernels associated with each type of kernel      |
 | ```spectra.jl```  | Computes the power spectra of any two tracers       |
-| ```emulator.jl``` | Computes the primordial powerspectrum as given by the Mootoovaloo et al 2022 emulator       |
+| ```emulator.jl``` | Computes the primordial power-spectrum as given by the Mootoovaloo et al 2022 emulator       |
 | ```Halofit.jl```  | Computes the non-linear matter power spectrum as given by the Halofit fitting formula       |
-| ```theory.jl```   | Interface to ```Turing.jl```        |
+| ```turing_utils.jl```   | Interface to ```Turing.jl```        |
+| ```turing_data.jl```   | Manages ```sacc``` files for large data vectors       |
 
 + **Object-oriented**: ```LimberJack.jl```  mimics ```CCL.py``` class structure by using ```Julia```'s ```structures```.
-+ **```Julia```**: ```LimberJack.jl```  is fully written in ```Julia``` without needing to inerface to any other programming language (```C```, ```Python```...) to compute thoretical predictions. This allows the user full access to the code from beginning to end.
++ **Transparency**: ```LimberJack.jl```  is fully written in ```Julia``` without needing to inerface to any other programming language (```C```, ```Python```...) to compute thoretical predictions. This allows the user full access to the code from input to output.
 
 ## Goals
 
-+ **Gradients**: cheap gradients of its theoretical predictions.
-+ **Precision**: within 0.005 relative error of```CCL```'s precision.
++ **Gradients**: one order of magnitude faster gradients than finite differences.
++ **Precision**: sub-percentage error with respect to ```CCL```.
 + **Speed**: ```C```-like performance.
-
 
 ## Installation
 
-Once you have installed ```Julia``` you can install ```LimberJack.jl``` by:
+In order to run ```LimberJack.jl``` you will need ```Julia-1.7.0``` or newer installed in your system.
+Older versions of ```Julia``` might be compatible but haven't been tested.
+You can find instructions on how to install ```Julia``` here: https://julialang.org/downloads/.
+
+Once you have installed ```Julia``` you can install ```LimberJack.jl``` following these steps:
 1. Clone the git repository
 2. From the repository directory open ```Julia```
 3. In the ```Julia``` command line run:
@@ -40,8 +44,24 @@ Once you have installed ```Julia``` you can install ```LimberJack.jl``` by:
     using Pkg
     Pkg.add(path=".")
 ```
+#### Known issues
 
-## Use
+Sometimes an older version of ```Interpolations``` is installed resulting in ```cubic_spline_interpolation``` is not defined.
+If this happens, run the following commands from ```LimberJack``` repository folder:
+
+``` julia
+    using Pkg
+    Pkg.activate(".")
+    Pkg.update("LimberJack")
+    Pkg.resolve()
+    Pkg.activate()
+    Pkg.add("Interpolations")
+    Pkg.update("Interpolations")
+    Pkg.develop(path=".")
+```
+This essentially updates the ```Interpolations``` installations inside and outside the ```LimberJack``` environment.
+
+## Replicated DESY1 3x2 analysis
 
 ``` julia
     # Import
@@ -71,6 +91,6 @@ Once you have installed ```Julia``` you can install ```LimberJack.jl``` by:
 
 ## Challenges
 
-1. Threading parallalization.
-2. GPU implementation.
-3. ```Zygote``` compatibility.
+1.  **Parallelization**: the current threading parallelization of ```LimberJack.jl``` is far away from the optimal one over number of threads scaling. Future works could study alternative parallalization schemes or  possible inneficiencies in the code. 
+2. **GPU's**: ```LimberJack.jl``` currently cannot run on GPU's which are known to significantly speed-up cosmological inference. Future works could study implementing ```Julia``` GPU libraries such as ```CUDA.jl```.
+3. **Backwards-AD**: currently ```LimberJack.jl```'s preferred AD mode is forward-AD. However, the key computation of cosmological inference, obtaining the $\chi^2$, is a map from N parameters to a scalar. For a large number of parameters, backwards-AD is in theory the preferred AD mode and should significantly speed up the computation of the gradient. Future works could look into making ```LimberJack.jl``` compatible with the latest ```Julia``` AD libraries such as ```Zygote.jl``` to implement efficient backwards-AD.
