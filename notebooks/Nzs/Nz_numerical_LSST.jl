@@ -16,10 +16,10 @@ using Distributed
     yaml_path = "../../data/DESY1/wlwl.yml"
     sacc_file = sacc.Sacc().load_fits(sacc_path)
     yaml_file = YAML.load_file(yaml_path)
-    nz_DESwl__0 = npzread(string(nz_path, "DESwl__0")
-    nz_DESwl__1 = npzread(string(nz_path, "DESwl__1")
-    nz_DESwl__2 = npzread(string(nz_path, "DESwl__2")
-    nz_DESwl__3 = npzread(string(nz_path, "DESwl__3")
+    nz_DESwl__0 = npzread(string(nz_path, "DESwl__0"))
+    nz_DESwl__1 = npzread(string(nz_path, "DESwl__1"))
+    nz_DESwl__2 = npzread(string(nz_path, "DESwl__2"))
+    nz_DESwl__3 = npzread(string(nz_path, "DESwl__3"))
     zs_k0, nz_k0, cov_k0 = nz_DESwl__0["z"], nz_DESwl__0["dndz"], nz_DESwl__0["cov"]
     zs_k1, nz_k1, cov_k1 = nz_DESwl__1["z"], nz_DESwl__1["dndz"], nz_DESwl__1["cov"]
     zs_k2, nz_k2, cov_k2 = nz_DESwl__2["z"], nz_DESwl__2["dndz"], nz_DESwl__2["cov"]
@@ -70,7 +70,6 @@ end
     DESwl__1_m = 0.012 #~ Normal(0.012, 0.023)
     DESwl__2_m = 0.012 #~ Normal(0.012, 0.023)
     DESwl__3_m = 0.012 #~ Normal(0.012, 0.023)
-
 
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
