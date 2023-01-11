@@ -9,7 +9,7 @@ export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
 export Theory, get_nzs
 export make_data
 
-using Interpolations, LinearAlgebra, Statistics,
+using Interpolations, LinearAlgebra, Statistics, QuadGK
 using NPZ, NumericalIntegration, PythonCall
 
 include("core.jl")
