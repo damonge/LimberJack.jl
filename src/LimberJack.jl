@@ -6,12 +6,11 @@ export Emulator, get_emulated_log_pk0
 export get_PKnonlin
 export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer
 export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
-export Theory, get_nzs
+export Theory
 export make_data
 
-using Interpolations, OrdinaryDiffEq, ForwardDiff 
-using LinearAlgebra, Statistics, Trapz, QuadGK, NPZ, NumericalIntegration
-using PythonCall
+using Interpolations, LinearAlgebra, Statistics, QuadGK
+using NPZ, NumericalIntegration, PythonCall
 
 include("core.jl")
 include("emulator.jl")
