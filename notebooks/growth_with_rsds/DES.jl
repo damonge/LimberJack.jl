@@ -95,7 +95,7 @@ adaptation = 250
 TAP = 0.65
 
 stats_model = model(fake_data)
-sampler = MH()
+sampler = NUTS(adaptation, TAP)
 
 println("sampling settings: ")
 println("cycles ", cycles)
