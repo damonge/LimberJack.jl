@@ -3,6 +3,7 @@ using Distributed
 @everywhere begin
     using LinearAlgebra
     using Turing
+    using AdvancedHMC
     using LimberJack
     using GaussianProcess
     using CSV
