@@ -97,9 +97,9 @@ adaptation = 300
 init_ϵ = 0.005
 
 stats_model = model(fake_data)
-sampler = NUTS(adaptation, TAP;
-               init_ϵ=init_ϵ,
-               metricT=AdvancedHMC.DenseEuclideanMetric)
+sampler = Turing.NUTS(adaptation, TAP;
+                   init_ϵ=init_ϵ,
+                   metricT=AdvancedHMC.DenseEuclideanMetric)
 
 println("sampling settings: ")
 println("cycles ", cycles)
