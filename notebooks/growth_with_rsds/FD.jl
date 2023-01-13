@@ -157,7 +157,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("DESY1_k1k_priors_EisHu_MH")
+folname = string("FD_TAP_", TAP, "_dense")
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
