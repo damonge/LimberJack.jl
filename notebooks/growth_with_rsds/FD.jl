@@ -138,14 +138,16 @@ end
     data ~ MvNormal(theory ./ errs, cov)
 end;
 cycles = 6
-iterations = 1000
+iterations = 250
 nchains = nprocs()
 
-adaptation = 250
+adaptation = 1000
 TAP = 0.65
+init_ϵ = 0.005
 
 stats_model = model(fake_data)
 sampler = NUTS(adaptation, TAP;
+               init_ϵ = init_ϵ,
                metricT=AdvancedHMC.DenseEuclideanMetric)
 
 println("sampling settings: ")
@@ -157,7 +159,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("FD_TAP_", TAP, "_dense")
+folname = string("FD_dense_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)

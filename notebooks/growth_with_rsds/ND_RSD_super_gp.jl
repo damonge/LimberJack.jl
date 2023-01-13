@@ -143,12 +143,12 @@ nchains = nprocs()
 
 TAP = 0.60
 adaptation = 300
-init_ϵ1 = 0.005
-init_ϵ2 = 0.005
+init_ϵ = 0.005
 
 stats_model = model(fake_data)
-sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns),
-                NUTS(adaptation, TAP, :v))
+sampler = NUTS(adaptation, TAP;
+               init_ϵ=init_ϵ,
+               metricT=AdvancedHMC.DenseEuclideanMetric)
 
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -159,7 +159,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("ND_RSD_super_gp_Gibbs_TAP_", TAP)
+folname = string("ND_RSD_super_gp_dense_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
