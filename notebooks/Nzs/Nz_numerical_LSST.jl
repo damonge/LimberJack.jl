@@ -2,6 +2,7 @@ using Distributed
 
 @everywhere begin
     using Turing
+    using AdvancedHMC
     using LimberJack
     using CSV
     using NPZ
@@ -91,11 +92,14 @@ cycles = 6
 iterations = 250
 nchains = nprocs()
 
-adaptation = 250
-TAP = 0.65
+TAP = 0.60
+adaptation = 300
+init_ϵ = 0.005
 
 stats_model = model(fake_data)
-sampler = NUTS(adaptation, TAP)
+sampler = NUTS(adaptation, TAP;
+               init_ϵ=init_ϵ,
+               metricT=AdvancedHMC.DenseEuclideanMetric)
 
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -106,7 +110,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("Nzs40_LSST_numerical_lite_", "TAP_", TAP)
+folname = string("Nzs40_LSST_numerical_lite_dense_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
