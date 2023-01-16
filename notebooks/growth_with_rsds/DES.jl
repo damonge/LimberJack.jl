@@ -91,11 +91,14 @@ cycles = 6
 iterations = 1000
 nchains = nprocs()
 
-adaptation = 250
+adaptation = 1000
 TAP = 0.65
+init_ϵ = 0.01
 
 stats_model = model(fake_data)
-sampler = NUTS(adaptation, TAP)
+sampler = Turing.NUTS(adaptation, TAP;
+                   init_ϵ = init_ϵ,
+                   metricT=AdvancedHMC.DenseEuclideanMetric)
 
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -106,7 +109,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("DESY1_k1k_priors_EisHu_MH")
+folname = string("DESY1_k1k_priors_EisHu_dense")
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
