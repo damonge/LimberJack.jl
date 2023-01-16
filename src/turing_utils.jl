@@ -1,4 +1,32 @@
 
+function maximum_a_posteriori(loglike::Function,
+                              params::NamedTuple,
+                              lower_bound::Vector{Float64},
+                              upper_bound::Vector{Float64})
+
+    Xi2 = _Xi2(params; model=model)
+
+    start_value = (upper_bound .+ lower_bound) ./ 2
+    opt = optimize((v)->-loglike(v), lower_bound, upper_bound, start_value, Fminbox())
+    return Optim.minimizer(opt)
+end
+
+function get_mass_matrix(loglike::Function,
+                         params::NamedTuple,
+                         MAP::Vector{Float64})
+
+    # Get the Hessian
+    hess = hessian(loglike, MAP)
+    inv_hess = inv(hess)
+    # Turn the Hessian into more of a covariance Matrix
+    w, v = eigen(inv_hess)
+    hess_cov = v * (diagm(abs.(w)) * v')
+    hess_cov = tril(hess_cov) + triu(hess_cov', 1)
+    hess_cov = Hermitian(hess_cov)
+    hess_cov = convert(Matrix{Float64}, hess_cov)
+    return hess_cov
+end
+
 function Theory(cosmology::Cosmology,
                 names, types, pairs,
                 idx, files;
