@@ -28,7 +28,7 @@ using Distributed
                             nz_DESwl__3=nz_DESwl__3)
 
     data_vector = meta.data
-    cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_dz_cov_marg_lsst.npz")["cov_marg"]
+    cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_cov_marg_lsst.npz")["cov_marg"]
 
     errs = sqrt.(diag(cov_tot))
     fake_data = data_vector ./ errs
