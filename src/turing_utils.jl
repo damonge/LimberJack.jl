@@ -1,8 +1,8 @@
-function Loglike(model, MAP)
+function Loglike(model, MAP_names)
 
     function LL(MAP_vals;
                 model=model,
-                MAP_names=keys(MAP))
+                MAP_names=MAP_names)
         MAP_namedT = NamedTuple(Symbol(name)=>val for (name,val) in zip(MAP_names, MAP_vals))
         return Turing.loglikelihood(model, MAP_namedT)
     end

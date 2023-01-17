@@ -67,10 +67,6 @@ end
                      "DESgc__2_dz" => DESgc__2_dz,
                      "DESgc__3_dz" => DESgc__3_dz,
                      "DESgc__4_dz" => DESgc__4_dz,
-
-                     "A_IA" => A_IA,
-                     "alpha_IA" => alpha_IA,
-
                      "DESwl__0_dz" => DESwl__0_dz,
                      "DESwl__1_dz" => DESwl__1_dz,
                      "DESwl__2_dz" => DESwl__2_dz,
@@ -78,7 +74,9 @@ end
                      "DESwl__0_m" => DESwl__0_m,
                      "DESwl__1_m" => DESwl__1_m,
                      "DESwl__2_m" => DESwl__2_m,
-                     "DESwl__3_m" => DESwl__3_m)
+                     "DESwl__3_m" => DESwl__3_m,
+                     "A_IA" => A_IA,
+                     "alpha_IA" => alpha_IA,)
 
     cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
                           tk_mode="EisHu",
@@ -89,35 +87,24 @@ end
 end
 
 stats_model = model(fake_data)
-
-MAP = Dict("Ωm" => 2.89781002e-01,
-         "Ωb" => 4.77686400e-02,
-         "h" => 7.38011259e-01,
-         "s8" => 7.98425957e-01,
-         "ns" => 9.69728709e-01,
-         "DESgc__0_b" => 1.49721568e+00,
-         "DESgc__1_b" => 1.81865817e+00,
-         "DESgc__2_b" => 1.79001308e+00,
-         "DESgc__3_b" => 2.18263403e+00,
-         "DESgc__4_b" => 2.24598151e+00,
-         "DESgc__0_dz" => -3.46696435e-03,
-         "DESgc__1_dz" => -3.77762873e-03,
-         "DESgc__2_dz" => -1.60856663e-03,
-         "DESgc__3_dz" => -2.09706269e-03,
-         "DESgc__4_dz" => 5.92820210e-04,
-         "DESwl__0_dz" => -1.05679892e-02,
-         "DESwl__1_dz" => 5.08483360e-03,
-         "DESwl__2_dz" => 4.75152724e-03,
-         "DESwl__3_dz" => -8.16263963e-04,
-         "DESwl__0_m" => 1.90524810e-02,
-         "DESwl__1_m" => 3.83250992e-03,
-         "DESwl__2_m" => 2.35920245e-02,
-         "DESwl__3_m" => -1.54272168e-03,
-         "A_IA" => 3.16431800e-01,
-         "alpha_IA" => -2.64120253e-01)
-
-loglike = Loglike(stats_model, MAP)
-mass_mat = get_mass_matrix(Xi2, MAP)
+MAP_vals = [ 2.89781002e-01,  4.77686400e-02,  7.38011259e-01,  7.98425957e-01,
+        9.69728709e-01,  1.49721568e+00,  1.81865817e+00,  1.79001308e+00,
+        2.18263403e+00,  2.24598151e+00, -3.46696435e-03, -3.77762873e-03,
+       -1.60856663e-03, -2.09706269e-03,  5.92820210e-04, -1.05679892e-02,
+        5.08483360e-03,  4.75152724e-03, -8.16263963e-04,  1.90524810e-02,
+        3.83250992e-03,  2.35920245e-02, -1.54272168e-03,  3.16431800e-01,
+       -2.64120253e-01]
+MAP_names = ["Ωm", "Ωb", "h", "s8",  "ns",
+              "DESgc__0_b", "DESgc__1_b","DESgc__2_b","DESgc__3_b","DESgc__4_b",
+              "DESgc__0_dz", "DESgc__1_dz", "DESgc__2_dz", "DESgc__3_dz", "DESgc__4_dz",
+              "DESwl__0_dz", "DESwl__1_dz", "DESwl__2_dz", "DESwl__3_dz",
+              "DESwl__0_m", "DESwl__1_m", "DESwl__2_m", "DESwl__3_m",
+              "A_IA", "alpha_IA",];
+loglike = Loglike(stats_model, MAP_names)
+mass_matrix = get_mass_matrix(loglike, MAP_vals)
+metric = DenseEuclideanMetric(hess_cov)
+sampler = Sampler(NUTS(adaptation, TAP; metric=metric),
+                  stats_model)
 
 cycles = 6
 iterations = 1000
