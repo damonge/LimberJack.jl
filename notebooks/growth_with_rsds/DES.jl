@@ -102,7 +102,7 @@ MAP_names = ["Ωm", "Ωb", "h", "s8",  "ns",
               "A_IA", "alpha_IA",];
 loglike = Loglike(stats_model, MAP_names)
 mass_matrix = get_mass_matrix(loglike, MAP_vals)
-metric = DenseEuclideanMetric(hess_cov)
+metric = DenseEuclideanMetric(mass_matrix)
 sampler = Sampler(NUTS(adaptation, TAP; metric=metric),
                   stats_model)
 
