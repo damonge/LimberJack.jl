@@ -1,10 +1,18 @@
+function Loglike(model, MAP)
 
-function maximum_a_posteriori(loglike::Function,
-                              params::NamedTuple,
-                              lower_bound::Vector{Float64},
-                              upper_bound::Vector{Float64})
+    function LL(MAP_vals;
+                model=model,
+                MAP_names=keys(MAP))
+        MAP_namedT = NamedTuple(Symbol(name)=>val for (name,val) in zip(MAP_names, MAP_vals))
+        return Turing.loglikelihood(model, MAP_namedT)
+    end
 
-    Xi2 = _Xi2(params; model=model)
+    return LL
+end
+
+function get_MAP(loglike::Function,
+                 lower_bound::Vector{Float64},
+                 upper_bound::Vector{Float64})
 
     start_value = (upper_bound .+ lower_bound) ./ 2
     opt = optimize((v)->-loglike(v), lower_bound, upper_bound, start_value, Fminbox())
@@ -12,11 +20,10 @@ function maximum_a_posteriori(loglike::Function,
 end
 
 function get_mass_matrix(loglike::Function,
-                         params::NamedTuple,
                          MAP::Vector{Float64})
 
     # Get the Hessian
-    hess = hessian(loglike, MAP)
+    hess = ForwardDiff.hessian(loglike, values(MAP))
     inv_hess = inv(hess)
     # Turn the Hessian into more of a covariance Matrix
     w, v = eigen(inv_hess)

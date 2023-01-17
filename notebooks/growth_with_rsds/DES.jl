@@ -88,6 +88,37 @@ end
     data ~ MvNormal(theory ./ errs, cov)
 end
 
+stats_model = model(fake_data)
+
+MAP = Dict("Ωm" => 2.89781002e-01,
+         "Ωb" => 4.77686400e-02,
+         "h" => 7.38011259e-01,
+         "s8" => 7.98425957e-01,
+         "ns" => 9.69728709e-01,
+         "DESgc__0_b" => 1.49721568e+00,
+         "DESgc__1_b" => 1.81865817e+00,
+         "DESgc__2_b" => 1.79001308e+00,
+         "DESgc__3_b" => 2.18263403e+00,
+         "DESgc__4_b" => 2.24598151e+00,
+         "DESgc__0_dz" => -3.46696435e-03,
+         "DESgc__1_dz" => -3.77762873e-03,
+         "DESgc__2_dz" => -1.60856663e-03,
+         "DESgc__3_dz" => -2.09706269e-03,
+         "DESgc__4_dz" => 5.92820210e-04,
+         "DESwl__0_dz" => -1.05679892e-02,
+         "DESwl__1_dz" => 5.08483360e-03,
+         "DESwl__2_dz" => 4.75152724e-03,
+         "DESwl__3_dz" => -8.16263963e-04,
+         "DESwl__0_m" => 1.90524810e-02,
+         "DESwl__1_m" => 3.83250992e-03,
+         "DESwl__2_m" => 2.35920245e-02,
+         "DESwl__3_m" => -1.54272168e-03,
+         "A_IA" => 3.16431800e-01,
+         "alpha_IA" => -2.64120253e-01)
+
+loglike = Loglike(stats_model, MAP)
+mass_mat = get_mass_matrix(Xi2, MAP)
+
 cycles = 6
 iterations = 1000
 nchains = nprocs()
@@ -96,7 +127,6 @@ adaptation = 1000
 TAP = 0.65
 init_ϵ = 0.01
 
-stats_model = model(fake_data)
 sampler = Turing.NUTS(adaptation, TAP;
                    init_ϵ = init_ϵ,
                    metricT=AdvancedHMC.DenseEuclideanMetric)

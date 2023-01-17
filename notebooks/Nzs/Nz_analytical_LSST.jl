@@ -51,18 +51,18 @@ end
     
     A_IA = 0.0 #~ Uniform(-5, 5)
     alpha_IA = 0.0 #~ Uniform(-5, 5)
-    DESwl__0_e_m = 0.012 #~ Normal(0.012, 0.023)
-    DESwl__1_e_m = 0.012 #~ Normal(0.012, 0.023)
-    DESwl__2_e_m = 0.012 #~ Normal(0.012, 0.023)
-    DESwl__3_e_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__0_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__1_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__2_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__3_m = 0.012 #~ Normal(0.012, 0.023)
 
 
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
-                     "DESwl__0_e_m" => DESwl__0_e_m,
-                     "DESwl__1_e_m" => DESwl__1_e_m,
-                     "DESwl__2_e_m" => DESwl__2_e_m,
-                     "DESwl__3_e_m" => DESwl__3_e_m)
+                     "DESwl__0_m" => DESwl__0_m,
+                     "DESwl__1_m" => DESwl__1_m,
+                     "DESwl__2_m" => DESwl__2_m,
+                     "DESwl__3_m" => DESwl__3_m)
     
     theory = Theory(cosmology, meta, files; Nuisances=nuisances)
     data ~ MvNormal(theory ./ errs, cov)
