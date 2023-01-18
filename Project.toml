@@ -4,7 +4,6 @@ authors = ["Jaime Ruiz-Zapatero <jaimerz011235812@gmail.com>", "David Alonso <da
 version = "0.1.0"
 
 [deps]
-Bolt = "d94d39b4-3f51-4e5a-bfd8-f3b08e8f2b62"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
