@@ -11,6 +11,7 @@ export make_data
 
 using Interpolations, LinearAlgebra, Statistics, QuadGK
 using NPZ, NumericalIntegration, PythonCall
+using OrdinaryDiffEq
 
 include("core.jl")
 include("emulator.jl")
