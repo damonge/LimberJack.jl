@@ -19,8 +19,7 @@ function get_MAP(loglike::Function,
     return Optim.minimizer(opt)
 end
 
-function get_mass_matrix(loglike::Function,
-                         MAP::Vector{Float64})
+function get_mass_matrix(loglike::Function, MAP)
 
     # Get the Hessian
     hess = ForwardDiff.hessian(loglike, values(MAP))
