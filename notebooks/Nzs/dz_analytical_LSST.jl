@@ -26,6 +26,7 @@ using Distributed
     fake_data = data_vector ./ errs
     fake_cov = Hermitian(cov_tot ./ (errs * errs'))
 end
+
 @everywhere @model function model(data;
                                   meta=meta,
                                   files=files,

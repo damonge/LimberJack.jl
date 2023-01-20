@@ -41,12 +41,12 @@ end
     DESwl__1_dz ~ TruncatedNormal(0.0, 4*0.017, -0.8, 0.8)
     DESwl__2_dz ~ TruncatedNormal(0.0, 4*0.013, -0.8, 0.8)
     DESwl__3_dz ~ TruncatedNormal(0.0, 4*0.015, -0.8, 0.8)
-    DESwl__0_m ~ Normal(0.012, 0.023)
-    DESwl__1_m ~ Normal(0.012, 0.023)
-    DESwl__2_m ~ Normal(0.012, 0.023)
-    DESwl__3_m ~ Normal(0.012, 0.023)
-    A_IA ~ Uniform(-5, 5)
-    alpha_IA ~ Uniform(-5, 5)
+    DESwl__0_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__1_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__2_m = 0.012 #~ Normal(0.012, 0.023)
+    DESwl__3_m = 0.012 #~ Normal(0.012, 0.023)
+    A_IA = 0.0 #~ Uniform(-5, 5)
+    alpha_IA = 0.0 #~ Uniform(-5, 5)
 
     nuisances = Dict("A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,
@@ -85,8 +85,8 @@ println("adaptation ", adaptation)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../../chains/Nzs_chains/"
-folname = string("dz_LSST_numerical_4x_", "TAP_", TAP)
+folpath = "../../chains/Nzs_chains/lite_runs/"
+folname = string("dz_LSST_numerical_lite_4x_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
