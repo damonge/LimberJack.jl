@@ -97,7 +97,7 @@ println("adaptation ", adaptation)
 println("nchains ", nchains)
 
 # Start sampling.
-folpath = "../../chains/Nzs_chains/"
+folpath = "../../chains/Nzs_chains/lite_runs/"
 folname = string("dz_LSST_nomarg_custom_nz_lite_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
