@@ -17,7 +17,19 @@ using Distributed
     yaml_path = "../../data/DESY1/wlwl.yml"
     sacc_file = sacc.Sacc().load_fits(sacc_path)
     yaml_file = YAML.load_file(yaml_path)
-    meta, files = make_data(sacc_file, yaml_file)
+    nz_DESwl__0 = npzread(string(nz_path, "nz_DESwl__0.npz"))
+    nz_DESwl__1 = npzread(string(nz_path, "nz_DESwl__1.npz"))
+    nz_DESwl__2 = npzread(string(nz_path, "nz_DESwl__2.npz"))
+    nz_DESwl__3 = npzread(string(nz_path, "nz_DESwl__3.npz"))
+    zs_k0, nz_k0, cov_k0 = nz_DESwl__0["z"], nz_DESwl__0["dndz"], nz_DESwl__0["cov"]
+    zs_k1, nz_k1, cov_k1 = nz_DESwl__1["z"], nz_DESwl__1["dndz"], nz_DESwl__1["cov"]
+    zs_k2, nz_k2, cov_k2 = nz_DESwl__2["z"], nz_DESwl__2["dndz"], nz_DESwl__2["cov"]
+    zs_k3, nz_k3, cov_k3 = nz_DESwl__3["z"], nz_DESwl__3["dndz"], nz_DESwl__3["cov"]
+    meta, files = make_data(sacc_file, yaml_file;
+                            nz_DESwl__0=nz_DESwl__0,
+                            nz_DESwl__1=nz_DESwl__1,
+                            nz_DESwl__2=nz_DESwl__2,
+                            nz_DESwl__3=nz_DESwl__3)
 
     data_vector = meta.data
     cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_dz_cov_marg_lsst.npz")["cov_marg"]
@@ -86,7 +98,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/"
-folname = string("dz_LSST_analytical_lite_", "TAP_", TAP)
+folname = string("dz_LSST_analytical_custom_nz_lite_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
