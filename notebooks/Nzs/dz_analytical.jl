@@ -79,7 +79,7 @@ end
     data ~ MvNormal(theory ./ errs, cov)
 end
 
-cycles = 6
+cycles = 4
 iterations = 250
 nchains = nprocs()
 
