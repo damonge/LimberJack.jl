@@ -33,7 +33,7 @@ using Distributed
                             nz_DESwl__3=nz_DESwl__3)
 
     data_vector = meta.data
-    cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_dz_cov_marg_lsst.npz")["cov_marg"]
+    cov_tot = npzread("../../data/DESY1/binned_40_nzs/wlwl_dz_cov_marg_lsst_cosmo2.npz")["cov_marg"]
 
     errs = sqrt.(diag(cov_tot))
     fake_data = data_vector ./ errs
@@ -50,10 +50,10 @@ end
     h ~ Uniform(0.55, 0.91)
     ns ~ Uniform(0.87, 1.07)
 
-    DESwl__0_dz = 0 #~ TruncatedNormal(0.0, 4*0.017, -0.8, 0.8)
-    DESwl__1_dz = 0 #~ TruncatedNormal(0.0, 4*0.017, -0.8, 0.8)
-    DESwl__2_dz = 0 #~ TruncatedNormal(0.0, 4*0.013, -0.8, 0.8)
-    DESwl__3_dz = 0 #~ TruncatedNormal(0.0, 4*0.015, -0.8, 0.8)
+    DESwl__0_dz = 0 #~ TruncatedNormal(0.0, 0.017, -0.8, 0.8)
+    DESwl__1_dz = 0 #~ TruncatedNormal(0.0, 0.017, -0.8, 0.8)
+    DESwl__2_dz = 0 #~ TruncatedNormal(0.0, 0.013, -0.8, 0.8)
+    DESwl__3_dz = 0 #~ TruncatedNormal(0.0, 0.015, -0.8, 0.8)
     DESwl__0_m = 0.012 #~ Normal(0.012, 0.023)
     DESwl__1_m = 0.012 #~ Normal(0.012, 0.023)
     DESwl__2_m = 0.012 #~ Normal(0.012, 0.023)
@@ -80,7 +80,7 @@ end
     data ~ MvNormal(theory ./ errs, cov)
 end
 
-cycles = 6
+cycles = 4
 iterations = 250
 nchains = nprocs()
 
@@ -99,7 +99,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains/Nzs_chains/lite_runs/"
-folname = string("dz_LSST_analytical_custom_nz_lite_", "TAP_", TAP)
+folname = string("dz_LSST_analytical_cosmo2_lite_", "TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
