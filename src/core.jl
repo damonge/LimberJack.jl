@@ -299,9 +299,11 @@ Cosmology(Ωm, Ωb, h, n_s, σ8;
           Dz_mode="RK2", tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           kwargs...) = begin
-    
+    kwargs=Dict(kwargs)
+
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
-    if custom_Dz != nothing
+
+    if get(kwargs, :Custom_Dz, nothing) != nothing
         _, Dz = custom_Dz
         Dz_type = eltype(Dz)
         if !(Dz_type <: Float64)
