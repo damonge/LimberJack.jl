@@ -1,3 +1,4 @@
+#=
 function _ρDE_z(z, w0=-1., wa=0.)
     return (1+z)^(3.0 * (1.0 + w0 + wa)) * exp(-3.0 * wa * z /(1+z))
 end
@@ -42,6 +43,7 @@ function _f_a(a::Array, sol::SciMLBase.ODESolution)
     D_prime = G_prime .* a .+ G
     return a ./ D .* D_prime
 end
+=#
 
 function get_growth(cpar::CosmoPar, settings::Settings; kwargs...)
     if settings.Dz_mode == "RK2"
@@ -74,6 +76,7 @@ function get_growth(cpar::CosmoPar, settings::Settings; kwargs...)
         fs8zi = linear_interpolation(z_Dz, -cpar.σ8 .* y./ (a_Dz.^2 .*e.*d[1]),
                                      extrapolation_bc=Line())
 
+    #=
     elseif settings.Dz_mode == "OrdDiffEq"
         sol = _growth_solver(cpar)
         z_Dz = LinRange(0, 1100, settings.nz_pk)
@@ -82,7 +85,8 @@ function get_growth(cpar::CosmoPar, settings::Settings; kwargs...)
         Dzi = cubic_spline_interpolation(z_Dz, Dzs, extrapolation_bc=Line())
         fs8zs = (cpar.σ8 .* Dzs ./ Dzs[1]) .* _f_a(a_Dz, sol)
         fs8zi = cubic_spline_interpolation(z_Dz, fs8zs, extrapolation_bc=Line())
-        
+    =#
+
     elseif settings.Dz_mode == "Custom"
         zs_c, Dzs_c = kwargs[:Dz_custom]
         d = zs_c[2]-zs_c[1]
