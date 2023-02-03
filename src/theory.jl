@@ -126,8 +126,8 @@ function TheoryFast(cosmo::Cosmology,
 
     P = zeros(Float64, sett.nz, sett.nℓ)
     for z ∈ axes(sett.nz, 1)
-        for ℓ ∈  axes(sett.ℓs, 1)
-            P[z, ℓ] = nonlin_Pk(cosmo, (sett.ℓs[ℓ]+0.5)/cosmo.chis[z], sett.zs[z])
+        for ℓ ∈  axes(cosmo.ℓs, 1)
+            P[z, ℓ] = nonlin_Pk(cosmo, (cosmo.ℓs[ℓ]+0.5)/cosmo.chis[z], sett.zs[z])
         end
     end
     Ezs = Ez(cosmo, sett.zs)
@@ -153,7 +153,7 @@ function TheoryFast(cosmo::Cosmology,
             name_i = names[i]
             name_j = names[j]
             cl_name = string("Cl_", name_i, name_j)
-            itp = linear_interpolation(sett.ℓs, C_ℓij[:,i,j])
+            itp = linear_interpolation(cosmo.ℓs, C_ℓij[:,i,j])
             merge!(Cls_ij_itps, Dict(cl_name =>itp))
         end
     end

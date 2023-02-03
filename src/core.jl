@@ -48,6 +48,7 @@ mutable struct Settings
     nz_pk::Int
     nz_t::Int
     nk::Int
+    nℓ::Int
     Dz_mode::String
     tk_mode::String
     Pk_mode::String
@@ -148,6 +149,7 @@ struct Cosmology
     pk0::Array
     logk
     dlogk
+    ℓs
     # Redshift and background
     zs::Array
     chi::AbstractInterpolation
@@ -202,12 +204,14 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
     nk = settings.nk
     nz = settings.nz
     nz_pk = settings.nz_pk
+    nℓ = settings.nℓ
     zs_pk = LinRange(0., 3.0, nz_pk)
     zs = range(0., stop=3.0, length=nz)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
+    ℓs = range(0., stop=3.0, length=nℓ)
     if settings.tk_mode == "emulator"
         lks_emul, pk0_emul = get_emulated_log_pk0(cpar, settings)
         pki_emul = cubic_spline_interpolation(lks_emul, log.(pk0_emul),
@@ -259,7 +263,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
                                    extrapolation_bc=Line())
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(settings, cpar, ks, pk0, logk, dlogk,
+    Cosmology(settings, cpar, ks, pk0, logk, dlogk, ℓs,
               collect(zs), chii, zi, chis, chis[end],
               chi_LSS, Dzi, fs8zi, pki, Pk)
 end
