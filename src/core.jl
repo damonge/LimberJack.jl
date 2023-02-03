@@ -152,6 +152,7 @@ struct Cosmology
     ℓs
     # Redshift and background
     zs::Array
+    zs_t::Array
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
     chis
@@ -204,9 +205,11 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
     nk = settings.nk
     nz = settings.nz
     nz_pk = settings.nz_pk
+    nz_t = settings.nz_t
     nℓ = settings.nℓ
     zs_pk = LinRange(0., 3.0, nz_pk)
-    zs = range(0., stop=3.0, length=nz)
+    zs = range(0.0, stop=3.0, length=nz)
+    zs_t = range(0.0001, stop=3.0, length=nz)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
@@ -264,7 +267,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(settings, cpar, ks, pk0, logk, dlogk, ℓs,
-              collect(zs), chii, zi, chis, chis[end],
+              collect(zs), zs_t, chii, zi, chis, chis[end],
               chi_LSS, Dzi, fs8zi, pki, Pk)
 end
 
