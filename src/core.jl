@@ -76,7 +76,7 @@ Settings(nz::Int,
          emul_path::String) = begin
     zs_pk = range(0., stop=3.0, length=nz_pk)
     zs = range(0.0, stop=3.0, length=nz)
-    zs_t = range(0.0001, stop=3.0, length=nz)
+    zs_t = range(0.0001, stop=3.0, length=nz_t)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
@@ -180,14 +180,6 @@ struct Cosmology
     settings::Settings
     cosmo::CosmoPar
     # Power spectrum
-    ks::Array
-    pk0::Array
-    logk
-    dlogk
-    ℓs
-    # Redshift and background
-    zs::Array
-    zs_t::Array
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
     chis
@@ -237,19 +229,11 @@ Returns:
 Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
     # Load settings
     cosmo_type = settings.cosmo_type
-    nk = settings.nk
-    nz = settings.nz
-    nz_pk = settings.nz_pk
-    nz_t = settings.nz_t
-    nℓ = settings.nℓ
-    zs_pk = LinRange(0., 3.0, nz_pk)
-    zs = range(0.0, stop=3.0, length=nz)
-    zs_t = range(0.0001, stop=3.0, length=nz_t)
-    # Compute linear power spectrum at z=0.
-    logk = range(log(0.0001), stop=log(7.0), length=nk)
-    ks = exp.(logk)
-    dlogk = log(ks[2]/ks[1])
-    ℓs = range(10.0, stop=3000, length=nℓ)
+    zs_pk, nz_pk = settings.zs_pk, settings.nz_pk
+    zs, nz = settings.zs, settings.nz
+    logk, nk = settings.logk, settings.nk
+    ks = settings.ks
+    dlogk = settings.dlogk
     pk0, pki = lin_Pk0(cpar, settings)
     # Compute redshift-distance relation
     norm = CLIGHT_HMPC / cpar.h
@@ -281,8 +265,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
                                    extrapolation_bc=Line())
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(settings, cpar, ks, pk0, logk, dlogk, ℓs,
-              collect(zs), zs_t, chii, zi, chis, chis[end],
+    Cosmology(settings, cpar, chii, zi, chis, chis[end],
               chi_LSS, Dzi, fs8zi, pki, Pk)
 end
 

@@ -119,25 +119,25 @@ function TheoryFast(cosmo::Cosmology,
             tracer = nothing
         end
         merge!(tracers, Dict(name => tracer))
-        W[i, :] .= tracer.wint(cosmo.chi(cosmo.zs_t))
-        F[i, :] .= tracer.F(cosmo.ℓs)
+        W[i, :] .= tracer.wint(cosmo.chi(sett.zs_t))
+        F[i, :] .= tracer.F(sett.ℓs)
     end
 
     P = zeros(Float64, sett.nz_t, sett.nℓ)
-    for z ∈ axes(cosmo.zs_t, 1)
-        for ℓ ∈  axes(cosmo.ℓs, 1)
-            P[z, ℓ] = nonlin_Pk(cosmo, (cosmo.ℓs[ℓ]+0.5)/cosmo.chis[z], cosmo.zs_t[z])
+    for z ∈ axes(sett.zs_t, 1)
+        for ℓ ∈  axes(sett.ℓs, 1)
+            P[z, ℓ] = nonlin_Pk(cosmo, (sett.ℓs[ℓ]+0.5)/cosmo.chis[z], sett.zs_t[z])
         end
     end
-    Ezs = Ez(cosmo, cosmo.zs_t)
-    chis = cosmo.chi(cosmo.zs_t)
-    dz = (cosmo.zs_t[2] - cosmo.zs_t[1])
+    Ezs = Ez(cosmo, sett.zs_t)
+    chis = cosmo.chi(sett.zs_t)
+    dz = (sett.zs_t[2] - sett.zs_t[1])
     SimpsonWeights = SimpsonWeightArray(sett.nz_t)
     C_ℓij = zeros(sett.cosmo_type, sett.nℓ, ntracers, ntracers)
     for ℓ ∈ axes(C_ℓij, 1)
         for i ∈ axes(C_ℓij, 2)
             for j ∈ axes(C_ℓij, 3)
-                for z ∈ axes(cosmo.zs_t, 1)
+                for z ∈ axes(sett.zs_t, 1)
                     integrand = (W[i, z] * W[j, z] * P[z, ℓ]) / (Ezs[z] * chis[z]^2)
                     C_ℓij[ℓ,i,j] += integrand * SimpsonWeights[z] * dz
                 end
@@ -152,7 +152,7 @@ function TheoryFast(cosmo::Cosmology,
             name_i = names[i]
             name_j = names[j]
             cl_name = string("Cl_", name_i, name_j)
-            itp = linear_interpolation(cosmo.ℓs, C_ℓij[:,i,j])
+            itp = linear_interpolation(sett.ℓs, C_ℓij[:,i,j])
             merge!(Cls_ij_itps, Dict(cl_name =>itp))
         end
     end
