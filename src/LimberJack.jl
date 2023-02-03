@@ -14,6 +14,7 @@ using NPZ, NumericalIntegration, PythonCall
 #using OrdinaryDiffEq
 
 include("core.jl")
+include("boltzmann.jl")
 include("growth.jl")
 include("emulator.jl")
 include("halofit.jl")

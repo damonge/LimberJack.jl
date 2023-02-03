@@ -43,18 +43,49 @@ Returns:
 
 """
 mutable struct Settings
-    cosmo_type::DataType
     nz::Int
     nz_pk::Int
     nz_t::Int
     nk::Int
     nℓ::Int
-    Dz_mode::String
+
+    zs
+    zs_pk
+    zs_t
+    ks
+    ℓs
+    logk
+    dlogk
+
+    cosmo_type::DataType
     tk_mode::String
+    Dz_mode::String
     Pk_mode::String
     emul_path::String
 end
 
+Settings(nz::Int,
+         nz_pk::Int,
+         nz_t::Int,
+         nk::Int,
+         nℓ::Int,
+         cosmo_type::DataType,
+         tk_mode::String,
+         Dz_mode::String,
+         Pk_mode::String,
+         emul_path::String) = begin
+    zs_pk = range(0., stop=3.0, length=nz_pk)
+    zs = range(0.0, stop=3.0, length=nz)
+    zs_t = range(0.0001, stop=3.0, length=nz)
+    # Compute linear power spectrum at z=0.
+    logk = range(log(0.0001), stop=log(7.0), length=nk)
+    ks = exp.(logk)
+    dlogk = log(ks[2]/ks[1])
+    ℓs = range(10, stop=3000, length=nℓ)
+    Settings(nz, nz_pk, nz_t, nk, nℓ,
+             zs, zs_pk, zs_t, ks, ℓs, logk,  dlogk,
+             cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
+end
 """
     CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
 
@@ -79,9 +110,11 @@ Returns:
 struct CosmoPar{T}
     Ωm::T
     Ωb::T
+    Ωc::T
     h::T
-    n_s::T
+    ns::T
     σ8::T
+    As::T
     θCMB::T
     Ωr::T
     ΩΛ::T
@@ -111,7 +144,9 @@ CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
     f_rel = 1.0 + Neff * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
     Ωr = prefac*f_rel*θCMB^4/h^2
     ΩΛ = 1-Ωm-Ωr
-    CosmoPar{Real}(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
+    Ωc = Ωm-Ωb
+    As =  1.0
+    CosmoPar{Real}(Ωm, Ωb, Ωc, h, n_s, σ8, As, θCMB, Ωr, ΩΛ)
 end
 
 """
@@ -215,27 +250,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     ℓs = range(10.0, stop=3000, length=nℓ)
-    if settings.tk_mode == "emulator"
-        lks_emul, pk0_emul = get_emulated_log_pk0(cpar, settings)
-        pki_emul = cubic_spline_interpolation(lks_emul, log.(pk0_emul),
-                                        extrapolation_bc=Line())
-        pk0 = exp.(pki_emul(logk))
-    elseif settings.tk_mode == "EisHu"
-        tk = TkEisHu(cpar, ks./ cpar.h)
-        pk0 = @. ks^cpar.n_s * tk
-    elseif settings.tk_mode == "BBKS"
-        tk = TkBBKS(cpar, ks)
-        pk0 = @. ks^cpar.n_s * tk
-     else
-        print("Transfer function not implemented")
-    end
-    #Renormalize Pk
-    σ8_2_here = _σR2(ks, pk0, dlogk, 8.0/cpar.h)
-    norm = cpar.σ8^2 / σ8_2_here
-    pk0 *= norm
-    # OPT: interpolation method
-    pki = cubic_spline_interpolation(logk, log.(pk0);
-                                     extrapolation_bc=Line())
+    pk0, pki = lin_Pk0(cpar, settings)
     # Compute redshift-distance relation
     norm = CLIGHT_HMPC / cpar.h
     chis = zeros(cosmo_type, nz)
@@ -303,7 +318,7 @@ Returns:
 
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,  nz_t=200, nℓ=100,
+          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,  nz_t=200, nℓ=300,
           Dz_mode="RK2", tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           kwargs...) = begin
@@ -320,8 +335,8 @@ Cosmology(Ωm, Ωb, h, n_s, σ8;
     end
     
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    settings = Settings(cosmo_type, nz, nz_pk, nz_t, nk, nℓ,
-                        Dz_mode, tk_mode, Pk_mode, emul_path)
+    settings = Settings(nz, nz_pk, nz_t, nk, nℓ,
+                        cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
     Cosmology(cpar, settings)
 end
 
