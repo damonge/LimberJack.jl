@@ -209,7 +209,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
     nℓ = settings.nℓ
     zs_pk = LinRange(0., 3.0, nz_pk)
     zs = range(0.0, stop=3.0, length=nz)
-    zs_t = range(0.0001, stop=3.0, length=nz)
+    zs_t = range(0.0001, stop=3.0, length=nz_t)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)

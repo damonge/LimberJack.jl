@@ -87,7 +87,7 @@ function TheoryFast(cosmo::Cosmology,
     end
     ntracers = length(names)
     tracers =  Dict{String}{Tracer}()
-    W = zeros(sett.cosmo_type, ntracers, sett.nz)
+    W = zeros(sett.cosmo_type, ntracers, sett.nz_t)
     F = zeros(Float64, ntracers, sett.nℓ)
     @inbounds for i in 1:ntracers
         name = names[i]
@@ -124,13 +124,13 @@ function TheoryFast(cosmo::Cosmology,
     end
 
     P = zeros(Float64, sett.nz_t, sett.nℓ)
-    for z ∈ axes(sett.nz, 1)
+    for z ∈ axes(cosmo.zs_t, 1)
         for ℓ ∈  axes(cosmo.ℓs, 1)
             P[z, ℓ] = nonlin_Pk(cosmo, (cosmo.ℓs[ℓ]+0.5)/cosmo.chis[z], cosmo.zs_t[z])
         end
     end
     Ezs = Ez(cosmo, cosmo.zs_t)
-    chis = cosmo.chis
+    chis = cosmo.chi(cosmo.zs_t)
     dz = (cosmo.zs_t[2] - cosmo.zs_t[1])
     SimpsonWeights = SimpsonWeightArray(sett.nz_t)
     C_ℓij = zeros(sett.cosmo_type, sett.nℓ, ntracers, ntracers)
