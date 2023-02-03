@@ -211,7 +211,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
-    ℓs = range(0., stop=3.0, length=nℓ)
+    ℓs = range(10.0, stop=3000, length=nℓ)
     if settings.tk_mode == "emulator"
         lks_emul, pk0_emul = get_emulated_log_pk0(cpar, settings)
         pki_emul = cubic_spline_interpolation(lks_emul, log.(pk0_emul),
@@ -300,7 +300,7 @@ Returns:
 
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,  nz_t=200,
+          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,  nz_t=200, nℓ=100,
           Dz_mode="RK2", tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           kwargs...) = begin
@@ -317,7 +317,7 @@ Cosmology(Ωm, Ωb, h, n_s, σ8;
     end
     
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-    settings = Settings(cosmo_type, nz, nz_pk, nz_t, nk,
+    settings = Settings(cosmo_type, nz, nz_pk, nz_t, nk, nℓ,
                         Dz_mode, tk_mode, Pk_mode, emul_path)
     Cosmology(cpar, settings)
 end
