@@ -1,27 +1,3 @@
-# c/(100 km/s/Mpc) in Mpc
-const CLIGHT_HMPC = 2997.92458
-
-function _w_tophat(x::Real)
-    x2 = x^2
-
-    if x < 0.1
-        w = 1. + x2*(-1.0/10.0 + x2*(1.0/280.0 +
-            x2*(-1.0/15120.0 + x2*(1.0/1330560.0 +
-            x2* (-1.0/172972800.0)))));
-    else
-        w = 3 * (sin(x)-x*cos(x))/(x2*x)
-    end
-    return w
-end    
-
-function _σR2(ks, pk, dlogk, R)
-    x = ks .* R
-    wk = _w_tophat.(x)
-    integ = @. pk * wk^2 * ks^3
-    # OPT: proper integration instead?
-    return sum(integ)*dlogk/(2*pi^2)
-end
-
 """
     Settings(cosmo_type, nz, nz_pk, nk, tk_mode, pk_mode, custom_Dz)
 
@@ -110,43 +86,60 @@ Returns:
 struct CosmoPar{T}
     Ωm::T
     Ωb::T
-    Ωc::T
     h::T
     ns::T
-    σ8::T
     As::T
+    σ8::T
     θCMB::T
+    Y_p::T
+    N_ν::T
+    Σm_ν::T
     Ωr::T
+    Ωc::T
     ΩΛ::T
 end
 
 """
     CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
-
-Cosmology parameters structure constructor.  
-
+Cosmology parameters structure constructor.
 Arguments:
-- `Ωm::Dual` : cosmological matter density. 
+- `Ωm::Dual` : cosmological matter density.
 - `Ωb::Dual` : cosmological baryonic density.
 - `h::Dual` : reduced Hubble parameter.
 - `n_s::Dual` : spectral index.
 - `σ8::Dual`: variance of the matter density field in a sphere of 8 Mpc.
 - `θCMB::Dual` : CMB temperature.
-
 Returns:
 - `CosmoPar` : cosmology parameters structure.
-
 """
-CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB) = begin
-    # This is 4*sigma_SB*(2.7 K)^4/rho_crit(h=1)
-    prefac = 2.38163816E-5
-    Neff = 3.046
-    f_rel = 1.0 + Neff * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
-    Ωr = prefac*f_rel*θCMB^4/h^2
-    ΩΛ = 1-Ωm-Ωr
+CosmoPar(;kwargs...) = begin
+    kwargs = Dict(kwargs)
+
+    Ωm = get(kwargs, :Ωm, 0.3)
+    Ωb = get(kwargs, :Ωb, 0.05)
+    h = get(kwargs, :h, 0.67)
+    ns = get(kwargs, :ns, 0.96)
+    As = get(kwargs, :As, 2.097e-9)
+    σ8 = get(kwargs, :σ8, 0.81)
+    cosmo_type = eltype([Ωm, Ωb, h, ns, σ8])
+
+    Y_p = get(kwargs, :Y_p, 0.24)  # primordial helium fraction
+    N_ν = get(kwargs, :N_ν, 3.046) #effective number of relativisic species (PDG25 value)
+    Σm_ν = get(kwargs, :Σm_ν, 0.0) #sum of neutrino masses (eV), Planck 15 default ΛCDM value
+    θCMB = get(kwargs, :θCMB, 2.725/2.7)
+    prefac = 2.38163816E-5 # This is 4*sigma_SB*(2.7 K)^4/rho_crit(h=1)
+    f_rel = 1.0 + N_ν * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
+    Ωr = get(kwargs, :Ωr, prefac*f_rel*θCMB^4/h^2)
     Ωc = Ωm-Ωb
-    As =  1.0
-    CosmoPar{Real}(Ωm, Ωb, Ωc, h, n_s, σ8, As, θCMB, Ωr, ΩΛ)
+    ΩΛ = 1-Ωm-Ωr
+    CosmoPar{cosmo_type}(Ωm, Ωb, h, ns, As, σ8,
+                         θCMB, Y_p, N_ν, Σm_ν,
+                         Ωr, Ωc, ΩΛ)
+end
+
+
+function _get_cosmo_type(x::CosmoPar{T}) where{T}
+    return T
 end
 
 """
@@ -178,11 +171,10 @@ Returns:
 """
 struct Cosmology
     settings::Settings
-    cosmo::CosmoPar
+    cpar::CosmoPar
     # Power spectrum
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
-    chis
     chi_max
     chi_LSS
     Dz::AbstractInterpolation
@@ -243,8 +235,8 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
         chis[i] = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, zz, rtol=1E-5)[1] * norm
     end
     # OPT: tolerances, interpolation method
-    chii = cubic_spline_interpolation(zs, chis, extrapolation_bc=Line())
-    zi = linear_interpolation(chis, zs, extrapolation_bc=Line())
+    chii = cubic_spline_interpolation(zs, Vector(chis), extrapolation_bc=Line())
+    zi = linear_interpolation(chis, Vector(zs), extrapolation_bc=Line())
     # Distance to LSS
     chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
@@ -265,7 +257,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
                                    extrapolation_bc=Line())
         print("Pk mode not implemented. Using linear Pk.")
     end
-    Cosmology(settings, cpar, chii, zi, chis, chis[end],
+    Cosmology(settings, cpar, chii, zi, chis[end],
               chi_LSS, Dzi, fs8zi, pki, Pk)
 end
 
@@ -300,142 +292,21 @@ Returns:
 - `Cosmology` : cosmology structure.
 
 """
-Cosmology(Ωm, Ωb, h, n_s, σ8; 
-          θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,  nz_t=200, nℓ=300,
+Cosmology(;nk=300, nz=300, nz_pk=70,  nz_t=200, nℓ=300,
           Dz_mode="RK2", tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           kwargs...) = begin
+
     kwargs=Dict(kwargs)
-
-    cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
-
-    if get(kwargs, :Custom_Dz, nothing) != nothing
-        _, Dz = custom_Dz
-        Dz_type = eltype(Dz)
-        if !(Dz_type <: Float64)
-            cosmo_type = Dz_type
-        end
-    end
-    
-    cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
+    cpar = CosmoPar(;kwargs...)
+    cosmo_type = _get_cosmo_type(cpar)
     settings = Settings(nz, nz_pk, nz_t, nk, nℓ,
                         cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
     Cosmology(cpar, settings)
 end
 
-"""
-    Cosmology()
-
-Calls the simple Cosmology structure constructor for the \
-paramters `[0.30, 0.05, 0.67, 0.96, 0.81]`.
-
-Returns:
-
-- `Cosmology` : cosmology structure.
-
-"""
-Cosmology() = Cosmology(0.30, 0.045, 0.67, 0.96, 0.81)
-
-function σR2(cosmo::Cosmology, R)
-    return _σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)
-end
-
-"""
-    TkBBKS(cosmo::CosmoPar, k)
-
-Computes the primordial power spectrum using the BBKS formula (https://ui.adsabs.harvard.edu/abs/1986ApJ...304...15B).  
-
-Arguments:
-
-- `cosmo::CosmoPar` : cosmological parameters structure 
-- `k::Vector{Dual}` : scales array
-
-Returns:
-
-- `Tk::Vector{Dual}` : transfer function.
-
-"""
-function TkBBKS(cosmo::CosmoPar, k)
-    q = @. (cosmo.θCMB^2 * k/(cosmo.Ωm * cosmo.h^2 * exp(-cosmo.Ωb*(1+sqrt(2*cosmo.h)/cosmo.Ωm))))
-    return (@. (log(1+2.34q)/(2.34q))^2/sqrt(1+3.89q+(16.1q)^2+(5.46q)^3+(6.71q)^4))
-end
-
-function _T0(keq, k, ac, bc)
-    q = @. (k/(13.41*keq))
-    C = @. ((14.2/ac) + (386/(1+69.9*q^1.08)))
-    T0 = @.(log(ℯ+1.8*bc*q)/(log(ℯ+1.8*bc*q)+C*q^2))
-    return T0
-end 
-
-"""
-    TkEisHu(cosmo::CosmoPar, k)
-
-Computes the primordial power spectrum using the Einsentein & Hu formula (arXiv:astro-ph/9710252).  
-
-Arguments:
-- `cosmo::CosmoPar` : cosmological parameters structure
-- `k::Vector{Dual}` : scales array
-
-Returns:
-- `Tk::Vector{Dual}` : transfer function.
-
-"""
-function TkEisHu(cosmo::CosmoPar, k)
-    Ωc = cosmo.Ωm-cosmo.Ωb
-    wm=cosmo.Ωm*cosmo.h^2
-    wb=cosmo.Ωb*cosmo.h^2
-
-    # Scales
-    # k_eq
-    keq = (7.46*10^-2)*wm/(cosmo.h * cosmo.θCMB^2)
-    # z_eq
-    zeq = (2.5*10^4)*wm*(cosmo.θCMB^-4)
-    # z_drag
-    b1 = 0.313*(wm^-0.419)*(1+0.607*wm^0.674)
-    b2 = 0.238*wm^0.223
-    zd = 1291*((wm^0.251)/(1+0.659*wm^0.828))*(1+b1*wb^b2)
-    # k_Silk
-    ksilk = 1.6*wb^0.52*wm^0.73*(1+(10.4*wm)^-0.95)/cosmo.h
-    # r_s
-    R_prefac = 31.5*wb*(cosmo.θCMB^-4)
-    Rd = R_prefac*((zd+1)/10^3)^-1
-    Rdm1 = R_prefac*(zd/10^3)^-1
-    Req = R_prefac*(zeq/10^3)^-1
-    rs = sqrt(1+Rd)+sqrt(Rd+Req)
-    rs /= (1+sqrt(Req))
-    rs =  (log(rs))
-    rs *= (2/(3*keq))*sqrt(6/Req)
-
-    # Tc
-    q = @.(k/(13.41*keq))
-    a1 = (46.9*wm)^0.670*(1+(32.1*wm)^-0.532)
-    a2 = (12.0*wm)^0.424*(1+(45.0*wm)^-0.582)
-    ac = (a1^(-cosmo.Ωb/cosmo.Ωm))*(a2^(-(cosmo.Ωb/cosmo.Ωm)^3))
-    b1 = 0.944*(1+(458*wm)^-0.708)^-1
-    b2 = (0.395*wm)^(-0.0266)
-    bc = (1+b1*((Ωc/cosmo.Ωm)^b2-1))^-1
-    f = @.(1/(1+(k*rs/5.4)^4))
-    Tc1 = f.*_T0(keq, k, 1, bc)
-    Tc2 = (1 .-f).*_T0(keq, k, ac, bc)
-    Tc = Tc1 .+ Tc2
-
-    # Tb
-    y = (1+zeq)/(1+zd)
-    Gy = y*(-6*sqrt(1+y)+(2+3y)*log((sqrt(1+y)+1)/(sqrt(1+y)-1)))
-    ab = 2.07*keq*rs*(1+Rdm1)^(-3/4)*Gy
-    bb =  0.5+(cosmo.Ωb/cosmo.Ωm)+(3-2*cosmo.Ωb/cosmo.Ωm)*sqrt((17.2*wm)^2+1)
-    bnode = 8.41*(wm)^0.435
-    ss = rs./(1 .+(bnode./(k.*rs)).^3).^(1/3)
-    Tb1 = _T0(keq, k, 1, 1)./(1 .+(k.*rs/5.2).^2)
-    Tb2 = (ab./(1 .+(bb./(k.*rs)).^3)).*exp.(-(k/ksilk).^ 1.4)
-    Tb = (Tb1.+Tb2).*sin.(k.*ss)./(k.*ss)
-
-    Tk = (cosmo.Ωb/cosmo.Ωm).*Tb.+(Ωc/cosmo.Ωm).*Tc
-    return Tk.^2
-end
-
-function _Ez(cosmo::CosmoPar, z)
-    E2 = @. (cosmo.Ωm*(1+z)^3+cosmo.Ωr*(1+z)^4+cosmo.ΩΛ)
+function _Ez(cpar::CosmoPar, z)
+    E2 = @. (cpar.Ωm*(1+z)^3+cpar.Ωr*(1+z)^4+cpar.ΩΛ)
     return sqrt.(E2)
 end
 
@@ -453,12 +324,7 @@ Returns:
 
 """
 function chi_to_z(cosmo::Cosmology, chi)
-    closest_chi, idx = findmin(abs(chi-cosmo.chis))
-    if closest_chi >= chi
-        idx += -1
-    end
-
-    return z
+    return cosmo.z_of_chi(chi)
 end
 
 """
@@ -474,7 +340,7 @@ Returns:
 - `Ez::Dual` : expansion rate 
 
 """
-Ez(cosmo::Cosmology, z) = _Ez(cosmo.cosmo, z)
+Ez(cosmo::Cosmology, z) = _Ez(cosmo.cpar, z)
 
 """
     Hmpc(cosmo::Cosmology, z)
@@ -489,7 +355,7 @@ Returns:
 - `Hmpc::Dual` : expansion rate 
 
 """
-Hmpc(cosmo::Cosmology, z) = cosmo.cosmo.h*Ez(cosmo, z)/CLIGHT_HMPC
+Hmpc(cosmo::Cosmology, z) = cosmo.cpar.h*Ez(cosmo, z)/CLIGHT_HMPC
 
 """
     comoving_radial_distance(cosmo::Cosmology, z)
@@ -519,7 +385,7 @@ Returns:
 - `f::Dual` : f
 
 """
-growth_rate(cosmo::Cosmology, z) = cosmo.fs8z(z) ./ (cosmo.cosmo.σ8*cosmo.Dz(z)/cosmo.Dz(0))
+growth_rate(cosmo::Cosmology, z) = cosmo.fs8z(z) ./ (cosmo.cpar.σ8*cosmo.Dz(z)/cosmo.Dz(0))
 
 """
     fs8(cosmo::Cosmology, z)
@@ -564,7 +430,7 @@ Returns:
 - `s8::Dual` : comoving radial distance
 
 """
-sigma8(cosmo::Cosmology, z) = cosmo.cosmo.σ8*cosmo.Dz(z)/cosmo.Dz(0)
+sigma8(cosmo::Cosmology, z) = cosmo.cpar.σ8*cosmo.Dz(z)/cosmo.Dz(0)
 
 """
     nonlin_Pk(cosmo::Cosmology, k, z)

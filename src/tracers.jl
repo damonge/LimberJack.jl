@@ -98,8 +98,8 @@ WeakLensingTracer(cosmo::Cosmology, z_n, nz; kwargs...) = begin
     end
     
     # Normalize
-    H0 = cosmo.cosmo.h/CLIGHT_HMPC
-    lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
+    H0 = cosmo.cpar.h/CLIGHT_HMPC
+    lens_prefac = 1.5*cosmo.cpar.Ωm*H0^2
     w_arr = @. w_arr * chi * lens_prefac * (1+z_w) / nz_norm
     
     if kwargs[:IA_params] != [0.0, 0.0]
@@ -147,8 +147,8 @@ CMBLensingTracer(cosmo::Cosmology) = begin
     chis = range(0.0, stop=cosmo.chi_max, length=cosmo.settings.nz_t)
     zs = cosmo.z_of_chi(chis)
     # Prefactor
-    H0 = cosmo.cosmo.h/CLIGHT_HMPC
-    lens_prefac = 1.5*cosmo.cosmo.Ωm*H0^2
+    H0 = cosmo.cpar.h/CLIGHT_HMPC
+    lens_prefac = 1.5*cosmo.cpar.Ωm*H0^2
     # Kernel
     w_arr = @. lens_prefac*chis*(1-chis/cosmo.chi_LSS)*(1+zs)
 
@@ -171,5 +171,5 @@ Returns:
 function get_IA(cosmo::Cosmology, zs, IA_params)
     A_IA = IA_params[1]
     alpha_IA = IA_params[2]
-    return @. A_IA*((1 + zs)/1.62)^alpha_IA * (0.0134 * cosmo.cosmo.Ωm / cosmo.Dz(zs))
+    return @. A_IA*((1 + zs)/1.62)^alpha_IA * (0.0134 * cosmo.cpar.Ωm / cosmo.Dz(zs))
 end

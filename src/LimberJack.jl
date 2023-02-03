@@ -13,6 +13,9 @@ using Interpolations, LinearAlgebra, Statistics, QuadGK
 using NPZ, NumericalIntegration, PythonCall
 #using OrdinaryDiffEq
 
+# c/(100 km/s/Mpc) in Mpc
+const CLIGHT_HMPC = 2997.92458
+
 include("core.jl")
 include("boltzmann.jl")
 include("growth.jl")

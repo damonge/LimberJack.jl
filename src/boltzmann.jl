@@ -230,6 +230,10 @@ function _σR2(ks, pk, dlogk, R)
     return sum(integ)*dlogk/(2*pi^2)
 end
 
+function σR2(cosmo::Cosmology, R)
+    return _σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)
+end
+
 function lin_Pk0(cpar::CosmoPar, settings::Settings)
     if settings.tk_mode == "emulator"
         lks_emul, pk0_emul = get_emulated_log_pk0(cpar, settings)

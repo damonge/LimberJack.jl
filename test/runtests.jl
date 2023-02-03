@@ -9,32 +9,28 @@ test_cls = npzread("test_cls.npz")["cls"]
 test_cls_files = npzread("test_cls_files.npz")
 test_output = Dict{String}{Vector}()
 
-cosmo_BBKS = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                       nk=300, nz=300, nz_pk=70)
-cosmo_EisHu = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81;
-                        nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
-cosmo_emul = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81;
+cosmo_BBKS = Cosmology(nk=300, nz=300, nz_pk=70)
+cosmo_EisHu = Cosmology(nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
+cosmo_emul = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0, σ8=0.81,
                        nk=300, nz=300, nz_pk=70, tk_mode="emulator")
 
-cosmo_BBKS_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                               nk=300, nz=300, nz_pk=70,
+cosmo_BBKS_nonlin = Cosmology(nk=300, nz=300, nz_pk=70,
                                Pk_mode="Halofit")
-cosmo_EisHu_nonlin = Cosmology(0.30, 0.05, 0.67, 0.96, 0.81,
-                               nk=300, nz=300, nz_pk=70,
+cosmo_EisHu_nonlin = Cosmology(nk=300, nz=300, nz_pk=70,
                                tk_mode="EisHu", Pk_mode="Halofit")
-cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81,
+cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0, σ8=0.81,
                               nk=300, nz=300, nz_pk=70,
                               tk_mode="emulator", Pk_mode="Halofit")
 
 @testset "All tests" begin
     @testset "CreateCosmo" begin
-        @test cosmo_BBKS.cosmo.Ωm == 0.3
+        @test cosmo_BBKS.cpar.Ωm == 0.3
     end
     
     @testset "BMHz" begin
         c = 299792458.0
         ztest = [0.1, 0.5, 1.0, 3.0]
-        H = cosmo_BBKS.cosmo.h*100*Ez(cosmo_BBKS, ztest)
+        H = cosmo_BBKS.cpar.h*100*Ez(cosmo_BBKS, ztest)
         H_bm = @. 67*sqrt(0.3 * (1+ztest)^3 + (1-0.3-0.69991) * (1+ztest)^4 + 0.69991)
         @test all(@. (abs(H/H_bm-1.0) < 0.0005))
     end
@@ -247,9 +243,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         zs = 0.02:0.02:1.0
 
         function f(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            θCMB = 2.725/2.7
-            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81)
+            cosmo = LimberJack.Cosmology(Ωm=p)
             chi = comoving_radial_distance(cosmo, zs)
             return chi
         end
@@ -265,23 +259,20 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
     @testset "IsLinPkDiff" begin
         ks = npzread("../emulator/files.npz")["training_karr"]
                                                 
-        function lin_BBKS(Ωm)
-            cosmo = Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81;
-                              tk_mode="BBKS", Pk_mode="linear")
+        function lin_BBKS(p)
+            cosmo = Cosmology(Ωm=p, tk_mode="BBKS", Pk_mode="linear")
             pk = lin_Pk(cosmo, ks, 0.)
             return pk
         end
 
-        function lin_EisHu(Ωm)
-            cosmo = Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81;
-                              tk_mode="EisHu", Pk_mode="linear")
+        function lin_EisHu(p)
+            cosmo = Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="linear")
             pk = lin_Pk(cosmo, ks, 0.)
             return pk
         end
 
-        function lin_emul(Ωm)
-            cosmo = Cosmology(Ωm, 0.04, 0.75, 1.0, 0.81;
-                              tk_mode="emulator", Pk_mode="linear")
+        function lin_emul(p)
+            cosmo = Cosmology(Ωm=p, tk_mode="emulator", Pk_mode="linear")
             pk = lin_Pk(cosmo, ks, 0.)
             return pk
         end
@@ -312,23 +303,20 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
     @testset "IsNonlinPkDiff" begin
         ks = npzread("../emulator/files.npz")["training_karr"]
                                                 
-        function nonlin_BBKS(Ωm)
-            cosmo = Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81;
-                              tk_mode="BBKS", Pk_mode="Halofit")
+        function nonlin_BBKS(p)
+            cosmo = Cosmology(Ωm=p, tk_mode="BBKS", Pk_mode="Halofit")
             pk = nonlin_Pk(cosmo, ks, 0.)
             return pk
         end
 
-        function nonlin_EisHu(Ωm)
-            cosmo = Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81;
-                              tk_mode="EisHu", Pk_mode="Halofit")
+        function nonlin_EisHu(p)
+            cosmo = Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="Halofit")
             pk = nonlin_Pk(cosmo, ks, 0.)
             return pk
         end
 
-        function nonlin_emul(Ωm)
-            cosmo = Cosmology(Ωm, 0.04, 0.75, 1.0, 0.81;
-                              tk_mode="emulator", Pk_mode="Halofit")
+        function nonlin_emul(p)
+            cosmo = Cosmology(Ωm=p, tk_mode="emulator", Pk_mode="Halofit")
             pk = nonlin_Pk(cosmo, ks, 0.)
             return pk
         end
@@ -360,9 +348,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
     @testset "AreClsDiff" begin
         
         function Cl_gg(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+            cosmo = LimberJack.Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="Halofit")
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
@@ -372,9 +358,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         end
         
         function Cl_ss(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+            cosmo = LimberJack.Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="Halofit")
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             ts = WeakLensingTracer(cosmo, z, nz;
@@ -386,9 +370,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         end
         
         function Cl_sk(p::T)::Array{T,1} where T<:Real
-            Ωm = p
-            cosmo = LimberJack.Cosmology(Ωm, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+            cosmo = LimberJack.Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="Halofit")
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             ts = WeakLensingTracer(cosmo, z, nz;
@@ -441,8 +423,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
     @testset "AreNuisancesDiff" begin
         
         function bias(p::T)::Array{T,1} where T<:Real
-            cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+            cosmo = Cosmology(tk_mode="EisHu", Pk_mode="Halofit")
             cosmo.settings.cosmo_type = typeof(p)
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
@@ -453,9 +434,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         end
         
         function dz(p::T)::Array{T,1} where T<:Real
-            cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit",
-                                         nz=300)
+            cosmo = Cosmology(tk_mode="EisHu", Pk_mode="Halofit", nz=300)
             cosmo.settings.cosmo_type = typeof(p)
             z = Vector(range(0., stop=2., length=256)) .- p
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
@@ -466,8 +445,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         end
         
         function mbias(p::T)::Array{T,1} where T<:Real
-            cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+            cosmo = Cosmology(tk_mode="EisHu", Pk_mode="Halofit")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -478,8 +456,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         end
         
         function IA_A(p::T)::Array{T,1} where T<:Real
-            cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+            cosmo = Cosmology(tk_mode="EisHu", Pk_mode="Halofit")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
@@ -490,8 +467,7 @@ cosmo_emul_nonlin = Cosmology((0.12+0.022)/0.75^2, 0.022/0.75^2, 0.75, 1.0, 0.81
         end
         
         function IA_alpha(p::T)::Array{T,1} where T<:Real
-            cosmo = LimberJack.Cosmology(0.3, 0.05, 0.67, 0.96, 0.81,
-                                         tk_mode="EisHu", Pk_mode="Halofit")
+            cosmo = Cosmology(tk_mode="EisHu", Pk_mode="Halofit")
             cosmo.settings.cosmo_type = typeof(p)
             z = range(0., stop=2., length=256)
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)

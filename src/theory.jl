@@ -85,6 +85,9 @@ function TheoryFast(cosmo::Cosmology,
             sett.cosmo_type = nui_type
         end
     end
+
+    chis = cosmo.chi(zs_t)
+
     ntracers = length(names)
     tracers =  Dict{String}{Tracer}()
     W = zeros(sett.cosmo_type, ntracers, sett.nz_t)
@@ -119,14 +122,14 @@ function TheoryFast(cosmo::Cosmology,
             tracer = nothing
         end
         merge!(tracers, Dict(name => tracer))
-        W[i, :] .= tracer.wint(cosmo.chi(sett.zs_t))
+        W[i, :] .= tracer.wint(chis)
         F[i, :] .= tracer.F(sett.ℓs)
     end
 
     P = zeros(Float64, sett.nz_t, sett.nℓ)
     for z ∈ axes(sett.zs_t, 1)
         for ℓ ∈  axes(sett.ℓs, 1)
-            P[z, ℓ] = nonlin_Pk(cosmo, (sett.ℓs[ℓ]+0.5)/cosmo.chis[z], sett.zs_t[z])
+            P[z, ℓ] = nonlin_Pk(cosmo, (sett.ℓs[ℓ]+0.5)/chis[z], sett.zs_t[z])
         end
     end
     Ezs = Ez(cosmo, sett.zs_t)
