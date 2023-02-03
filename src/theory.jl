@@ -86,7 +86,7 @@ function TheoryFast(cosmo::Cosmology,
         end
     end
 
-    chis = cosmo.chi(zs_t)
+    chis = cosmo.chi(sett.zs_t)
 
     ntracers = length(names)
     tracers =  Dict{String}{Tracer}()
@@ -144,7 +144,7 @@ function TheoryFast(cosmo::Cosmology,
                     integrand = (W[i, z] * W[j, z] * P[z, ℓ]) / (Ezs[z] * chis[z]^2)
                     C_ℓij[ℓ,i,j] += integrand * SimpsonWeights[z] * dz
                 end
-                C_ℓij[ℓ,i,j] *= CLIGHT_HMPC * F[i, ℓ] * F[j, ℓ]
+                C_ℓij[ℓ,i,j] *= (CLIGHT_HMPC/cosmo.cpar.h) * F[i, ℓ] * F[j, ℓ]
             end
         end
     end

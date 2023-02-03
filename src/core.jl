@@ -52,7 +52,7 @@ Settings(nz::Int,
          emul_path::String) = begin
     zs_pk = range(0., stop=3.0, length=nz_pk)
     zs = range(0.0, stop=3.0, length=nz)
-    zs_t = range(0.0001, stop=3.0, length=nz_t)
+    zs_t = range(0.00001, stop=3.0, length=nz_t)
     # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
