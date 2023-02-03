@@ -115,7 +115,7 @@ function TheoryFast(cosmo::Cosmology,
                                        m=m, IA_params=IA_params)
 
         elseif t_type == "cmb_convergence"
-            tracer = CMBLensingTracer(cosmology)
+            tracer = CMBLensingTracer(cosmo)
 
         else
             print("Not implemented")
@@ -137,7 +137,7 @@ function TheoryFast(cosmo::Cosmology,
     dz = (sett.zs_t[2] - sett.zs_t[1])
     SimpsonWeights = SimpsonWeightArray(sett.nz_t)
     C_ℓij = zeros(sett.cosmo_type, sett.nℓ, ntracers, ntracers)
-    for ℓ ∈ axes(C_ℓij, 1)
+    @turbo for ℓ ∈ axes(C_ℓij, 1)
         for i ∈ axes(C_ℓij, 2)
             for j ∈ axes(C_ℓij, 3)
                 for z ∈ axes(sett.zs_t, 1)
@@ -150,12 +150,12 @@ function TheoryFast(cosmo::Cosmology,
     end
 
     Cls_ij_itps = Dict{String}{AbstractExtrapolation}()
-    for i ∈ axes(C_ℓij, 2)
-        for j ∈ axes(C_ℓij, 3)
+    @inbounds for i ∈ axes(C_ℓij, 2)
+        @inbounds for j ∈ axes(C_ℓij, 3)
             name_i = names[i]
             name_j = names[j]
             cl_name = string("Cl_", name_i, name_j)
-            itp = linear_interpolation(sett.ℓs, C_ℓij[:,i,j])
+            itp = cubic_spline_interpolation(sett.ℓs, C_ℓij[:,i,j])
             merge!(Cls_ij_itps, Dict(cl_name =>itp))
         end
     end
@@ -163,13 +163,14 @@ function TheoryFast(cosmo::Cosmology,
     npairs = length(pairs)
     total_len = last(idx)
     theory = zeros(sett.cosmo_type, total_len)
-    for i in 1:npairs
+    @inbounds for i in 1:npairs
         name1, name2 = pairs[i]
         cl_name = string("Cl_", name1, name2)
         itp = Cls_ij_itps[cl_name]
         ls = files[string("ls_", name1, "_", name2)]
         theory[idx[i]+1:idx[i+1]] = itp(ls)
     end
+
     return theory
 end
 

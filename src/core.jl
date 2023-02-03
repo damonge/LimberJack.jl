@@ -57,7 +57,7 @@ Settings(nz::Int,
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
-    ℓs = range(10, stop=3000, length=nℓ)
+    ℓs = range(0, stop=2000, length=nℓ)
     Settings(nz, nz_pk, nz_t, nk, nℓ,
              zs, zs_pk, zs_t, ks, ℓs, logk,  dlogk,
              cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)

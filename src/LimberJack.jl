@@ -10,7 +10,7 @@ export Theory, TheoryFast
 export make_data
 
 using Interpolations, LinearAlgebra, Statistics, QuadGK
-using NPZ, NumericalIntegration, PythonCall
+using NPZ, NumericalIntegration, PythonCall, LoopVectorization
 #using OrdinaryDiffEq
 
 # c/(100 km/s/Mpc) in Mpc
