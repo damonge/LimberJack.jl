@@ -243,6 +243,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
     chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
     Dzi, fs8zi = get_growth(cpar, settings; kwargs...)
+    Dzs = Dzi(zs_pk)
 
     if settings.Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0]
