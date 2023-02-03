@@ -9,7 +9,7 @@ export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
 export Theory, TheoryFast
 export make_data
 
-using Interpolations, LinearAlgebra, Statistics, QuadGK
+using Interpolations, LinearAlgebra, Statistics, QuadGK, Bolt
 using NPZ, NumericalIntegration, PythonCall, LoopVectorization
 #using OrdinaryDiffEq
 

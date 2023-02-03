@@ -244,7 +244,7 @@ function lin_Pk0(cpar::CosmoPar, settings::Settings)
         ks_Bolt, pk0_Bolt = get_Bolt_pk0(cpar, settings)
         pki_Bolt = linear_interpolation(ks_Bolt, log.(pk0_Bolt);
                                         extrapolation_bc=Line())
-        pk0 = exp.(pki_Bolt(ks))
+        pk0 = exp.(pki_Bolt(settings.ks))
     elseif settings.tk_mode == "EisHu"
         tk = TkEisHu(cpar, settings.ks./ cpar.h)
         pk0 = @. cpar.As * settings.ks^cpar.ns * tk
