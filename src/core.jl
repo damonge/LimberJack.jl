@@ -48,10 +48,10 @@ mutable struct Settings
     nz_pk::Int
     nz_t::Int
     nk::Int
+    Dz_mode::String
     tk_mode::String
     Pk_mode::String
     emul_path::String
-    custom_Dz
 end
 
 """
@@ -152,6 +152,7 @@ struct Cosmology
     zs::Array
     chi::AbstractInterpolation
     z_of_chi::AbstractInterpolation
+    chis
     chi_max
     chi_LSS
     Dz::AbstractInterpolation
@@ -195,7 +196,7 @@ Returns:
 - `Cosmology` : cosmology structure.
 
 """
-Cosmology(cpar::CosmoPar, settings::Settings) = begin
+Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
     # Load settings
     cosmo_type = settings.cosmo_type
     nk = settings.nk
@@ -241,51 +242,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
     # Distance to LSS
     chi_LSS = quadgk(z -> 1.0/_Ez(cpar, z), 0.0, 1100., rtol=1E-5)[1] * norm
 
-    if settings.custom_Dz == nothing
-        # ODE solution for growth factor
-        x_Dz = LinRange(0, log(1+1100), nz_pk)
-        dx_Dz = x_Dz[2]-x_Dz[1]
-        z_Dz = @.(exp(x_Dz) - 1)
-        a_Dz = @.(1/(1+z_Dz))
-        aa = reverse(a_Dz)
-        e = _Ez(cpar, z_Dz)
-        ee = reverse(e)
-        
-        dd = zeros(settings.cosmo_type, nz_pk)
-        yy = zeros(settings.cosmo_type, nz_pk)
-        dd[1] = aa[1]
-        yy[1] = aa[1]^3*ee[end]
-        
-        for i in 1:(nz_pk-1)
-            A0 = -1.5 * cpar.Ωm / (aa[i]*ee[i])
-            B0 = -1. / (aa[i]^2*ee[i])
-            A1 = -1.5 * cpar.Ωm / (aa[i+1]*ee[i+1])
-            B1 = -1. / (aa[i+1]^2*ee[i+1])
-            yy[i+1] = (1+0.5*dx_Dz^2*A0*B0)*yy[i] + 0.5*(A0+A1)*dx_Dz*dd[i]
-            dd[i+1] = 0.5*(B0+B1)*dx_Dz*yy[i] + (1+0.5*dx_Dz^2*A0*B0)*dd[i]
-        end
-        
-        y = reverse(yy)
-        d = reverse(dd)
-        
-        Dzi = linear_interpolation(z_Dz, d./d[1], extrapolation_bc=Line())
-        fs8zi = linear_interpolation(z_Dz, -cpar.σ8 .* y./ (a_Dz.^2 .*e.*d[1]),
-                                     extrapolation_bc=Line())
-        Dzs = Dzi(zs_pk)
-    else
-        zs_c, Dzs_c = settings.custom_Dz
-        d = zs_c[2]-zs_c[1]
-
-        Dzi = cubic_spline_interpolation(zs_c, Dzs_c, extrapolation_bc=Line())
-        dDzs_mid = (Dzs_c[2:end].-Dzs_c[1:end-1])/d
-        zs_mid = (zs_c[2:end].+zs_c[1:end-1])./2
-        dDzi = linear_interpolation(zs_mid, dDzs_mid, extrapolation_bc=Line())
-        dDzs_c = dDzi(zs_c)
-        fs8zi = cubic_spline_interpolation(zs_c, -cpar.σ8 .* (1 .+ zs_c) .* dDzs_c,
-                                           extrapolation_bc=Line())
-
-        Dzs = Dzi(zs_pk)
-    end
+    Dzi, fs8zi = get_growth(cpar, settings; kwargs...)
 
     if settings.Pk_mode == "linear"
         Pks = [@. pk*Dzs^2 for pk in pk0]
@@ -302,7 +259,7 @@ Cosmology(cpar::CosmoPar, settings::Settings) = begin
         print("Pk mode not implemented. Using linear Pk.")
     end
     Cosmology(settings, cpar, ks, pk0, logk, dlogk,
-              collect(zs), chii, zi, chis[end],
+              collect(zs), chii, zi, chis, chis[end],
               chi_LSS, Dzi, fs8zi, pki, Pk)
 end
 
@@ -339,9 +296,9 @@ Returns:
 """
 Cosmology(Ωm, Ωb, h, n_s, σ8; 
           θCMB=2.725/2.7, nk=300, nz=300, nz_pk=70,  nz_t=200,
-          tk_mode="BBKS", Pk_mode="linear",
+          Dz_mode="RK2", tk_mode="BBKS", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
-          custom_Dz=nothing) = begin
+          kwargs...) = begin
     
     cosmo_type = eltype([Ωm, Ωb, h, n_s, σ8, θCMB])
     if custom_Dz != nothing
@@ -354,7 +311,7 @@ Cosmology(Ωm, Ωb, h, n_s, σ8;
     
     cpar = CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB)
     settings = Settings(cosmo_type, nz, nz_pk, nz_t, nk,
-                        tk_mode, Pk_mode, emul_path, custom_Dz)
+                        Dz_mode, tk_mode, Pk_mode, emul_path)
     Cosmology(cpar, settings)
 end
 

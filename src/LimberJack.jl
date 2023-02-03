@@ -6,7 +6,7 @@ export Emulator, get_emulated_log_pk0
 export get_PKnonlin
 export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer
 export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
-export Theory, get_nzs
+export Theory, TheoryFast
 export make_data
 
 using Interpolations, LinearAlgebra, Statistics, QuadGK
@@ -18,7 +18,8 @@ include("emulator.jl")
 include("halofit.jl")
 include("tracers.jl")
 include("spectra.jl")
-include("turing_utils.jl")
+include("theory.jl")
+include("math_utils.jl")
 include("data_utils.jl")
 
 end
