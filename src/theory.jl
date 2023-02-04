@@ -122,7 +122,7 @@ function TheoryFast(cosmo::Cosmology,
             tracer = nothing
         end
         merge!(tracers, Dict(name => tracer))
-        W[i, :] .= tracer.wint(cosmo.chi(cosmo.zs_t))
+        W[i, :] .= tracer.wint(cosmo.chi(sett.zs_t))
         F[i, :] .= tracer.F(sett.ℓs)
     end
 

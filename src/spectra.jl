@@ -45,9 +45,11 @@ function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector)
     return t1.F(ℓs) .* t2.F(ℓs) .* Cℓs
 end
 
-function angularCℓsFast(cosmo::Cosmology, W::Matrix{Any}, F::Matrix{Any})
+function angularCℓsFast(cosmo::Cosmology, W::Matrix, F::Matrix)
     sett = cosmo.settings
 
+    ntracers = size(W)[1]
+    chis = cosmo.chi(sett.zs_t)
     P = zeros(Float64, sett.nz_t, sett.nℓ)
     for z ∈ axes(sett.zs_t, 1)
         for ℓ ∈  axes(sett.ℓs, 1)
@@ -55,7 +57,6 @@ function angularCℓsFast(cosmo::Cosmology, W::Matrix{Any}, F::Matrix{Any})
         end
     end
     Ezs = Ez(cosmo, sett.zs_t)
-    chis = cosmo.chi(sett.zs_t)
     dz = (sett.zs_t[2] - sett.zs_t[1])
     SimpsonWeights = SimpsonWeightArray(sett.nz_t)
     C_ℓij = zeros(sett.cosmo_type, sett.nℓ, ntracers, ntracers)

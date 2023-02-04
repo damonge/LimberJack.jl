@@ -4,8 +4,8 @@ export Settings, CosmoPar, Cosmology, Ez, Hmpc, comoving_radial_distance
 export growth_factor, growth_rate, fs8, sigma8
 export lin_Pk, nonlin_Pk
 export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer
-export angularCℓs, angularCℓ
-export Theory
+export angularCℓs, angularCℓ, angularCℓFast
+export Theory, TheoryFast
 export make_data
 
 using Interpolations, LinearAlgebra, Statistics, QuadGK, Bolt
