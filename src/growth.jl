@@ -1,49 +1,8 @@
-#=
-function _ρDE_z(z, w0=-1., wa=0.)
-    return (1+z)^(3.0 * (1.0 + w0 + wa)) * exp(-3.0 * wa * z /(1+z))
+function _dgrowth!(dd, d, cosmo::CosmoPar, a)
+    ez = _Ez(cosmo, 1.0/a-1.0)
+    dd[1] = d[2] * 1.5 * cosmo.Ωm / (a^2*ez)
+    dd[2] = d[1] / (a^3*ez)
 end
-
-function _X_z(z, ΩM, w0, wa)
-    return ΩM*((1+z)^3)/((1-ΩM)*_ρDE_z(z, w0, wa))
-end
-
-function _w_z(z, w0, wa)
-    return w0+wa*z/(1+z)
-end
-
-function _growth!(du,u,p,a)
-    ΩM = p[1]
-    w0 = p[2]
-    wa = p[3]
-    z = 1.0 / a - 1.0
-    G = u[1]
-    dG = u[2]
-    du[1] = dG
-    du[2] = -(3.5-1.5*_w_z(z, w0, wa)/(1+_X_z(z, ΩM, w0, wa)))*dG/a-1.5*(1-_w_z(z, w0,wa))/(1+_X_z(z, ΩM, w0, wa))*G/(a^2)
-end
-
-function _growth_solver(cpar::CosmoPar; w0=-1.0, wa=0.0)
-    u₀ = [1.0,0.0]
-    aspan = (0.99e-3, 1.01)
-    p = [cpar.Ωm, w0, wa]
-
-    prob = ODEProblem(_growth!, u₀, aspan, p)
-    sol = solve(prob, Tsit5(), abstol=1e-6, reltol=1e-6)
-    return sol
-end
-
-function _D_a(a::Array, sol::SciMLBase.ODESolution)
-    [u for (u,t) in sol.(a)] .* a ./ (sol(1)[1,:])
-end
-
-function _f_a(a::Array, sol::SciMLBase.ODESolution)
-    G = [u for (u,t) in sol.(a)]
-    G_prime = [t for (u,t) in sol.(a)]
-    D = G .* a
-    D_prime = G_prime .* a .+ G
-    return a ./ D .* D_prime
-end
-=#
 
 function get_growth(cpar::CosmoPar, settings::Settings; kwargs...)
     if settings.Dz_mode == "RK2"
@@ -78,13 +37,22 @@ function get_growth(cpar::CosmoPar, settings::Settings; kwargs...)
 
     #=
     elseif settings.Dz_mode == "OrdDiffEq"
-        sol = _growth_solver(cpar)
-        z_Dz = LinRange(0, 1100, settings.nz_pk)
-        a_Dz = @.(1/(1+z_Dz))
-        Dzs = _D_a(a_Dz, sol)
-        Dzi = cubic_spline_interpolation(z_Dz, Dzs, extrapolation_bc=Line())
-        fs8zs = (cpar.σ8 .* Dzs ./ Dzs[1]) .* _f_a(a_Dz, sol)
-        fs8zi = cubic_spline_interpolation(z_Dz, fs8zs, extrapolation_bc=Line())
+        z_ini = 1000.0
+        a_ini = 1.0/(1.0+z_ini)
+        ez_ini = _Ez(cpar, z_ini)
+        d0 = [a_ini^3*ez_ini, a_ini]
+        a_s = reverse(@. 1.0 / (1.0 + zs))
+        prob = ODEProblem(_dgrowth!, d0, (a_ini, 1.0), cpar)
+        sol = solve(prob, Tsit5(), reltol=1E-6,
+                    abstol=1E-8, saveat=a_s)
+        # OPT: interpolation (see below), ODE method, tolerances
+        # Note that sol already includes some kind of interpolation,
+        # so it may be possible to optimize this by just using
+        # sol directly.
+        s = vcat(sol.u'...)
+        Dzs = reverse(s[:, 2] / s[end, 2])
+        # OPT: interpolation method
+        Dzi = LinearInterpolation(zs, Dzs, extrapolation_bc=Line())
     =#
 
     elseif settings.Dz_mode == "Custom"
