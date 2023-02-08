@@ -23,8 +23,8 @@ using Distributed
             0.272602, -2.410019,
             0.04939203, 0.02605237, 0.0261737, -0.007550238,
            -0.01824749, 0.001053441, 0.004397685, 0.01410571]
-    
-    fid_cosmo = Cosmology(pars[1], pars[2], pars[3], pars[4], pars[5], 
+                          #Ωm,      Ωb,       h,     ns,        s8,
+    fid_cosmo = Cosmology(pars[1], pars[3], pars[4], pars[5], pars[2], 
                           tk_mode="EisHu", Pk_mode="Halofit")
     
     fid_nui = Dict("DESgc__0_b" => pars[6],
