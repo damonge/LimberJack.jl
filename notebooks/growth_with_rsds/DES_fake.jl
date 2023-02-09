@@ -66,7 +66,8 @@ end
     h ~ TruncatedNormal(72, 5, 0.64, 0.82)
     s8 ~ Uniform(0.4, 1.2)
     ns ~ Uniform(0.84, 1.1)
-
+    
+    #=
     DESgc__0_b ~ Uniform(0.8, 3.0)
     DESgc__1_b ~ Uniform(0.8, 3.0)
     DESgc__2_b ~ Uniform(0.8, 3.0)
@@ -108,12 +109,13 @@ end
                      "DESwl__3_m" => DESwl__3_m,
                      "A_IA" => A_IA,
                      "alpha_IA" => alpha_IA,)
+    =#
 
     cosmology = Cosmology(Ωm, Ωb, h, ns, s8,
                           tk_mode="EisHu",
                           Pk_mode="Halofit")
 
-    theory = Theory(cosmology, meta, files; Nuisances=nuisances)
+    theory = Theory(cosmology, meta, files; Nuisances=fid_nui)
     data ~ MvNormal(theory ./ errs, cov)
 end
 
@@ -137,7 +139,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("DESY1_EisHu_fake_data_TAP_", TAP)
+folname = string("DESY1_EisHu_fake_data_fixed_nui_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
