@@ -133,8 +133,8 @@ init_ϵ1 = 0.005
 init_ϵ2 = 0.005
 
 stats_model = model(fake_data)
-sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns; init_ϵ=init_ϵ1),
-                NUTS(adaptation, TAP, :v; init_ϵ=init_ϵ2))
+sampler = Gibbs(NUTS(adaptation, TAP, :Ωm, :Ωb, :h, :ns),
+                NUTS(adaptation, TAP, :v))
 
 println("sampling settings: ")
 println("cycles ", cycles)
@@ -145,7 +145,7 @@ println("nchains ", nchains)
 
 # Start sampling.
 folpath = "../../chains"
-folname = string("ND_super_gp_Gibbs_TAP_", TAP, "_init_ϵ_", init_ϵ)
+folname = string("ND_super_gp_2_Gibbs_TAP_", TAP)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
