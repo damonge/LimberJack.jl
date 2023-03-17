@@ -62,10 +62,6 @@ end
     data ~ MvNormal(theory, cov)
 end
 
-cycles = 6
-iterations = 500
-nchains = nprocs()
-
 eps = 0.07
 L = sqrt(13)
 sigma = ones(13)
@@ -73,43 +69,11 @@ sigma = ones(13)
 stats_model = model(data)
 sampler = MCHMC(eps, L; sigma=sigma)
 
-println("sampling settings: ")
-println("cycles ", cycles)
-println("iterations ", iterations)
-println("nchains ", nchains)
-
 # Start sampling.
 folpath = "../../chains/MCHMC"
 folname = string("DECALS_eps_", eps, "_L_", L)
 folname = joinpath(folpath, folname)
 
-if isdir(folname)
-    fol_files = readdir(folname)
-    println("Found existing file ", folname)
-    if length(fol_files) != 0
-        last_chain = last([file for file in fol_files if occursin("chain", file)])
-        last_n = parse(Int, last_chain[7])
-        println("Restarting chain")
-    else
-        println("Starting new chain")
-        last_n = 0
-    end
-else
-    mkdir(folname)
-    println(string("Created new folder ", folname))
-    last_n = 0
-end
+samples= Sample(spl, target, 1000;
+                file_name=folname, dialog=true)
 
-for i in (1+last_n):(cycles+last_n)
-    if i == 1
-        chain = sample(stats_model, sampler, MCMCDistributed(),
-                       iterations, nchains, progress=true; save_state=true)
-    else
-        old_chain = read(joinpath(folname, string("chain_", i-1,".jls")), Chains)
-        chain = sample(stats_model, sampler, MCMCDistributed(),
-                       iterations, nchains, progress=true; save_state=true, resume_from=old_chain)
-    end  
-    write(joinpath(folname, string("chain_", i,".jls")), chain)
-    CSV.write(joinpath(folname, string("chain_", i,".csv")), chain)
-    CSV.write(joinpath(folname, string("summary_", i,".csv")), describe(chain)[1])
-end
