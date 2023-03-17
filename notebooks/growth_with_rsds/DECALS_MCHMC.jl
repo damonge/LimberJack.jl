@@ -63,7 +63,7 @@ end
 end
 
 eps = 0.07
-L = sqrt(13)
+L = round(sqrt(13), digits=2)
 sigma = ones(13)
 
 stats_model = model(data)
@@ -75,6 +75,23 @@ folpath = "../../chains/MCHMC"
 folname = string("DECALS_eps_", eps, "_L_", L)
 folname = joinpath(folpath, folname)
 
+if isdir(folname)
+    fol_files = readdir(folname)
+    println("Found existing file")
+    if length(fol_files) != 0
+        last_chain = last([file for file in fol_files if occursin("chain", file)])
+        last_n = parse(Int, last_chain[7])
+        println("Restarting chain")
+    else
+        last_n = 0
+    end
+else
+    mkdir(folname)
+    println(string("Created new folder ", folname))
+    last_n = 0
+end
+
+file_name = joinpath(folname, string("chain_", last_n))
 samples= Sample(spl, target, 1000;
-                file_name=folname, dialog=true)
+                file_name=file_name, dialog=true)
 
