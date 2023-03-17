@@ -67,7 +67,8 @@ L = sqrt(13)
 sigma = ones(13)
 
 stats_model = model(data)
-sampler = MCHMC(eps, L; sigma=sigma)
+target = TuringTarget(stats_model)
+spl = MCHMC(eps, L; sigma=sigma)
 
 # Start sampling.
 folpath = "../../chains/MCHMC"
