@@ -1,7 +1,7 @@
 using Distributed
 
 @everywhere begin
-     using LinearAlgebra
+    using LinearAlgebra
     using Turing
     using LimberJack
     using GaussianProcess
