@@ -1,8 +1,9 @@
-using Pkg
-Pkg.activate("../../../MicroCanonicalHMC.jl/")
 using Base.Threads
 
 @everywhere begin
+    using Pkg
+    Pkg.activate("../../../MicroCanonicalHMC.jl/")
+    
     using LinearAlgebra
     using Turing
     using LimberJack
