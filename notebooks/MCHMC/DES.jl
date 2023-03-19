@@ -127,6 +127,9 @@ else
     last_n = 0
 end
 
-file_name = joinpath(folname, string("chain_", last_n))
-samples= Sample(spl, target, 10_000;
-                burn_in=200, file_name=file_name, dialog=true)
+@threads for i in 1:nchains    
+    file_name = joinpath(folname, string("chain_", i))
+    samples= Sample(spl, target, 10_000;
+                    burn_in=200, file_name=file_name, dialog=true)
+end      
+
