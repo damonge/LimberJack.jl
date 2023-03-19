@@ -55,7 +55,7 @@ data = meta.data
                           tk_mode="EisHu",
                           Pk_mode="Halofit")
 
-    theory = Theory(cosmology, meta, files; Nuisances=nuisances)
+    theory = Theory_st(cosmology, meta, files; Nuisances=nuisances)
     data ~ MvNormal(theory, cov)
 end
 
