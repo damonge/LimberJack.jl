@@ -1,34 +1,31 @@
 using Pkg
 Pkg.activate("../../../MicroCanonicalHMC.jl/")
 
-using Distributed
+using Base.Threads
+using LinearAlgebra
+using Turing
+using LimberJack
+using DataFrames
+using CSV
+using YAML
+using NPZ
+using PythonCall
+sacc = pyimport("sacc");
 
-@everywhere begin
-    using LinearAlgebra
-    using Turing
-    using LimberJack
-    using DataFrames
-    using CSV
-    using YAML
-    using NPZ
-    using PythonCall
-    sacc = pyimport("sacc");
-    
-    using MicroCanonicalHMC
+using MicroCanonicalHMC
 
-    println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
+println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
 
-    sacc_path = "../../data/FD/cls_FD_covG.fits"
-    yaml_path = "../../data/DECALS/DECALS.yml"
-    sacc_file = sacc.Sacc().load_fits(sacc_path)
-    yaml_file = YAML.load_file(yaml_path)
-    meta, files = make_data(sacc_file, yaml_file)
-    
-    cov = meta.cov
-    data = meta.data
-end
+sacc_path = "../../data/FD/cls_FD_covG.fits"
+yaml_path = "../../data/DECALS/DECALS.yml"
+sacc_file = sacc.Sacc().load_fits(sacc_path)
+yaml_file = YAML.load_file(yaml_path)
+meta, files = make_data(sacc_file, yaml_file)
 
-@everywhere @model function model(data; files=files)
+cov = meta.cov
+data = meta.data
+
+@model function model(data; files=files)
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
@@ -76,22 +73,16 @@ folname = string("DECALS_eps_", eps, "_L_", L)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
-    fol_files = readdir(folname)
     println("Found existing file")
-    if length(fol_files) != 0
-        last_chain = last([file for file in fol_files if occursin("chain", file)])
-        last_n = parse(Int, last_chain[7])
-        println("Restarting chain")
-    else
-        last_n = 0
-    end
 else
     mkdir(folname)
     println(string("Created new folder ", folname))
-    last_n = 0
 end
 
-file_name = joinpath(folname, string("chain_", last_n))
-samples= Sample(spl, target, 10_000;
-                burn_in=200, file_name=file_name, dialog=true)
+nchains = nthreads()
 
+@threads for i in 1:nchains    
+    file_name = joinpath(folname, string("chain_", i))
+    samples= Sample(spl, target, 10_000;
+                    burn_in=200, file_name=file_name, dialog=true)
+end        

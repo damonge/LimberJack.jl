@@ -6,7 +6,7 @@ export Emulator, get_emulated_log_pk0
 export get_PKnonlin
 export NumberCountsTracer, WeakLensingTracer, CMBLensingTracer
 export angularCℓs, angularCℓ, lin_Pk, nonlin_Pk
-export Loglike, get_MAP, get_mass_matrix, Theory
+export Loglike, get_MAP, get_mass_matrix, Theory, Theory_st
 export make_data
 
 using Interpolations, LinearAlgebra, Statistics, QuadGK
