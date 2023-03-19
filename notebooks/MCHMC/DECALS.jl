@@ -14,8 +14,6 @@ sacc = pyimport("sacc");
 
 using MicroCanonicalHMC
 
-println("My id is ", myid(), " and I have ", Threads.nthreads(), " threads")
-
 sacc_path = "../../data/FD/cls_FD_covG.fits"
 yaml_path = "../../data/DECALS/DECALS.yml"
 sacc_file = sacc.Sacc().load_fits(sacc_path)
