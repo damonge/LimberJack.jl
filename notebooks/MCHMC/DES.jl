@@ -1,45 +1,42 @@
 using Pkg
 Pkg.activate("../../../MicroCanonicalHMC.jl/")
 
-using Distributed
+using Base.Threads
+using LinearAlgebra
+using Turing
+using LimberJack
+using DataFrames
+using CSV
+using YAML
+using NPZ
+using PythonCall
+sacc = pyimport("sacc");
 
-@everywhere begin
-    using LinearAlgebra
-    using Turing
-    using LimberJack
-    using DataFrames
-    using CSV
-    using YAML
-    using NPZ
-    using PythonCall
-    sacc = pyimport("sacc");
+using MicroCanonicalHMC
 
-    using MicroCanonicalHMC
+sacc_path = "../../data/FD/cls_FD_covG.fits"
+yaml_path = "../../data/DESY1/gcgc_gcwl_wlwl.yml"
+nz_path = "../../data/DESY1/binned_40_nzs/"
+sacc_file = sacc.Sacc().load_fits(sacc_path)
+yaml_file = YAML.load_file(yaml_path)
+nz_DESwl__0 = npzread(string(nz_path, "nz_DESwl__0.npz"))
+nz_DESwl__1 = npzread(string(nz_path, "nz_DESwl__1.npz"))
+nz_DESwl__2 = npzread(string(nz_path, "nz_DESwl__2.npz"))
+nz_DESwl__3 = npzread(string(nz_path, "nz_DESwl__3.npz"))
+zs_k0, nz_k0, cov_k0 = nz_DESwl__0["z"], nz_DESwl__0["dndz"], nz_DESwl__0["cov"]
+zs_k1, nz_k1, cov_k1 = nz_DESwl__1["z"], nz_DESwl__1["dndz"], nz_DESwl__1["cov"]
+zs_k2, nz_k2, cov_k2 = nz_DESwl__2["z"], nz_DESwl__2["dndz"], nz_DESwl__2["cov"]
+zs_k3, nz_k3, cov_k3 = nz_DESwl__3["z"], nz_DESwl__3["dndz"], nz_DESwl__3["cov"]
+meta, files = make_data(sacc_file, yaml_file;
+                        nz_DESwl__0=nz_DESwl__0,
+                        nz_DESwl__1=nz_DESwl__1,
+                        nz_DESwl__2=nz_DESwl__2,
+                        nz_DESwl__3=nz_DESwl__3)
 
-    sacc_path = "../../data/FD/cls_FD_covG.fits"
-    yaml_path = "../../data/DESY1/gcgc_gcwl_wlwl.yml"
-    nz_path = "../../data/DESY1/binned_40_nzs/"
-    sacc_file = sacc.Sacc().load_fits(sacc_path)
-    yaml_file = YAML.load_file(yaml_path)
-    nz_DESwl__0 = npzread(string(nz_path, "nz_DESwl__0.npz"))
-    nz_DESwl__1 = npzread(string(nz_path, "nz_DESwl__1.npz"))
-    nz_DESwl__2 = npzread(string(nz_path, "nz_DESwl__2.npz"))
-    nz_DESwl__3 = npzread(string(nz_path, "nz_DESwl__3.npz"))
-    zs_k0, nz_k0, cov_k0 = nz_DESwl__0["z"], nz_DESwl__0["dndz"], nz_DESwl__0["cov"]
-    zs_k1, nz_k1, cov_k1 = nz_DESwl__1["z"], nz_DESwl__1["dndz"], nz_DESwl__1["cov"]
-    zs_k2, nz_k2, cov_k2 = nz_DESwl__2["z"], nz_DESwl__2["dndz"], nz_DESwl__2["cov"]
-    zs_k3, nz_k3, cov_k3 = nz_DESwl__3["z"], nz_DESwl__3["dndz"], nz_DESwl__3["cov"]
-    meta, files = make_data(sacc_file, yaml_file;
-                            nz_DESwl__0=nz_DESwl__0,
-                            nz_DESwl__1=nz_DESwl__1,
-                            nz_DESwl__2=nz_DESwl__2,
-                            nz_DESwl__3=nz_DESwl__3)
-
-    cov = meta.cov
-    data = meta.data
-end    
-
-@everywhere @model function model(data; files=files)
+cov = meta.cov
+data = meta.data
+    
+@model function model(data; files=files)
     #KiDS priors
     Ωm ~ Uniform(0.2, 0.6)
     Ωb ~ Uniform(0.028, 0.065)
@@ -131,4 +128,3 @@ end
     samples= Sample(spl, target, 10_000;
                     burn_in=200, file_name=file_name, dialog=true)
 end      
-
