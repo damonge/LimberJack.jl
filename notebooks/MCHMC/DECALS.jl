@@ -57,9 +57,10 @@ data = meta.data
     data ~ MvNormal(theory, cov)
 end
 
+d = 13
 eps = 0.07
-L = round(sqrt(13), digits=2)
-sigma = ones(13)
+L = round(sqrt(d), digits=2)
+sigma = ones(d)
 
 stats_model = model(data)
 target = TuringTarget(stats_model)
