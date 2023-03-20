@@ -130,7 +130,7 @@ data = meta.data
                                      emul_path="../../emulator/files.npz")
     
     theory = Theory(cosmology, meta, files; Nuisances=nuisances)
-    data ~ MvNormal(theory ./ errs, cov)
+    data ~ MvNormal(theory, cov)
 end;
 
 d = 45
