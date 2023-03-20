@@ -144,7 +144,7 @@ spl = MCHMC(eps, L; sigma=sigma)
 
 # Start sampling.
 folpath = "../../chains/MCHMC"
-folname = string("SD_eps_", eps, "_L_", L)
+folname = string("FD_eps_", eps, "_L_", L)
 folname = joinpath(folpath, folname)
 
 if isdir(folname)
