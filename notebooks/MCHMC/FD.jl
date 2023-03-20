@@ -129,7 +129,7 @@ data = meta.data
                                      Pk_mode="Halofit",
                                      emul_path="../../emulator/files.npz")
     
-    theory = Theory(cosmology, meta, files; Nuisances=nuisances)
+    theory = Theory_st(cosmology, meta, files; Nuisances=nuisances)
     data ~ MvNormal(theory, cov)
 end;
 
