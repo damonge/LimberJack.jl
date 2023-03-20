@@ -10,7 +10,9 @@ using CSV
 using YAML
 using NPZ
 using PythonCall
-sacc = pyimport("sacc");
+sacc = pyimport("sacc")
+
+using MicroCanonicalHMC
 
 sacc_path = "../../data/FD/cls_FD_covG.fits"
 yaml_path = "../../data/ND/ND.yml"
