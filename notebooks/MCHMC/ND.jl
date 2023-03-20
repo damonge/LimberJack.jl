@@ -119,5 +119,5 @@ nchains = nthreads()
 @threads for i in 1:nchains    
     file_name = joinpath(folname, string("chain_", i))
     samples= Sample(spl, target, 10_000;
-                    burn_in=200, file_name=file_name, dialog=true)
+                    burn_in=200, fol_name=folname, file_name=file_name, dialog=true)
 end      
