@@ -126,7 +126,8 @@ data = meta.data
     
     cosmology = LimberJack.Cosmology(Ωm, Ωb, h, ns, s8,
                                      tk_mode="emulator",
-                                     Pk_mode="Halofit")
+                                     Pk_mode="Halofit",
+                                     emul_path="../../emulator/files.npz")
     
     theory = Theory(cosmology, meta, files; Nuisances=nuisances)
     data ~ MvNormal(theory ./ errs, cov)
