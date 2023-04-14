@@ -176,7 +176,7 @@ function get_emulated_log_pk0(cpar::CosmoPar, settings::Settings)
     cosmotype = settings.cosmo_type
     wc = cpar.Ωc*cpar.h^2
     wb = cpar.Ωb*cpar.h^2
-    ln1010As = 2.7
+    ln1010As = log((10^10)*cpar.As)
     params = [wc, wb, ln1010As, cpar.ns, cpar.h]
     params_t = _x_transformation(emulator, params')
     
@@ -195,7 +195,7 @@ function get_Bolt_pk0(cpar::CosmoPar, settings)
                     Ω_r = cpar.Ωr,
                     Ω_b = cpar.Ωb,
                     Ω_c = cpar.Ωc,
-                    A = 2.097e-9,
+                    A = cpar.As,
                     n = cpar.ns,
                     Y_p = cpar.Y_p,
                     N_ν = cpar.N_ν,
@@ -254,12 +254,13 @@ function lin_Pk0(cpar::CosmoPar, settings::Settings)
      else
         print("Transfer function not implemented")
     end
+
     #Renormalize Pk
-    #if !settings.using_As
-    σ8_2_here = _σR2(settings.ks, pk0, settings.dlogk, 8.0/cpar.h)
-    norm = cpar.σ8^2 / σ8_2_here
-    pk0 *= norm
-    #end
+    if settings.using_σ8
+        σ8_2_here = _σR2(settings.ks, pk0, settings.dlogk, 8.0/cpar.h)
+        norm = cpar.σ8^2 / σ8_2_here
+        pk0 *= norm
+    end
 
     pki = cubic_spline_interpolation(settings.logk, log.(pk0);
                                      extrapolation_bc=Line())

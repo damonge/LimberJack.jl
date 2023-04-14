@@ -33,6 +33,9 @@ mutable struct Settings
     logk
     dlogk
 
+    using_As::Bool
+    using_σ8::Bool
+    
     cosmo_type::DataType
     tk_mode::String
     Dz_mode::String
@@ -45,6 +48,8 @@ Settings(nz::Int,
          nz_t::Int,
          nk::Int,
          nℓ::Int,
+         using_As::Bool,
+         using_σ8::Bool,    
          cosmo_type::DataType,
          tk_mode::String,
          Dz_mode::String,
@@ -60,6 +65,7 @@ Settings(nz::Int,
     ℓs = range(0, stop=2000, length=nℓ)
     Settings(nz, nz_pk, nz_t, nk, nℓ,
              zs, zs_pk, zs_t, ks, ℓs, logk,  dlogk,
+             using_As, using_σ8,
              cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
 end
 """
@@ -124,8 +130,8 @@ CosmoPar(;kwargs...) = begin
     cosmo_type = eltype([Ωm, Ωb, h, ns, σ8])
 
     Y_p = get(kwargs, :Y_p, 0.24)  # primordial helium fraction
-    N_ν = get(kwargs, :N_ν, 3.046) #effective number of relativisic species (PDG25 value)
-    Σm_ν = get(kwargs, :Σm_ν, 0.0) #sum of neutrino masses (eV), Planck 15 default ΛCDM value
+    N_ν = get(kwargs, :N_ν, 3.046) # effective number of relativisic species (PDG25 value)
+    Σm_ν = get(kwargs, :Σm_ν, 0.0) # sum of neutrino masses (eV), Planck 15 default ΛCDM value
     θCMB = get(kwargs, :θCMB, 2.725/2.7)
     prefac = 2.38163816E-5 # This is 4*sigma_SB*(2.7 K)^4/rho_crit(h=1)
     f_rel = 1.0 + N_ν * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
@@ -293,11 +299,23 @@ Returns:
 
 """
 Cosmology(;nk=300, nz=300, nz_pk=70,  nz_t=200, nℓ=300,
-          Dz_mode="RK2", tk_mode="BBKS", Pk_mode="linear",
+          Dz_mode="RK2", tk_mode="EisHu", Pk_mode="linear",
           emul_path= "../emulator/files.npz",
           kwargs...) = begin
 
     kwargs=Dict(kwargs)
+    if :As ∈ keys(kwargs)
+        using_As = true
+    end    
+    if :σ8 ∈ keys(kwargs)
+        using_σ8 = true
+    end 
+    if using_As == using_σ8 == true
+        error("Cannot use both As and σ8")
+    end
+    if using_As == using_σ8 == false
+        error("Must use either As or σ8")
+    end   
     cpar = CosmoPar(;kwargs...)
     cosmo_type = _get_cosmo_type(cpar)
     settings = Settings(nz, nz_pk, nz_t, nk, nℓ,
