@@ -18,6 +18,27 @@ cosmo_bolt = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, 
                            transfer_function="boltzmann_class",
                            matter_power_spectrum="linear")
 
+cosmo_bbks_As = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, n_s=1.0, 
+                                A_s = 2.10058e-9,   
+                                Omega_g=0, Omega_k=0,
+                                transfer_function="bbks",
+                                matter_power_spectrum="linear")
+cosmo_eishu_As = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, n_s=1.0, 
+                                A_s = 2.10058e-9,   
+                                Omega_g=0, Omega_k=0,
+                                transfer_function="eisenstein_hu",
+                                matter_power_spectrum="linear")
+cosmo_camb_As = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, n_s=1.0, 
+                              A_s = 2.10058e-9,   
+                              Omega_g=0, Omega_k=0,
+                              transfer_function="boltzmann_class",
+                              matter_power_spectrum="linear")
+cosmo_bolt_As = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, n_s=1.0,
+                              A_s = 2.10058e-9,   
+                              Omega_g=5.0469e-5, Omega_k=0,
+                              transfer_function="boltzmann_class",
+                              matter_power_spectrum="linear")
+
 cosmo_bbks_nonlin = ccl.CosmologyVanillaLCDM(transfer_function="bbks",
                                               matter_power_spectrum="halofit",
                                               Omega_g=0, Omega_k=0)
@@ -41,6 +62,12 @@ test_results["pk_BBKS"] = ccl.linear_matter_power(cosmo_bbks, ks, 1.)
 test_results["pk_EisHu"] = ccl.linear_matter_power(cosmo_eishu, ks, 1.)
 test_results["pk_emul"] = ccl.linear_matter_power(cosmo_camb, ks, 1.)
 test_results["pk_Bolt"] = ccl.linear_matter_power(cosmo_bolt, ks, 1.)
+# =====
+ks = np.load("../emulator/files.npz")["training_karr"]
+test_results["pk_BBKS_As"] = ccl.linear_matter_power(cosmo_bbks_As, ks, 1.)
+test_results["pk_EisHu_As"] = ccl.linear_matter_power(cosmo_eishu_As, ks, 1.)
+test_results["pk_emul_As"] = ccl.linear_matter_power(cosmo_camb_As, ks, 1.)
+test_results["pk_Bolt_As"] = ccl.linear_matter_power(cosmo_bolt_As, ks, 1.)
 # =====
 ks = np.load("../emulator/files.npz")["training_karr"]
 test_results["pk_BBKS_nonlin"] = ccl.nonlin_matter_power(cosmo_bbks_nonlin, ks, 1.)

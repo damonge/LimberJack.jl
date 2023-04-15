@@ -35,7 +35,7 @@ mutable struct Settings
 
     using_As::Bool
     using_σ8::Bool
-    
+
     cosmo_type::DataType
     tk_mode::String
     Dz_mode::String
@@ -43,26 +43,29 @@ mutable struct Settings
     emul_path::String
 end
 
-Settings(nz::Int,
-         nz_pk::Int,
-         nz_t::Int,
-         nk::Int,
-         nℓ::Int,
-         using_As::Bool,
-         using_σ8::Bool,    
-         cosmo_type::DataType,
-         tk_mode::String,
-         Dz_mode::String,
-         Pk_mode::String,
-         emul_path::String) = begin
+Settings(;kwargs...) = begin
+    nz = get(kwargs, :nz, 300)
+    nz_pk = get(kwargs, :nz_pk, 70)
+    nz_t = get(kwargs, :nz_t, 200)
+    nk = get(kwargs, :nk, 300)
+    nℓ = get(kwargs, :nℓ, 300)
+
     zs_pk = range(0., stop=3.0, length=nz_pk)
     zs = range(0.0, stop=3.0, length=nz)
     zs_t = range(0.00001, stop=3.0, length=nz_t)
-    # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     ℓs = range(0, stop=2000, length=nℓ)
+
+    using_As = get(kwargs, :using_As, false)
+    using_σ8 = get(kwargs, :using_σ8, true)
+
+    cosmo_type = get(kwargs, :cosmo_type, Float64)
+    tk_mode = get(kwargs, :tk_mode, "EisHu")
+    Dz_mode = get(kwargs, :Dz_mode, "RK2")
+    Pk_mode = get(kwargs, :Pk_mode, "linear")
+    emul_path = get(kwargs, :emul_path, "../emulator/files.npz")
     Settings(nz, nz_pk, nz_t, nk, nℓ,
              zs, zs_pk, zs_t, ks, ℓs, logk,  dlogk,
              using_As, using_σ8,
@@ -298,28 +301,22 @@ Returns:
 - `Cosmology` : cosmology structure.
 
 """
-Cosmology(;nk=300, nz=300, nz_pk=70,  nz_t=200, nℓ=300,
-          Dz_mode="RK2", tk_mode="EisHu", Pk_mode="linear",
-          emul_path= "../emulator/files.npz",
-          kwargs...) = begin
+Cosmology(;kwargs...) = begin
 
     kwargs=Dict(kwargs)
     if :As ∈ keys(kwargs)
         using_As = true
-    end    
-    if :σ8 ∈ keys(kwargs)
+        using_σ8 = false
+    else
+        using_As = false
         using_σ8 = true
-    end 
-    if using_As == using_σ8 == true
-        error("Cannot use both As and σ8")
-    end
-    if using_As == using_σ8 == false
-        error("Must use either As or σ8")
-    end   
+    end     
     cpar = CosmoPar(;kwargs...)
     cosmo_type = _get_cosmo_type(cpar)
-    settings = Settings(nz, nz_pk, nz_t, nk, nℓ,
-                        cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
+    settings = Settings(;cosmo_type=cosmo_type,
+                         using_As=using_As,
+                         using_σ8=using_σ8,
+                         kwargs...)
     Cosmology(cpar, settings)
 end
 

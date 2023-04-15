@@ -16,6 +16,15 @@ cosmo_emul = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0
 cosmo_Bolt = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0, σ8=0.81,
                        Ωr=5.0469e-5, nk=70, nz=300, nz_pk=70, tk_mode="Bolt")
 
+cosmo_BBKS_As = Cosmology(As = 2.1005829616811546e-9, nk=300, nz=300, nz_pk=70)
+cosmo_EisHu_As = Cosmology(As = 2.1005829616811546e-9, nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
+cosmo_emul_As = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0,
+                          As = 2.1005829616811546e-9,
+                          nk=300, nz=300, nz_pk=70, tk_mode="emulator")
+cosmo_Bolt_As = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0,
+                          As = 2.1005829616811546e-9,
+                          Ωr=5.0469e-5, nk=70, nz=300, nz_pk=70, tk_mode="Bolt")
+
 cosmo_BBKS_nonlin = Cosmology(nk=300, nz=300, nz_pk=70,
                                Pk_mode="Halofit")
 cosmo_EisHu_nonlin = Cosmology(nk=300, nz=300, nz_pk=70,
@@ -61,7 +70,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         @test all(@. (abs(fs8z/fs8z_bm-1.0) < 0.005))
     end
 
-    @testset "linear_Pk" begin
+    @testset "linear_Pk_σ8" begin
         ks = npzread("../emulator/files.npz")["training_karr"]
         pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
@@ -75,6 +84,29 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         merge!(test_output, Dict("pk_EisHu"=> pk_EisHu))
         merge!(test_output, Dict("pk_emul"=> pk_emul))
         merge!(test_output, Dict("pk_Bolt"=> pk_Bolt))
+        #This is problematic
+        @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) <  0.1))
+        @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.005))
+        #This is problematic
+        @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.05))
+        #This is problematic
+        @test all(@. (abs(pk_Bolt/pk_Bolt_bm-1.0) <  0.25))
+    end
+
+    @testset "linear_Pk_As" begin
+        ks = npzread("../emulator/files.npz")["training_karr"]
+        pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
+        pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
+        pk_emul = nonlin_Pk(cosmo_emul, ks, 0.0)
+        pk_Bolt = nonlin_Pk(cosmo_Bolt, ks, 0.0)
+        pk_BBKS_bm = test_results["pk_BBKS_As"]
+        pk_EisHu_bm = test_results["pk_EisHu_As"]
+        pk_emul_bm = test_results["pk_emul_As"]
+        pk_Bolt_bm = test_results["pk_Bolt_As"]
+        merge!(test_output, Dict("pk_BBKS_As"=> pk_BBKS))
+        merge!(test_output, Dict("pk_EisHu_As"=> pk_EisHu))
+        merge!(test_output, Dict("pk_emul_As"=> pk_emul))
+        merge!(test_output, Dict("pk_Bolt_As"=> pk_Bolt))
         #This is problematic
         @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) <  0.1))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.005))

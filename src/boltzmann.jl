@@ -222,7 +222,7 @@ function _w_tophat(x::Real)
     return w
 end
 
-function _σR2(ks, pk, dlogk, R)
+function σR2(ks, pk, dlogk, R)
     x = ks .* R
     wk = _w_tophat.(x)
     integ = @. pk * wk^2 * ks^3
@@ -231,7 +231,7 @@ function _σR2(ks, pk, dlogk, R)
 end
 
 function σR2(cosmo::Cosmology, R)
-    return _σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)
+    return σR2(cosmo.ks, cosmo.pk0, cosmo.dlogk, R)
 end
 
 function lin_Pk0(cpar::CosmoPar, settings::Settings)
@@ -257,7 +257,7 @@ function lin_Pk0(cpar::CosmoPar, settings::Settings)
 
     #Renormalize Pk
     if settings.using_σ8
-        σ8_2_here = _σR2(settings.ks, pk0, settings.dlogk, 8.0/cpar.h)
+        σ8_2_here = σR2(settings.ks, pk0, settings.dlogk, 8.0/cpar.h)
         norm = cpar.σ8^2 / σ8_2_here
         pk0 *= norm
     end
