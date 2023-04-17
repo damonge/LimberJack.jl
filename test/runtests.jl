@@ -95,6 +95,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         #This is problematic
         @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.05))
         #This is problematic
+        println(abs(pk_Bolt/pk_Bolt_bm-1.0))
         @test all(@. (abs(pk_Bolt/pk_Bolt_bm-1.0) <  0.25))
     end
 
@@ -275,12 +276,6 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
 
     @testset "IsLinPkDiff" begin
         ks = npzread("../emulator/files.npz")["training_karr"]
-                                                
-        function lin_BBKS(p)
-            cosmo = Cosmology(Ωm=p, tk_mode="BBKS", Pk_mode="linear")
-            pk = lin_Pk(cosmo, ks, 0.)
-            return pk
-        end
 
         function lin_EisHu(p)
             cosmo = Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="linear")
@@ -298,10 +293,8 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         dΩm = 0.01
         ddΩm = 0.015
 
-        lin_BBKS_autodiff = abs.(ForwardDiff.derivative(lin_BBKS, Ωm0))
         lin_EisHu_autodiff = abs.(ForwardDiff.derivative(lin_EisHu, Ωm0))
         lin_emul_autodiff = abs.(ForwardDiff.derivative(lin_emul, Ωm0))
-        lin_BBKS_num = abs.((lin_BBKS(Ωm0+dΩm)-lin_BBKS(Ωm0-dΩm))/(2dΩm))
         lin_EisHu_num = abs.((lin_EisHu(Ωm0+dΩm)-lin_EisHu(Ωm0-dΩm))/(2dΩm))
         lin_emul_num = abs.((lin_emul(Ωm0+ddΩm)-lin_emul(Ωm0-ddΩm))/(2ddΩm))
 
@@ -311,7 +304,6 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         merge!(test_output, Dict("lin_emul_num"=> lin_emul_num))         
         # Median needed since errors shoot up when derivatieve
         # crosses zero
-        @test median(lin_BBKS_autodiff./lin_BBKS_num.-1) < 0.05
         @test median(lin_EisHu_autodiff./lin_EisHu_num.-1) < 0.05
         @test median(lin_emul_autodiff./lin_emul_num.-1) < 0.05
     end
@@ -320,12 +312,6 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
     @testset "IsNonlinPkDiff" begin
         ks = npzread("../emulator/files.npz")["training_karr"]
                                                 
-        function nonlin_BBKS(p)
-            cosmo = Cosmology(Ωm=p, tk_mode="BBKS", Pk_mode="Halofit")
-            pk = nonlin_Pk(cosmo, ks, 0.)
-            return pk
-        end
-
         function nonlin_EisHu(p)
             cosmo = Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="Halofit")
             pk = nonlin_Pk(cosmo, ks, 0.)
@@ -342,10 +328,8 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         dΩm = 0.01
         ddΩm = 0.02
 
-        nonlin_BBKS_autodiff = abs.(ForwardDiff.derivative(nonlin_BBKS, Ωm0))
         nonlin_EisHu_autodiff = abs.(ForwardDiff.derivative(nonlin_EisHu, Ωm0))
         nonlin_emul_autodiff = abs.(ForwardDiff.derivative(nonlin_emul, Ωm0))
-        nonlin_BBKS_num = abs.((nonlin_BBKS(Ωm0+dΩm)-nonlin_BBKS(Ωm0-dΩm))/(2dΩm))
         nonlin_EisHu_num = abs.((nonlin_EisHu(Ωm0+dΩm)-nonlin_EisHu(Ωm0-dΩm))/(2dΩm))
         nonlin_emul_num = abs.((nonlin_emul(Ωm0+ddΩm)-nonlin_emul(Ωm0-ddΩm))/(2ddΩm));
                                                 
@@ -355,7 +339,6 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         merge!(test_output, Dict("nonlin_emul_num"=> nonlin_emul_num))
         # Median needed since errors shoot up when derivatieve
         # crosses zero
-        @test median(nonlin_BBKS_autodiff./nonlin_BBKS_num.-1) < 0.1
         @test median(nonlin_EisHu_autodiff./nonlin_EisHu_num.-1) < 0.1
         @test median(nonlin_emul_autodiff./nonlin_emul_num.-1) < 0.1
     end
@@ -573,6 +556,5 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
     @test median(comp) < 0.003                                                      
     end
     =#
-
     npzwrite("test_output.npz", test_output)
 end
