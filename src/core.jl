@@ -34,7 +34,6 @@ mutable struct Settings
     dlogk
 
     using_As::Bool
-    using_σ8::Bool
 
     cosmo_type::DataType
     tk_mode::String
@@ -59,7 +58,6 @@ Settings(;kwargs...) = begin
     ℓs = range(0, stop=2000, length=nℓ)
 
     using_As = get(kwargs, :using_As, false)
-    using_σ8 = get(kwargs, :using_σ8, true)
 
     cosmo_type = get(kwargs, :cosmo_type, Float64)
     tk_mode = get(kwargs, :tk_mode, "EisHu")
@@ -68,7 +66,7 @@ Settings(;kwargs...) = begin
     emul_path = get(kwargs, :emul_path, "../emulator/files.npz")
     Settings(nz, nz_pk, nz_t, nk, nℓ,
              zs, zs_pk, zs_t, ks, ℓs, logk,  dlogk,
-             using_As, using_σ8,
+             using_As,
              cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
 end
 """
@@ -92,7 +90,7 @@ Returns:
 - `CosmoPar` : cosmology parameters structure.
 
 """
-struct CosmoPar{T}
+mutable struct CosmoPar{T}
     Ωm::T
     Ωb::T
     h::T
@@ -306,17 +304,19 @@ Cosmology(;kwargs...) = begin
     kwargs=Dict(kwargs)
     if :As ∈ keys(kwargs)
         using_As = true
-        using_σ8 = false
     else
         using_As = false
-        using_σ8 = true
     end     
     cpar = CosmoPar(;kwargs...)
     cosmo_type = _get_cosmo_type(cpar)
     settings = Settings(;cosmo_type=cosmo_type,
                          using_As=using_As,
-                         using_σ8=using_σ8,
                          kwargs...)
+    if using_As && (settings.tk_mode == "BBKS" || settings.tk_mode == "EisensteinHu")
+        @warn "Using As with BBKS or EisensteinHu transfer function is not possible."
+        @warn "Using σ8 instead."
+        using_As = false
+    end                     
     Cosmology(cpar, settings)
 end
 

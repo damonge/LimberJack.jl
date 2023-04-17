@@ -9,15 +9,12 @@ test_cls = npzread("test_cls.npz")["cls"]
 test_cls_files = npzread("test_cls_files.npz")
 test_output = Dict{String}{Vector}()
 
-cosmo_BBKS = Cosmology(nk=300, nz=300, nz_pk=70)
 cosmo_EisHu = Cosmology(nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
 cosmo_emul = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0, σ8=0.81,
                        nk=300, nz=300, nz_pk=70, tk_mode="emulator")
 cosmo_Bolt = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0, σ8=0.81,
                        Ωr=5.0469e-5, nk=70, nz=300, nz_pk=70, tk_mode="Bolt")
 
-cosmo_BBKS_As = Cosmology(As = 2.1005829616811546e-9, nk=300, nz=300, nz_pk=70)
-cosmo_EisHu_As = Cosmology(As = 2.1005829616811546e-9, nk=300, nz=300, nz_pk=70, tk_mode="EisHu")
 cosmo_emul_As = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0,
                           As = 2.1005829616811546e-9,
                           nk=300, nz=300, nz_pk=70, tk_mode="emulator")
@@ -25,8 +22,6 @@ cosmo_Bolt_As = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=
                           As = 2.1005829616811546e-9,
                           Ωr=5.0469e-5, nk=70, nz=300, nz_pk=70, tk_mode="Bolt")
 
-cosmo_BBKS_nonlin = Cosmology(nk=300, nz=300, nz_pk=70,
-                               Pk_mode="Halofit")
 cosmo_EisHu_nonlin = Cosmology(nk=300, nz=300, nz_pk=70,
                                tk_mode="EisHu", Pk_mode="Halofit")
 cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0, σ8=0.81,
@@ -35,20 +30,20 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
 
 @testset "All tests" begin
     @testset "CreateCosmo" begin
-        @test cosmo_BBKS.cpar.Ωm == 0.3
+        @test cosmo_EisHu.cpar.Ωm == 0.3
     end
 
     @testset "BMHz" begin
         c = 299792458.0
         ztest = [0.1, 0.5, 1.0, 3.0]
-        H = cosmo_BBKS.cpar.h*100*Ez(cosmo_BBKS, ztest)
+        H = cosmo_EisHu.cpar.h*100*Ez(cosmo_EisHu, ztest)
         H_bm = @. 67*sqrt(0.3 * (1+ztest)^3 + (1-0.3-0.69991) * (1+ztest)^4 + 0.69991)
         @test all(@. (abs(H/H_bm-1.0) < 0.0005))
     end
 
     @testset "BMChi" begin
         ztest = [0.1, 0.5, 1.0, 3.0]
-        chi = comoving_radial_distance(cosmo_BBKS, ztest)
+        chi = comoving_radial_distance(cosmo_EisHu, ztest)
         chi_bm = test_results["Chi"]
         merge!(test_output, Dict("Chi"=> chi))
         @test all(@. (abs(chi/chi_bm-1.0) < 0.0005))
@@ -56,9 +51,9 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
 
     @testset "BMGrowth" begin
         ztest = [0.1, 0.5, 1.0, 3.0]
-        Dz = growth_factor(cosmo_BBKS, ztest)
-        fz = growth_rate(cosmo_BBKS, ztest)
-        fs8z = fs8(cosmo_BBKS, ztest)
+        Dz = growth_factor(cosmo_EisHu, ztest)
+        fz = growth_rate(cosmo_EisHu, ztest)
+        fs8z = fs8(cosmo_EisHu, ztest)
         Dz_bm = test_results["Dz"]
         fz_bm = test_results["fz"]
         fs8z_bm = 0.81 .* Dz_bm .* fz_bm
@@ -72,20 +67,16 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
 
     @testset "linear_Pk_σ8" begin
         ks = npzread("../emulator/files.npz")["training_karr"]
-        pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
         pk_emul = nonlin_Pk(cosmo_emul, ks, 0.0)
         pk_Bolt = nonlin_Pk(cosmo_Bolt, ks, 0.0)
-        pk_BBKS_bm = test_results["pk_BBKS"]
         pk_EisHu_bm = test_results["pk_EisHu"]
         pk_emul_bm = test_results["pk_emul"]
         pk_Bolt_bm = test_results["pk_Bolt"]
-        merge!(test_output, Dict("pk_BBKS"=> pk_BBKS))
         merge!(test_output, Dict("pk_EisHu"=> pk_EisHu))
         merge!(test_output, Dict("pk_emul"=> pk_emul))
         merge!(test_output, Dict("pk_Bolt"=> pk_Bolt))
         #This is problematic
-        @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) <  0.1))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.005))
         #This is problematic
         @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.05))
@@ -95,21 +86,12 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
 
     @testset "linear_Pk_As" begin
         ks = npzread("../emulator/files.npz")["training_karr"]
-        pk_BBKS = nonlin_Pk(cosmo_BBKS, ks, 0.0)
-        pk_EisHu = nonlin_Pk(cosmo_EisHu, ks, 0.0)
-        pk_emul = nonlin_Pk(cosmo_emul, ks, 0.0)
-        pk_Bolt = nonlin_Pk(cosmo_Bolt, ks, 0.0)
-        pk_BBKS_bm = test_results["pk_BBKS_As"]
-        pk_EisHu_bm = test_results["pk_EisHu_As"]
+        pk_emul = nonlin_Pk(cosmo_emul_As, ks, 0.0)
+        pk_Bolt = nonlin_Pk(cosmo_Bolt_As, ks, 0.0)
         pk_emul_bm = test_results["pk_emul_As"]
         pk_Bolt_bm = test_results["pk_Bolt_As"]
-        merge!(test_output, Dict("pk_BBKS_As"=> pk_BBKS))
-        merge!(test_output, Dict("pk_EisHu_As"=> pk_EisHu))
         merge!(test_output, Dict("pk_emul_As"=> pk_emul))
         merge!(test_output, Dict("pk_Bolt_As"=> pk_Bolt))
-        #This is problematic
-        @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) <  0.1))
-        @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) <  0.005))
         #This is problematic
         @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.05))
         #This is problematic
@@ -118,17 +100,13 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
 
     @testset "nonlinear_Pk" begin
         ks = npzread("../emulator/files.npz")["training_karr"]
-        pk_BBKS = nonlin_Pk(cosmo_BBKS_nonlin, ks, 0.0)
         pk_EisHu = nonlin_Pk(cosmo_EisHu_nonlin, ks, 0)
         pk_emul = nonlin_Pk(cosmo_emul_nonlin, ks, 0)
-        pk_BBKS_bm = test_results["pk_BBKS_nonlin"]
         pk_EisHu_bm = test_results["pk_EisHu_nonlin"]
         pk_emul_bm = test_results["pk_emul_nonlin"]
-        merge!(test_output, Dict("pk_BBKS_nonlin"=> pk_BBKS))
         merge!(test_output, Dict("pk_EisHu_nonlin"=> pk_EisHu))
         merge!(test_output, Dict("pk_emul_nonlin"=> pk_emul))
         # It'd be best if this was < 1E-4...
-        @test all(@. (abs(pk_BBKS/pk_BBKS_bm-1.0) < 0.005))
         @test all(@. (abs(pk_EisHu/pk_EisHu_bm-1.0) < 0.005))
         # This is problematic
         @test all(@. (abs(pk_emul/pk_emul_bm-1.0) < 0.05))
@@ -138,9 +116,9 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         p_of_z(x) = @. exp(-0.5*((x-0.5)/0.05)^2)
         z = Vector(range(0., stop=2., length=200))
         nz = Vector(p_of_z(z))
-        t = NumberCountsTracer(cosmo_BBKS, z, nz, b=1.0)
-        wz1 = t.wint(cosmo_BBKS.chi(0.5))
-        hz = Hmpc(cosmo_BBKS, 0.5)
+        t = NumberCountsTracer(cosmo_EisHu, z, nz, b=1.0)
+        wz1 = t.wint(cosmo_EisHu.chi(0.5))
+        hz = Hmpc(cosmo_EisHu, 0.5)
         wz2 = p_of_z(0.5)*hz/(sqrt(2π)*0.05)
         @test abs(wz2/wz1 - 1) < 0.005
     end
@@ -595,5 +573,6 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
     @test median(comp) < 0.003                                                      
     end
     =#
+
     npzwrite("test_output.npz", test_output)
 end

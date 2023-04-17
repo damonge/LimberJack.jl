@@ -1,17 +1,3 @@
-"""
-    TkBBKS(cosmo::CosmoPar, k)
-Computes the primordial power spectrum using the BBKS formula (https://ui.adsabs.harvard.edu/abs/1986ApJ...304...15B).
-Arguments:
-- `cosmo::CosmoPar` : cosmological parameters structure
-- `k::Vector{Dual}` : scales array
-Returns:
-- `Tk::Vector{Dual}` : transfer function.
-"""
-function TkBBKS(cosmo::CosmoPar, k)
-    q = @. (cosmo.θCMB^2 * k/(cosmo.Ωm * cosmo.h^2 * exp(-cosmo.Ωb*(1+sqrt(2*cosmo.h)/cosmo.Ωm))))
-    return (@. (log(1+2.34q)/(2.34q))^2/sqrt(1+3.89q+(16.1q)^2+(5.46q)^3+(6.71q)^4))
-end
-
 function _T0(keq, k, ac, bc)
     q = @. (k/(13.41*keq))
     C = @. ((14.2/ac) + (386/(1+69.9*q^1.08)))
@@ -247,21 +233,19 @@ function lin_Pk0(cpar::CosmoPar, settings::Settings)
         pk0 = exp.(pki_Bolt(settings.ks))
     elseif settings.tk_mode == "EisHu"
         tk = TkEisHu(cpar, settings.ks./ cpar.h)
-        pk0 = @. cpar.As * settings.ks^cpar.ns * tk
-    elseif settings.tk_mode == "BBKS"
-        tk = TkBBKS(cpar, settings.ks)
-        pk0 = @. cpar.As * settings.ks^cpar.ns * tk
+        pk0 = @. settings.ks^cpar.ns * tk
      else
         print("Transfer function not implemented")
     end
 
     #Renormalize Pk
-    if settings.using_σ8
-        σ8_2_here = σR2(settings.ks, pk0, settings.dlogk, 8.0/cpar.h)
-        norm = cpar.σ8^2 / σ8_2_here
+    _σ8 = σR2(settings.ks, pk0, settings.dlogk, 8.0/cpar.h)
+    if settings.using_As
+        cpar.σ8 = _σ8 
+    else    
+        norm = cpar.σ8^2 / _σ8
         pk0 *= norm
     end
-
     pki = cubic_spline_interpolation(settings.logk, log.(pk0);
                                      extrapolation_bc=Line())
     return pk0, pki
