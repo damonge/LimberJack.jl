@@ -178,7 +178,7 @@ end
 
 function get_Bolt_pk0(cpar::CosmoPar, settings)
     𝕡 = Bolt.CosmoParams(h = cpar.h,
-                    Ω_r = cpar.Ωr,
+                    Ω_r = cpar.Ωg,
                     Ω_b = cpar.Ωb,
                     Ω_c = cpar.Ωc,
                     A = cpar.As,

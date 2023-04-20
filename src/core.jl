@@ -101,6 +101,7 @@ mutable struct CosmoPar{T}
     Y_p::T
     N_ν::T
     Σm_ν::T
+    Ωg::T
     Ωr::T
     Ωc::T
     ΩΛ::T
@@ -136,12 +137,13 @@ CosmoPar(;kwargs...) = begin
     θCMB = get(kwargs, :θCMB, 2.725/2.7)
     prefac = 2.38163816E-5 # This is 4*sigma_SB*(2.7 K)^4/rho_crit(h=1)
     f_rel = 1.0 + N_ν * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
-    Ωr = get(kwargs, :Ωr, prefac*f_rel*θCMB^4/h^2)
+    Ωg = get(kwargs, :Ωr, prefac*θCMB^4/h^2)
+    Ωr = get(kwargs, :Ωr, Ωg*f_rel)
     Ωc = Ωm-Ωb
     ΩΛ = 1-Ωm-Ωr
     CosmoPar{cosmo_type}(Ωm, Ωb, h, ns, As, σ8,
                          θCMB, Y_p, N_ν, Σm_ν,
-                         Ωr, Ωc, ΩΛ)
+                         Ωg, Ωr, Ωc, ΩΛ)
 end
 
 

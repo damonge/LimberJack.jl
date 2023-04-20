@@ -10,17 +10,17 @@ cosmo_camb = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, 
                            Omega_g=0, Omega_k=0,
                            transfer_function="boltzmann_class",
                            matter_power_spectrum="linear")
-cosmo_bolt = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, n_s=1.0, sigma8=0.81,
+cosmo_bolt = ccl.Cosmology(Omega_c=0.224, Omega_b=0.046, h=0.7, n_s=1.0, sigma8=0.8,
                            Omega_g=5.0469e-5, Omega_k=0,
                            transfer_function="boltzmann_class",
                            matter_power_spectrum="linear")
 
-cosmo_camb_As = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, n_s=1.0, 
+cosmo_camb_As = ccl.Cosmology(Omega_c=0.224, Omega_b=0.046, h=0.70, n_s=1.0, 
                               A_s = 2.10058e-9,   
                               Omega_g=0, Omega_k=0,
                               transfer_function="boltzmann_class",
                               matter_power_spectrum="linear")
-cosmo_bolt_As = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, n_s=1.0,
+cosmo_bolt_As = ccl.Cosmology(Omega_c=0.224, Omega_b=0.046, h=0.70, n_s=1.0,
                               A_s = 2.10058e-9,   
                               Omega_g=5.0469e-5, Omega_k=0,
                               transfer_function="boltzmann_class",

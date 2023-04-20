@@ -15,11 +15,9 @@ cosmo_emul = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0
 cosmo_Bolt = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0, σ8=0.81,
                        Ωr=5.0469e-5, nk=70, nz=300, nz_pk=70, tk_mode="Bolt")
 
-cosmo_emul_As = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0,
-                          As = 2.1005829616811546e-9,
+cosmo_emul_As = Cosmology(Ωm=0.27, Ωb=0.046, h=0.7, ns=1.0, As=2.097e-9,
                           nk=300, nz=300, nz_pk=70, tk_mode="emulator")
-cosmo_Bolt_As = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75, ns=1.0,
-                          As = 2.1005829616811546e-9,
+cosmo_Bolt_As = Cosmology(Ωm=0.27, Ωb=0.046, h=0.7, ns=1.0, As=2.097e-9,
                           Ωr=5.0469e-5, nk=70, nz=300, nz_pk=70, tk_mode="Bolt")
 
 cosmo_EisHu_nonlin = Cosmology(nk=300, nz=300, nz_pk=70,
@@ -95,8 +93,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         #This is problematic
         @test all(@. (abs(pk_emul/pk_emul_bm-1.0) <  0.05))
         #This is problematic
-        println(abs(pk_Bolt/pk_Bolt_bm-1.0))
-        @test all(@. (abs(pk_Bolt/pk_Bolt_bm-1.0) <  0.25))
+        @test all(@. (abs(pk_Bolt/pk_Bolt_bm-1.0) <  0.05))
     end
 
     @testset "nonlinear_Pk" begin
@@ -112,7 +109,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         # This is problematic
         @test all(@. (abs(pk_emul/pk_emul_bm-1.0) < 0.05))
     end
-
+   
     @testset "CreateTracer" begin
         p_of_z(x) = @. exp(-0.5*((x-0.5)/0.05)^2)
         z = Vector(range(0., stop=2., length=200))
