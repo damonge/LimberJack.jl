@@ -33,6 +33,8 @@ mutable struct Settings
     logk
     dlogk
 
+    using_As::Bool
+
     cosmo_type::DataType
     tk_mode::String
     Dz_mode::String
@@ -40,26 +42,31 @@ mutable struct Settings
     emul_path::String
 end
 
-Settings(nz::Int,
-         nz_pk::Int,
-         nz_t::Int,
-         nk::Int,
-         nℓ::Int,
-         cosmo_type::DataType,
-         tk_mode::String,
-         Dz_mode::String,
-         Pk_mode::String,
-         emul_path::String) = begin
+Settings(;kwargs...) = begin
+    nz = get(kwargs, :nz, 300)
+    nz_pk = get(kwargs, :nz_pk, 70)
+    nz_t = get(kwargs, :nz_t, 200)
+    nk = get(kwargs, :nk, 300)
+    nℓ = get(kwargs, :nℓ, 300)
+
     zs_pk = range(0., stop=3.0, length=nz_pk)
     zs = range(0.0, stop=3.0, length=nz)
     zs_t = range(0.00001, stop=3.0, length=nz_t)
-    # Compute linear power spectrum at z=0.
     logk = range(log(0.0001), stop=log(7.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     ℓs = range(0, stop=2000, length=nℓ)
+
+    using_As = get(kwargs, :using_As, false)
+
+    cosmo_type = get(kwargs, :cosmo_type, Float64)
+    tk_mode = get(kwargs, :tk_mode, "EisHu")
+    Dz_mode = get(kwargs, :Dz_mode, "RK2")
+    Pk_mode = get(kwargs, :Pk_mode, "linear")
+    emul_path = get(kwargs, :emul_path, "../emulator/files.npz")
     Settings(nz, nz_pk, nz_t, nk, nℓ,
              zs, zs_pk, zs_t, ks, ℓs, logk,  dlogk,
+             using_As,
              cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
 end
 """
@@ -83,7 +90,7 @@ Returns:
 - `CosmoPar` : cosmology parameters structure.
 
 """
-struct CosmoPar{T}
+mutable struct CosmoPar{T}
     Ωm::T
     Ωb::T
     h::T
@@ -94,6 +101,7 @@ struct CosmoPar{T}
     Y_p::T
     N_ν::T
     Σm_ν::T
+    Ωg::T
     Ωr::T
     Ωc::T
     ΩΛ::T
@@ -124,17 +132,18 @@ CosmoPar(;kwargs...) = begin
     cosmo_type = eltype([Ωm, Ωb, h, ns, σ8])
 
     Y_p = get(kwargs, :Y_p, 0.24)  # primordial helium fraction
-    N_ν = get(kwargs, :N_ν, 3.046) #effective number of relativisic species (PDG25 value)
-    Σm_ν = get(kwargs, :Σm_ν, 0.0) #sum of neutrino masses (eV), Planck 15 default ΛCDM value
+    N_ν = get(kwargs, :N_ν, 3.046) # effective number of relativisic species (PDG25 value)
+    Σm_ν = get(kwargs, :Σm_ν, 0.0) # sum of neutrino masses (eV), Planck 15 default ΛCDM value
     θCMB = get(kwargs, :θCMB, 2.725/2.7)
     prefac = 2.38163816E-5 # This is 4*sigma_SB*(2.7 K)^4/rho_crit(h=1)
     f_rel = 1.0 + N_ν * (7.0/8.0) * (4.0/11.0)^(4.0/3.0)
-    Ωr = get(kwargs, :Ωr, prefac*f_rel*θCMB^4/h^2)
+    Ωg = get(kwargs, :Ωr, prefac*θCMB^4/h^2)
+    Ωr = get(kwargs, :Ωr, Ωg*f_rel)
     Ωc = Ωm-Ωb
     ΩΛ = 1-Ωm-Ωr
     CosmoPar{cosmo_type}(Ωm, Ωb, h, ns, As, σ8,
                          θCMB, Y_p, N_ν, Σm_ν,
-                         Ωr, Ωc, ΩΛ)
+                         Ωg, Ωr, Ωc, ΩΛ)
 end
 
 
@@ -292,16 +301,24 @@ Returns:
 - `Cosmology` : cosmology structure.
 
 """
-Cosmology(;nk=300, nz=300, nz_pk=70,  nz_t=200, nℓ=300,
-          Dz_mode="RK2", tk_mode="BBKS", Pk_mode="linear",
-          emul_path= "../emulator/files.npz",
-          kwargs...) = begin
+Cosmology(;kwargs...) = begin
 
     kwargs=Dict(kwargs)
+    if :As ∈ keys(kwargs)
+        using_As = true
+    else
+        using_As = false
+    end     
     cpar = CosmoPar(;kwargs...)
     cosmo_type = _get_cosmo_type(cpar)
-    settings = Settings(nz, nz_pk, nz_t, nk, nℓ,
-                        cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
+    settings = Settings(;cosmo_type=cosmo_type,
+                         using_As=using_As,
+                         kwargs...)
+    if using_As && (settings.tk_mode == "BBKS" || settings.tk_mode == "EisensteinHu")
+        @warn "Using As with BBKS or EisensteinHu transfer function is not possible."
+        @warn "Using σ8 instead."
+        using_As = false
+    end                     
     Cosmology(cpar, settings)
 end
 
