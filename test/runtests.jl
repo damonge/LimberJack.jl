@@ -155,6 +155,40 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.005))
     end
 
+    @testset "nonlin_EisHu_Cℓs" begin
+        z = Vector(range(0., stop=2., length=256))
+        nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+        tg = NumberCountsTracer(cosmo_EisHu, z, nz; b=1.0)
+        ts = WeakLensingTracer(cosmo_EisHu, z, nz;
+                               m=0.0,
+                               IA_params=[0.0, 0.0])
+        tk = CMBLensingTracer(cosmo_EisHu)
+        ℓs = [10.0, 30.0, 100.0, 300.0, 1000.0]
+        Cℓ_gg = angularCℓs(cosmo_EisHu_nonlin, tg, tg, ℓs)
+        Cℓ_gs = angularCℓs(cosmo_EisHu_nonlin, tg, ts, ℓs)
+        Cℓ_ss = angularCℓs(cosmo_EisHu_nonlin, ts, ts, ℓs)
+        Cℓ_gk = angularCℓs(cosmo_EisHu_nonlin, tg, tk, ℓs)
+        Cℓ_sk = angularCℓs(cosmo_EisHu_nonlin, ts, tk, ℓs)
+        Cℓ_gg_bm = test_results["cl_gg_eishu_nonlin"]
+        Cℓ_gs_bm = test_results["cl_gs_eishu_nonlin"]
+        Cℓ_ss_bm = test_results["cl_ss_eishu_nonlin"]
+        Cℓ_gk_bm = test_results["cl_gk_eishu_nonlin"]
+        Cℓ_sk_bm = test_results["cl_sk_eishu_nonlin"]
+        merge!(test_output, Dict("cl_gg_eishu_nonlin"=> Cℓ_gg))
+        merge!(test_output, Dict("cl_gs_eishu_nonlin"=> Cℓ_gs))
+        merge!(test_output, Dict("cl_ss_eishu_nonlin"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gk_eishu_nonlin"=> Cℓ_sk))
+        merge!(test_output, Dict("cl_sk_eishu_nonlin"=> Cℓ_ss))
+        
+        # It'd be best if this was < 1E-4...
+        @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_ss/Cℓ_ss_bm-1.0) < 0.005))
+        @test all(@. (abs(Cℓ_gk/Cℓ_gk_bm-1.0) < 0.005))
+        # The ℓ=10 point is a bit inaccurate for some reason
+        @test all(@. (abs(Cℓ_sk/Cℓ_sk_bm-1.0) < 0.005))
+    end
+
     @testset "emul_Cℓs" begin
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)

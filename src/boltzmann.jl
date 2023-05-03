@@ -211,9 +211,11 @@ end
 function σR2(ks, pk, dlogk, R)
     x = ks .* R
     wk = _w_tophat.(x)
-    integ = @. pk * wk^2 * ks^3
+    integrand = @. pk * wk^2 * ks^3
     # OPT: proper integration instead?
-    return sum(integ)*dlogk/(2*pi^2)
+    σ = integrate(log.(ks), integrand, SimpsonEven())/(2*pi^2)
+    #σ = sum(integrand)*dlogk/(2*pi^2)
+    return σ
 end
 
 function σR2(cosmo::Cosmology, R)
