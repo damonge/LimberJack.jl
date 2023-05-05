@@ -1,0 +1,54 @@
+{
+    "arch": "x86_64",
+    "build": "h5fc0e48_12",
+    "build_number": 12,
+    "build_string": "h5fc0e48_12",
+    "channel": "https://conda.anaconda.org/conda-forge/linux-64",
+    "constrains": [],
+    "depends": [
+        "binutils_impl_linux-64 2.39.*",
+        "sysroot_linux-64"
+    ],
+    "extracted_package_dir": "/home/jaimerz/.julia/scratchspaces/0b3b1443-0f03-428d-bdfb-f27f9c1191ea/root/pkgs/binutils_linux-64-2.39-h5fc0e48_12",
+    "files": [
+        "etc/conda/activate.d/activate-binutils_linux-64.sh",
+        "etc/conda/deactivate.d/deactivate-binutils_linux-64.sh"
+    ],
+    "fn": "binutils_linux-64-2.39-h5fc0e48_12.conda",
+    "license": "BSD-3-Clause",
+    "link": {
+        "source": "/home/jaimerz/.julia/scratchspaces/0b3b1443-0f03-428d-bdfb-f27f9c1191ea/root/pkgs/binutils_linux-64-2.39-h5fc0e48_12",
+        "type": 1
+    },
+    "md5": "4395b0d4f6e3553bc3b804a9a3cdb234",
+    "name": "binutils_linux-64",
+    "package_tarball_full_path": "/home/jaimerz/.julia/scratchspaces/0b3b1443-0f03-428d-bdfb-f27f9c1191ea/root/pkgs/binutils_linux-64-2.39-h5fc0e48_12.tar.bz2",
+    "paths_data": {
+        "paths": [
+            {
+                "_path": "etc/conda/activate.d/activate-binutils_linux-64.sh",
+                "path_type": "hardlink",
+                "sha256": "f904f3850e8ee62b67cb37e19d124b62110b6e2be7c23441162a8a8bfaf4382e",
+                "sha256_in_prefix": "f904f3850e8ee62b67cb37e19d124b62110b6e2be7c23441162a8a8bfaf4382e",
+                "size_in_bytes": 3778
+            },
+            {
+                "_path": "etc/conda/deactivate.d/deactivate-binutils_linux-64.sh",
+                "path_type": "hardlink",
+                "sha256": "82825e79eaa449eb88be5e16eeaeb751ec313a59390cb8772fca3b060e6c8c92",
+                "sha256_in_prefix": "82825e79eaa449eb88be5e16eeaeb751ec313a59390cb8772fca3b060e6c8c92",
+                "size_in_bytes": 3778
+            }
+        ],
+        "paths_version": 1
+    },
+    "platform": "linux",
+    "requested_spec": "",
+    "sha256": "af53c690661126f81c30a9f45a69bac8e17dc84804029aa6a819956abb63cd71",
+    "size": 27589,
+    "subdir": "linux-64",
+    "timestamp": 1679899733745,
+    "track_features": "",
+    "url": "https://conda.anaconda.org/conda-forge/linux-64/binutils_linux-64-2.39-h5fc0e48_12.conda",
+    "version": "2.39"
+}
