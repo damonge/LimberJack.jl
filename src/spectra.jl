@@ -44,32 +44,3 @@ function angularCℓs(cosmo::Cosmology, t1::Tracer, t2::Tracer, ℓs::Vector)
     Cℓs = [integrate(sett.logk, Cℓintegrand(cosmo, t1.wint, t2.wint, ℓ)/(ℓ+0.5), SimpsonEven()) for ℓ in ℓs]
     return t1.F(ℓs) .* t2.F(ℓs) .* Cℓs
 end
-
-function angularCℓsFast(cosmo::Cosmology, W::Matrix, F::Matrix)
-    sett = cosmo.settings
-
-    ntracers = size(W)[1]
-    chis = cosmo.chi(sett.zs_t)
-    P = zeros(Float64, sett.nz_t, sett.nℓ)
-    for z ∈ axes(sett.zs_t, 1)
-        for ℓ ∈  axes(sett.ℓs, 1)
-            P[z, ℓ] = nonlin_Pk(cosmo, (sett.ℓs[ℓ]+0.5)/chis[z], sett.zs_t[z])
-        end
-    end
-    Ezs = Ez(cosmo, sett.zs_t)
-    dz = (sett.zs_t[2] - sett.zs_t[1])
-    SimpsonWeights = SimpsonWeightArray(sett.nz_t)
-    C_ℓij = zeros(sett.cosmo_type, sett.nℓ, ntracers, ntracers)
-    @turbo for ℓ ∈ axes(C_ℓij, 1)
-        for i ∈ axes(C_ℓij, 2)
-            for j ∈ axes(C_ℓij, 3)
-                for z ∈ axes(sett.zs_t, 1)
-                    integrand = (W[i, z] * W[j, z] * P[z, ℓ]) / (Ezs[z] * chis[z]^2)
-                    C_ℓij[ℓ,i,j] += integrand * SimpsonWeights[z] * dz
-                end
-                C_ℓij[ℓ,i,j] *= (CLIGHT_HMPC/cosmo.cpar.h) * F[i, ℓ] * F[j, ℓ]
-            end
-        end
-    end
-    return C_ℓij
-end
