@@ -278,8 +278,8 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
         merge!(test_output, Dict("cl_gg_emul_nonlin"=> Cℓ_gg))
         merge!(test_output, Dict("cl_gs_emul_nonlin"=> Cℓ_gs))
         merge!(test_output, Dict("cl_ss_emul_nonlin"=> Cℓ_ss))
-        merge!(test_output, Dict("cl_gk_emul_nonlin"=> Cℓ_sk))
-        merge!(test_output, Dict("cl_sk_emul_nonlin"=> Cℓ_ss))
+        merge!(test_output, Dict("cl_gk_emul_nonlin"=> Cℓ_gk))
+        merge!(test_output, Dict("cl_sk_emul_nonlin"=> Cℓ_sk))
         # It'd be best if this was < 1E-4...
         @test all(@. (abs(Cℓ_gg/Cℓ_gg_bm-1.0) < 0.05))
         @test all(@. (abs(Cℓ_gs/Cℓ_gs_bm-1.0) < 0.05))
@@ -381,7 +381,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
-            ℓs = LinRange(10, 1000, 30)
+            ℓs = Vector(LinRange(10, 1000, 30))
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
         end
@@ -394,7 +394,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
             ts = WeakLensingTracer(cosmo, z, nz;
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
-            ℓs = LinRange(10, 1000, 30)
+            ℓs = Vector(LinRange(10, 1000, 30))
             Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
             return Cℓ_gs
         end
@@ -406,7 +406,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
             ts = WeakLensingTracer(cosmo, z, nz;
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
-            ℓs = LinRange(10, 1000, 30)
+            ℓs = Vector(LinRange(10, 1000, 30))
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
         end
@@ -419,7 +419,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
-            ℓs = LinRange(10, 1000, 30)
+            ℓs = Vector(LinRange(10, 1000, 30))
             Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
         end
@@ -430,7 +430,7 @@ cosmo_emul_nonlin = Cosmology(Ωm=(0.12+0.022)/0.75^2, Ωb=0.022/0.75^2, h=0.75,
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
             tk = CMBLensingTracer(cosmo)
-            ℓs = LinRange(10, 1000, 30)
+            ℓs = Vector(LinRange(10, 1000, 30))
             Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs)
             return Cℓ_gk
         end
