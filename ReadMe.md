@@ -14,13 +14,14 @@
  
 | Module      | function    |
 | ----------- | :----------- |
-| ```core.jl```    | Performs the computation of the fundamental theoretical predictions   |
-| ```tracers.jl``` | Computes the kernels associated with each type of kernel      |
+| ```boltzmann.jl```    | Performs the computation of primordial power spectrum   |
+| ```core.jl```    | Defines the structures where the theoretical predictions are stored and computes the background quantities   |
+| ```data_utils.jl```   | Manages ```sacc``` files for large data vectors       |
+| ```growth.jl```   | Computes the growth factor       |
+| ```halofit.jl```  | Computes the non-linear matter power spectrum as given by the Halofit fitting formula       |
 | ```spectra.jl```  | Computes the power spectra of any two tracers       |
-| ```emulator.jl``` | Computes the primordial power-spectrum as given by the Mootoovaloo et al 2022 emulator       |
-| ```Halofit.jl```  | Computes the non-linear matter power spectrum as given by the Halofit fitting formula       |
-| ```turing_utils.jl```   | Interface to ```Turing.jl```        |
-| ```turing_data.jl```   | Manages ```sacc``` files for large data vectors       |
+| ```theory.jl```   | Computes large data vectors that combine many spectra     |
+| ```tracers.jl``` | Computes the kernels associated with each type of kernel      |
 
 + **Object-oriented**: ```LimberJack.jl```  mimics ```CCL.py``` class structure by using ```Julia```'s ```structures```.
 + **Transparency**: ```LimberJack.jl```  is fully written in ```Julia``` without needing to inerface to any other programming language (```C```, ```Python```...) to compute thoretical predictions. This allows the user full access to the code from input to output.
