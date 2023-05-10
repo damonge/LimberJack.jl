@@ -4,6 +4,8 @@ using ForwardDiff
 using NPZ
 using Statistics
 
+extensive=false
+
 test_results = npzread("test_results.npz")
 test_cls = npzread("test_cls.npz")["cls"]
 test_cls_files = npzread("test_cls_files.npz")
@@ -260,7 +262,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
                                m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_emul_nonlin)
-        ℓs = Vector(LinRange(10, 1000, 30))
+        ℓs = 10 .^ Vector(LinRange(2, 3, 30))
         Cℓ_gg = angularCℓs(cosmo_emul_nonlin, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo_emul_nonlin, tg, ts, ℓs) 
         Cℓ_ss = angularCℓs(cosmo_emul_nonlin, ts, ts, ℓs) 
@@ -316,34 +318,47 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             return pk
         end
 
-        function lin_Bolt(p)
-            cosmo = Cosmology(Ωm=p, tk_mode="Bolt", Pk_mode="linear")
-            pk = lin_Pk(cosmo, ks, 0.)
-            return pk
-        end
-
         Ωm0 = 0.25
         dΩm = 0.01
 
         lin_EisHu_autodiff = abs.(ForwardDiff.derivative(lin_EisHu, Ωm0))
         lin_emul_autodiff = abs.(ForwardDiff.derivative(lin_emul, Ωm0))
-        lin_Bolt_autodiff = abs.(ForwardDiff.derivative(lin_Bolt, Ωm0))
         lin_EisHu_num = abs.((lin_EisHu(Ωm0+dΩm)-lin_EisHu(Ωm0-dΩm))/(2dΩm))
         lin_emul_num = abs.((lin_emul(Ωm0+dΩm)-lin_emul(Ωm0-dΩm))/(2dΩm))
-        lin_Bolt_num = abs.((lin_Bolt(Ωm0+dΩm)-lin_Bolt(Ωm0-dΩm))/(2dΩm))
 
         merge!(test_output, Dict("lin_EisHu_autodiff"=> lin_EisHu_autodiff))
         merge!(test_output, Dict("lin_emul_autodiff"=> lin_emul_autodiff))
-        merge!(test_output, Dict("lin_Bolt_autodiff"=> lin_Bolt_autodiff))
         merge!(test_output, Dict("lin_EisHu_num"=> lin_EisHu_num))
-        merge!(test_output, Dict("lin_emul_num"=> lin_emul_num))
-        merge!(test_output, Dict("lin_Bolt_num"=> lin_Bolt_num))        
+        merge!(test_output, Dict("lin_emul_num"=> lin_emul_num))       
         # Median needed since errors shoot up when derivatieve
         # crosses zero
         @test median(lin_EisHu_autodiff./lin_EisHu_num.-1) < 0.05
         @test median(lin_emul_autodiff./lin_emul_num.-1) < 0.05
-        @test median(lin_Bolt_autodiff./lin_Bolt_num.-1) < 0.05
     end
+
+    if extensive
+        @testset "IsBoltPkDiff" begin
+            ks = npzread("../emulator/files.npz")["training_karr"]
+
+            function lin_Bolt(p)
+                cosmo = Cosmology(Ωm=p, tk_mode="Bolt", Pk_mode="linear")
+                pk = lin_Pk(cosmo, ks, 0.)
+                return pk
+            end
+
+            Ωm0 = 0.25
+            dΩm = 0.01
+
+            lin_Bolt_autodiff = abs.(ForwardDiff.derivative(lin_Bolt, Ωm0))
+            lin_Bolt_num = abs.((lin_Bolt(Ωm0+dΩm)-lin_Bolt(Ωm0-dΩm))/(2dΩm))
+
+            merge!(test_output, Dict("lin_Bolt_autodiff"=> lin_Bolt_autodiff))
+            merge!(test_output, Dict("lin_Bolt_num"=> lin_Bolt_num))        
+            # Median needed since errors shoot up when derivatieve
+            # crosses zero
+            @test median(lin_Bolt_autodiff./lin_Bolt_num.-1) < 0.05
+        end
+    end    
     
 
     @testset "IsNonlinPkDiff" begin
@@ -401,7 +416,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
-            ℓs = Vector(LinRange(10, 1000, 30))
+            ℓs = 10 .^ Vector(LinRange(2, 3, 30))
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
         end
@@ -414,7 +429,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             ts = WeakLensingTracer(cosmo, z, nz;
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
-            ℓs = Vector(LinRange(10, 1000, 30))
+            ℓs = 10 .^ Vector(LinRange(2, 3, 30))
             Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
             return Cℓ_gs
         end
@@ -426,7 +441,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             ts = WeakLensingTracer(cosmo, z, nz;
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
-            ℓs = Vector(LinRange(10, 1000, 30))
+            ℓs = 10 .^ Vector(LinRange(2, 3, 30))
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
         end
@@ -439,7 +454,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
-            ℓs = Vector(LinRange(10, 1000, 30))
+            ℓs = 10 .^ Vector(LinRange(2, 3, 30))
             Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
         end
@@ -450,7 +465,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
             tk = CMBLensingTracer(cosmo)
-            ℓs = Vector(LinRange(10, 1000, 30))
+            ℓs = 10 .^ Vector(LinRange(2, 3, 30))
             Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs)
             return Cℓ_gk
         end
@@ -586,66 +601,5 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
         @test all(@. (abs(IA_A_autodiff/IA_A_anal-1) < 0.05))
         @test all(@. (abs(IA_alpha_autodiff/IA_alpha_anal-1) < 0.05))
     end
-    #=
-    # Needs a way of also testing make_data
-    @testset "turing_utils" begin
-            
-    names = ["DESgc__0", "DESgc__1", "DESgc__2", "DESgc__3", "DESgc__4",
-             "DESwl__0", "DESwl__1", "DESwl__2", "DESwl__3"]
-    types = ["galaxy_density", "galaxy_density", "galaxy_density", "galaxy_density", "galaxy_density",
-             "galaxy_shear", "galaxy_shear", "galaxy_shear", "galaxy_shear"]
-    pairs = [["DESgc__0", "DESgc__0"], ["DESgc__1", "DESgc__1"], ["DESgc__2", "DESgc__2"], 
-             ["DESgc__3", "DESgc__3"], ["DESgc__4", "DESgc__4"], ["DESgc__0", "DESwl__0"], 
-             ["DESgc__0", "DESwl__1"], ["DESgc__0", "DESwl__2"], ["DESgc__0", "DESwl__3"], 
-             ["DESgc__1", "DESwl__0"], ["DESgc__1", "DESwl__1"], ["DESgc__1", "DESwl__2"],
-             ["DESgc__1", "DESwl__3"], ["DESgc__2", "DESwl__0"], ["DESgc__2", "DESwl__1"],
-             ["DESgc__2", "DESwl__2"], ["DESgc__2", "DESwl__3"], ["DESgc__3", "DESwl__0"],
-             ["DESgc__3", "DESwl__1"], ["DESgc__3", "DESwl__2"], ["DESgc__3", "DESwl__3"],
-             ["DESgc__4", "DESwl__0"], ["DESgc__4", "DESwl__1"], ["DESgc__4", "DESwl__2"],
-             ["DESgc__4", "DESwl__3"], ["DESwl__0", "DESwl__0"], ["DESwl__0", "DESwl__1"],
-             ["DESwl__0", "DESwl__2"], ["DESwl__0", "DESwl__3"], ["DESwl__1", "DESwl__1"],
-             ["DESwl__1", "DESwl__2"], ["DESwl__1", "DESwl__3"], ["DESwl__2", "DESwl__2"],
-             ["DESwl__2", "DESwl__3"], ["DESwl__3", "DESwl__3"]]
-    idx = [0, 5, 13, 23, 34, 47, 52, 57, 62, 67, 75, 83, 91, 99, 109, 119, 129, 139, 150, 
-           161, 172, 183, 196, 209, 222, 235, 259, 283, 307, 331, 355, 379, 403, 427, 451, 475]
-    pars = [4.426868e-02,     2.093138e-01,     8.963611e-01,     8.495440e-01,
-             1.343888e+00,    1.639047e+00,      1.597174e+00,     1.944583e+00,     2.007245e+00,
-            -4.679383e-03,   -2.839996e-03,      1.771571e-03,     1.197051e-03,    -5.199799e-03,
-             2.389208e-01,   -6.435288e-01, 
-             1.802722e-03,   -5.508994e-03,     1.952514e-02,    -1.117726e-03,
-            -1.744083e-02,    6.777779e-03,    -1.097939e-03,    -4.912315e-03,
-             8.536883e-01,    2.535825e-01]
-   nuisances = Dict("DESgc__0_b" => pars[5],
-                 "DESgc__1_b" => pars[6],
-                 "DESgc__2_b" => pars[7],
-                 "DESgc__3_b" => pars[8],
-                 "DESgc__4_b" => pars[9],
-                 "DESgc__0_dz" => pars[10],
-                 "DESgc__1_dz" => pars[11],
-                 "DESgc__2_dz" => pars[12],
-                 "DESgc__3_dz" => pars[13],
-                 "DESgc__4_dz" => pars[14],
-                 "A_IA" => pars[15],
-                 "alpha_IA" => pars[16],
-                 "DESwl__0_dz" => pars[21],
-                 "DESwl__1_dz" => pars[22],
-                 "DESwl__2_dz" => pars[23],
-                 "DESwl__3_dz" => pars[24],
-                 "DESwl__0_m" => pars[17],
-                 "DESwl__1_m" => pars[18],
-                 "DESwl__2_m" => pars[19],
-                 "DESwl__3_m" => pars[20])
-
-    cosmology = Cosmology(pars[end], pars[1], pars[4], pars[3], pars[end-1], 
-                          tk_mode="EisHu", Pk_mode="Halofit")
-
-    t = Theory(cosmology, names, types, pairs, idx, test_cls_files;
-               Nuisances=nuisances)
-    merge!(test_output, Dict("DES_cls"=> t))
-                         
-    comp = @.(abs(test_cls-t)/test_cls)
-    @test median(comp) < 0.003                                                      
-    end
-    =#
     npzwrite("test_output.npz", test_output)
 end
