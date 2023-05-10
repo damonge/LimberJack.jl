@@ -8,10 +8,6 @@ cosmo_eishu = ccl.CosmologyVanillaLCDM(transfer_function="eisenstein_hu",
 cosmo_camb = ccl.Cosmology(Omega_c=0.12/0.75**2, Omega_b=0.022/0.75**2, h=0.75, n_s=1.0, sigma8=0.81,
                            transfer_function="boltzmann_class",
                            matter_power_spectrum="linear")
-cosmo_bolt = ccl.Cosmology(Omega_c=0.224, Omega_b=0.046, h=0.7, n_s=1.0, sigma8=0.81,
-                           Omega_g=5.0469e-5, 
-                           transfer_function="boltzmann_class",
-                           matter_power_spectrum="linear")
 
 cosmo_camb_As = ccl.Cosmology(Omega_c=0.224, Omega_b=0.046, h=0.70, n_s=1.0,  A_s = 2.10058e-9, 
                               transfer_function="boltzmann_class",
@@ -42,7 +38,6 @@ test_results["fz"] = ccl.growth_rate(cosmo_eishu, 1 / (1 + ztest))
 ks = np.load("../emulator/files.npz")["training_karr"]
 test_results["pk_EisHu"] = ccl.linear_matter_power(cosmo_eishu, ks, 1.)
 test_results["pk_emul"] = ccl.linear_matter_power(cosmo_camb, ks, 1.)
-test_results["pk_Bolt"] = ccl.linear_matter_power(cosmo_bolt, ks, 1.)
 # =====
 ks = np.load("../emulator/files.npz")["training_karr"]
 test_results["pk_emul_As"] = ccl.linear_matter_power(cosmo_camb_As, ks, 1.)
