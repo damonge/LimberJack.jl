@@ -416,16 +416,17 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
 
     @testset "AreClsDiff" begin
         
+        if extensive
+            ℓs = 10 .^ Vector(LinRange(2, 3, 100))
+        else
+            ℓs = [10.0, 30.0, 100.0, 300.0]
+        end
+
         function Cl_gg(p::T)::Array{T,1} where T<:Real
             cosmo = LimberJack.Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="Halofit")
             z = Vector(range(0., stop=2., length=256))
             nz = Vector(@. exp(-0.5*((z-0.5)/0.05)^2))
             tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
-            if extensive
-                ℓs = 10 .^ Vector(LinRange(2, 3, 100))
-            else
-                ℓs = [10.0, 30.0, 100.0, 300.0]
-            end    
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
         end
@@ -438,11 +439,6 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             ts = WeakLensingTracer(cosmo, z, nz;
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
-            if extensive
-                ℓs = 10 .^ Vector(LinRange(2, 3, 100))
-            else
-                ℓs = [10.0, 30.0, 100.0, 300.0]
-            end
             Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
             return Cℓ_gs
         end
@@ -454,11 +450,6 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             ts = WeakLensingTracer(cosmo, z, nz;
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
-            if extensive
-                ℓs = 10 .^ Vector(LinRange(2, 3, 100))
-            else
-                ℓs = [10.0, 30.0, 100.0, 300.0]
-            end
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
         end
@@ -471,11 +462,6 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
                                    m=0.0,
                                    IA_params=[0.0, 0.0])
             tk = CMBLensingTracer(cosmo)
-            if extensive
-                ℓs = 10 .^ Vector(LinRange(2, 3, 100))
-            else
-                ℓs = [10.0, 30.0, 100.0, 300.0]
-            end
             Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
         end
@@ -486,11 +472,6 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             nz = @. exp(-0.5*((z-0.5)/0.05)^2)
             tg = NumberCountsTracer(cosmo, z, nz; b=1.0)
             tk = CMBLensingTracer(cosmo)
-            if extensive
-                ℓs = 10 .^ Vector(LinRange(2, 3, 100))
-            else
-                ℓs = [10.0, 30.0, 100.0, 300.0]
-            end
             Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs)
             return Cℓ_gk
         end

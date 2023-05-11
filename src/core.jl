@@ -45,7 +45,7 @@ end
 Settings(;kwargs...) = begin
     nz = get(kwargs, :nz, 300)
     nz_pk = get(kwargs, :nz_pk, 70)
-    nz_t = get(kwargs, :nz_t, 400)
+    nz_t = get(kwargs, :nz_t, 200)
     nk = get(kwargs, :nk, 500)
     nℓ = get(kwargs, :nℓ, 300)
 
