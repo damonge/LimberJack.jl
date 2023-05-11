@@ -39,20 +39,20 @@ mutable struct Settings
     tk_mode::String
     Dz_mode::String
     Pk_mode::String
-    emul_path::String
+    emul_files
 end
 
 Settings(;kwargs...) = begin
     nz = get(kwargs, :nz, 300)
     nz_pk = get(kwargs, :nz_pk, 70)
-    nz_t = get(kwargs, :nz_t, 200)
-    nk = get(kwargs, :nk, 300)
+    nz_t = get(kwargs, :nz_t, 400)
+    nk = get(kwargs, :nk, 500)
     nℓ = get(kwargs, :nℓ, 300)
 
     zs_pk = range(0., stop=3.0, length=nz_pk)
     zs = range(0.0, stop=3.0, length=nz)
     zs_t = range(0.00001, stop=3.0, length=nz_t)
-    logk = range(log(0.0001), stop=log(7.0), length=nk)
+    logk = range(log(0.0001), stop=log(100.0), length=nk)
     ks = exp.(logk)
     dlogk = log(ks[2]/ks[1])
     ℓs = range(0, stop=2000, length=nℓ)
@@ -63,11 +63,11 @@ Settings(;kwargs...) = begin
     tk_mode = get(kwargs, :tk_mode, "EisHu")
     Dz_mode = get(kwargs, :Dz_mode, "RK2")
     Pk_mode = get(kwargs, :Pk_mode, "linear")
-    emul_path = get(kwargs, :emul_path, "../emulator/files.npz")
+    emul_files = get(kwargs, :emul_files, nothing)
     Settings(nz, nz_pk, nz_t, nk, nℓ,
              zs, zs_pk, zs_t, ks, ℓs, logk,  dlogk,
              using_As,
-             cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_path)
+             cosmo_type, tk_mode, Dz_mode, Pk_mode, emul_files)
 end
 """
     CosmoPar(Ωm, Ωb, h, n_s, σ8, θCMB, Ωr, ΩΛ)
