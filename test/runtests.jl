@@ -317,7 +317,8 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
         end
 
         function lin_emul(p)
-            cosmo = Cosmology(Ωm=p, tk_mode="emulator", Pk_mode="linear")
+            cosmo = Cosmology(Ωm=p, tk_mode="emulator", Pk_mode="linear",
+                              emul_files=emulator)
             pk = lin_Pk(cosmo, ks, 0.)
             return pk
         end
@@ -423,7 +424,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             if extensive
                 ℓs = 10 .^ Vector(LinRange(2, 3, 100))
             else
-                ℓs = 10 .^ Vector(LinRange(2, 3, 10))
+                ℓs = [10.0, 30.0, 100.0, 300.0]
             end    
             Cℓ_gg = angularCℓs(cosmo, tg, tg, ℓs) 
             return Cℓ_gg
@@ -440,7 +441,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             if extensive
                 ℓs = 10 .^ Vector(LinRange(2, 3, 100))
             else
-                ℓs = 10 .^ Vector(LinRange(2, 3, 10))
+                ℓs = [10.0, 30.0, 100.0, 300.0]
             end
             Cℓ_gs = angularCℓs(cosmo, tg, ts, ℓs) 
             return Cℓ_gs
@@ -456,7 +457,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             if extensive
                 ℓs = 10 .^ Vector(LinRange(2, 3, 100))
             else
-                ℓs = 10 .^ Vector(LinRange(2, 3, 10))
+                ℓs = [10.0, 30.0, 100.0, 300.0]
             end
             Cℓ_ss = angularCℓs(cosmo, ts, ts, ℓs)
             return Cℓ_ss
@@ -473,7 +474,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             if extensive
                 ℓs = 10 .^ Vector(LinRange(2, 3, 100))
             else
-                ℓs = 10 .^ Vector(LinRange(2, 3, 10))
+                ℓs = [10.0, 30.0, 100.0, 300.0]
             end
             Cℓ_sk = angularCℓs(cosmo, ts, tk, ℓs)
             return Cℓ_sk
@@ -488,7 +489,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
             if extensive
                 ℓs = 10 .^ Vector(LinRange(2, 3, 100))
             else
-                ℓs = 10 .^ Vector(LinRange(2, 3, 10))
+                ℓs = [10.0, 30.0, 100.0, 300.0]
             end
             Cℓ_gk = angularCℓs(cosmo, tg, tk, ℓs)
             return Cℓ_gk
