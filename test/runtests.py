@@ -98,7 +98,7 @@ test_results["cl_sk_eishu_nonlin"] = ccl.angular_cl(cosmo_eishu_nonlin, ts, tk, 
 # =====
 z = np.linspace(0.01, 2., num=1024)
 nz = np.exp(-0.5*((z-0.5)/0.05)**2)
-ℓs = 10**(np.linspace(2, 3, 30))
+ℓs = np.array([10.0, 30.0, 100.0, 300.0, 1000.0])
 tg = ccl.NumberCountsTracer(cosmo_camb_nonlin, False, dndz=(z, nz), bias=(z, 1 * np.ones_like(z)))
 ts = ccl.WeakLensingTracer(cosmo_camb_nonlin, dndz=(z, nz))
 tk = ccl.CMBLensingTracer(cosmo_camb_nonlin, z_source=1100)

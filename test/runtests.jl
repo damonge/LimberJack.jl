@@ -266,7 +266,13 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
                                m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_emul_nonlin)
-        ℓs = 10 .^ Vector(LinRange(2, 3, 30))
+
+        if extensive
+            ℓs = 10 .^ Vector(LinRange(2, 3, 100))
+        else
+            ℓs = [10.0, 30.0, 100.0, 300.0, 1000.0]
+        end 
+
         Cℓ_gg = angularCℓs(cosmo_emul_nonlin, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo_emul_nonlin, tg, ts, ℓs) 
         Cℓ_ss = angularCℓs(cosmo_emul_nonlin, ts, ts, ℓs) 
