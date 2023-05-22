@@ -5,6 +5,9 @@ using NPZ
 using Statistics
 
 extensive=false
+if extensive
+    println("extensive")
+end    
 
 test_results = npzread("test_results.npz")
 test_cls = npzread("test_cls.npz")["cls"]
@@ -47,7 +50,11 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     end
 
     @testset "BMChi" begin
-        ztest = [0.1, 0.5, 1.0, 3.0]
+        if extensive
+            ztest = LinRange(0.01, 3.0, 100)
+        else    
+            ztest = [0.1, 0.5, 1.0, 3.0]
+        end 
         chi = comoving_radial_distance(cosmo_EisHu, ztest)
         chi_bm = test_results["Chi"]
         merge!(test_output, Dict("Chi"=> chi))
@@ -55,7 +62,11 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     end
 
     @testset "BMGrowth" begin
-        ztest = [0.1, 0.5, 1.0, 3.0]
+        if extensive
+            ztest = LinRange(0.01, 3.0, 100)
+        else    
+            ztest = [0.1, 0.5, 1.0, 3.0]
+        end    
         Dz = growth_factor(cosmo_EisHu, ztest)
         fz = growth_rate(cosmo_EisHu, ztest)
         fs8z = fs8(cosmo_EisHu, ztest)
@@ -266,13 +277,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
                                m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_emul_nonlin)
-
-        if extensive
-            ℓs = 10 .^ Vector(LinRange(2, 3, 100))
-        else
-            ℓs = [10.0, 30.0, 100.0, 300.0, 1000.0]
-        end 
-
+        ℓs =  Vector(range(10., stop=1000., length=100))
         Cℓ_gg = angularCℓs(cosmo_emul_nonlin, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo_emul_nonlin, tg, ts, ℓs) 
         Cℓ_ss = angularCℓs(cosmo_emul_nonlin, ts, ts, ℓs) 
@@ -297,24 +302,48 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     end
 
     @testset "IsBaseDiff" begin
-        zs = 0.02:0.02:1.0
+        if extensive
+            zs = LinRange(0.01, 3.0, 100)
+        else    
+            zs = [0.1, 0.5, 1.0, 3.0]
+        end
 
-        function f(p::T)::Array{T,1} where T<:Real
+        function f(p)
             cosmo = LimberJack.Cosmology(Ωm=p)
-            chi = comoving_radial_distance(cosmo, zs)
+            chi = LimberJack.comoving_radial_distance(cosmo, zs)
+            return chi
+        end
+
+        function g(p)
+            cosmo = LimberJack.Cosmology(Ωm=p)
+            chi = LimberJack.growth_factor(cosmo, zs)
             return chi
         end
 
         Ωm0 = 0.3
-        g = ForwardDiff.derivative(f, Ωm0)
-
         dΩm = 0.02
-        g1 = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
-        @test all(@. (abs(g/g1-1) < 0.005))
+
+        fs = ForwardDiff.derivative(f, Ωm0)
+        gs = ForwardDiff.derivative(g, Ωm0)
+        fs_bm = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
+        gs_bm = (g(Ωm0+dΩm)-g(Ωm0-dΩm))/2dΩm
+
+        merge!(test_output, Dict("chi_autodiff"=> fs))
+        merge!(test_output, Dict("Dz_autodiff"=> gs))
+        merge!(test_output, Dict("Chi_num"=> fs_bm))
+        merge!(test_output, Dict("Dz_num"=> gs_bm))
+
+        @test all(@. (abs(fs/fs_bm-1) < 0.005))
+        @test all(@. (abs(gs/gs_bm-1) < 0.005))
     end
 
     @testset "IsLinPkDiff" begin
-        ks = npzread("../emulator/files.npz")["training_karr"]
+        if extensive
+            logk = range(log(0.0001), stop=log(100.0), length=500)
+            ks = exp.(logk)
+        else
+            ks = npzread("../emulator/files.npz")["training_karr"]
+        end
 
         function lin_EisHu(p)
             cosmo = Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="linear")
@@ -349,7 +378,8 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
 
     if extensive
         @testset "IsBoltPkDiff" begin
-            ks = npzread("../emulator/files.npz")["training_karr"]
+            logk = range(log(0.0001), stop=log(100.0), length=20)
+            ks = exp.(logk)
 
             function lin_Bolt(p)
                 cosmo = Cosmology(Ωm=p, tk_mode="Bolt", Pk_mode="linear")
@@ -373,7 +403,13 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     
 
     @testset "IsNonlinPkDiff" begin
-        ks = npzread("../emulator/files.npz")["training_karr"]
+        if extensive
+            logk = range(log(0.0001), stop=log(100.0), length=500)
+            ks = exp.(logk)
+        else
+            ks = npzread("../emulator/files.npz")["training_karr"]
+        end
+
                                                 
         function nonlin_EisHu(p)
             cosmo = Cosmology(Ωm=p, tk_mode="EisHu", Pk_mode="Halofit")
