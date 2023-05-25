@@ -28,10 +28,10 @@ cosmo_bolt_nonlin = ccl.Cosmology(Omega_c=0.224, Omega_b=0.046, h=0.7, n_s=1.0, 
                                   transfer_function="boltzmann_class",
                                   matter_power_spectrum="halofit")
 # =====
-ztest = np.array([0.1, 0.5, 1.0, 3.0])
+ztest = np.linspace(0.01, 3., num=100)
 test_results["Chi"] = ccl.comoving_radial_distance(cosmo_eishu,  1 / (1 + ztest))
 # =====
-ztest = np.array([0.1, 0.5, 1.0, 3.0])
+ztest = np.linspace(0.01, 3., num=100)
 test_results["Dz"] = ccl.growth_factor(cosmo_eishu, 1 / (1 + ztest))
 test_results["fz"] = ccl.growth_rate(cosmo_eishu, 1 / (1 + ztest))
 # =====
@@ -98,7 +98,7 @@ test_results["cl_sk_eishu_nonlin"] = ccl.angular_cl(cosmo_eishu_nonlin, ts, tk, 
 # =====
 z = np.linspace(0.01, 2., num=1024)
 nz = np.exp(-0.5*((z-0.5)/0.05)**2)
-ℓs = np.linspace(10, 1000, 100)
+ℓs = 10**np.linspace(1, 3, 100)
 tg = ccl.NumberCountsTracer(cosmo_camb_nonlin, False, dndz=(z, nz), bias=(z, 1 * np.ones_like(z)))
 ts = ccl.WeakLensingTracer(cosmo_camb_nonlin, dndz=(z, nz))
 tk = ccl.CMBLensingTracer(cosmo_camb_nonlin, z_source=1100)

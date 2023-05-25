@@ -41,7 +41,7 @@ Returns:
 - `pk_NL(logk, z)::Interpolator` : non-linear matter spectrum as a function of log k-scale and redshift
 
 """
-function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
+function get_PKnonlin(cpar::CosmoPar, z, k, PkLz0, Dzs; cosmo_type::DataType=Real)
     nk = length(k)
     nz = length(z)
     logk = log.(k)
@@ -67,7 +67,7 @@ function get_PKnonlin(cosmo::CosmoPar, z, k, PkLz0, Dzs, cosmo_type::DataType)
         twoderiv_int = _get_σ2(logk, k, PkLz0, rsig, 4) * Dz2
         neff = 2*onederiv_int - 3.0
         C = 4*(twoderiv_int + onederiv_int^2)
-        pk_NLs[1:nk, i] = _power_spectrum_nonlin(cosmo, PkLz0 .* Dz2, k, z[i], rsig, neff, C)
+        pk_NLs[1:nk, i] = _power_spectrum_nonlin(cpar, PkLz0 .* Dz2, k, z[i], rsig, neff, C)
     end
     
     pk_NL = linear_interpolation((logk, z), log.(pk_NLs),

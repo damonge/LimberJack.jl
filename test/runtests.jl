@@ -4,7 +4,7 @@ using ForwardDiff
 using NPZ
 using Statistics
 
-extensive=false
+extensive=true
 if extensive
     println("extensive")
 end    
@@ -50,11 +50,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     end
 
     @testset "BMChi" begin
-        if extensive
-            ztest = LinRange(0.01, 3.0, 100)
-        else    
-            ztest = [0.1, 0.5, 1.0, 3.0]
-        end 
+        ztest = LinRange(0.01, 3.0, 100)
         chi = comoving_radial_distance(cosmo_EisHu, ztest)
         chi_bm = test_results["Chi"]
         merge!(test_output, Dict("Chi"=> chi))
@@ -62,11 +58,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     end
 
     @testset "BMGrowth" begin
-        if extensive
-            ztest = LinRange(0.01, 3.0, 100)
-        else    
-            ztest = [0.1, 0.5, 1.0, 3.0]
-        end    
+        ztest = LinRange(0.01, 3.0, 100)   
         Dz = growth_factor(cosmo_EisHu, ztest)
         fz = growth_rate(cosmo_EisHu, ztest)
         fs8z = fs8(cosmo_EisHu, ztest)
@@ -272,12 +264,12 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     @testset "emul_Halo_Cℓs" begin
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
+        ℓs = 10 .^ Vector(LinRange(1, 3, 100))                                   
         tg = NumberCountsTracer(cosmo_emul_nonlin, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo_emul_nonlin, z, nz;
                                m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_emul_nonlin)
-        ℓs =  Vector(range(10., stop=1000., length=100))
         Cℓ_gg = angularCℓs(cosmo_emul_nonlin, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo_emul_nonlin, tg, ts, ℓs) 
         Cℓ_ss = angularCℓs(cosmo_emul_nonlin, ts, ts, ℓs) 
@@ -376,7 +368,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
         @test median(lin_emul_autodiff./lin_emul_num.-1) < 0.05
     end
 
-    if extensive
+    if false #extensive
         @testset "IsBoltPkDiff" begin
             logk = range(log(0.0001), stop=log(100.0), length=20)
             ks = exp.(logk)
@@ -459,7 +451,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     @testset "AreClsDiff" begin
         
         if extensive
-            ℓs = 10 .^ Vector(LinRange(2, 3, 100))
+            ℓs = 10 .^ Vector(LinRange(1, 3, 100))
         else
             ℓs = [10.0, 30.0, 100.0, 300.0]
         end

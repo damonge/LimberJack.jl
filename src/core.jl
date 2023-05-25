@@ -258,13 +258,10 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
         Pk = linear_interpolation((logk, zs_pk), log.(Pks);
                                    extrapolation_bc=Line())
     elseif settings.Pk_mode == "Halofit"
-        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs, cosmo_type)
+        Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs;
+                          cosmo_type=como_type)
     else 
-        Pks = [@. pk*Dzs^2 for pk in pk0]
-        Pks = reduce(vcat, transpose.(Pks))
-        Pk = linear_interpolation((logk, zs_pk), log.(Pks);
-                                   extrapolation_bc=Line())
-        print("Pk mode not implemented. Using linear Pk.")
+        @error("Pk mode not implemented")
     end
     Cosmology(settings, cpar, chii, zi, chis[end],
               chi_LSS, Dzi, fs8zi, pki, Pk)

@@ -38,7 +38,7 @@ function Theory(cosmology::Cosmology,
             tracer = CMBLensingTracer(cosmology)
 
         else
-            print("Not implemented")
+            @error("Tracer not implemented")
             tracer = nothing
         end
         merge!(tracers, Dict(name => tracer))
