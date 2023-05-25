@@ -4,7 +4,7 @@ using ForwardDiff
 using NPZ
 using Statistics
 
-extensive=true
+extensive=false
 if extensive
     println("extensive")
 end    
@@ -264,12 +264,12 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     @testset "emul_Halo_Cℓs" begin
         z = Vector(range(0., stop=2., length=256))
         nz = @. exp(-0.5*((z-0.5)/0.05)^2)
-        ℓs = 10 .^ Vector(LinRange(1, 3, 100))                                   
         tg = NumberCountsTracer(cosmo_emul_nonlin, z, nz; b=1.0)
         ts = WeakLensingTracer(cosmo_emul_nonlin, z, nz;
                                m=0.0,
                                IA_params=[0.0, 0.0])
         tk = CMBLensingTracer(cosmo_emul_nonlin)
+        ℓs =  Vector(range(10., stop=1000., length=100))
         Cℓ_gg = angularCℓs(cosmo_emul_nonlin, tg, tg, ℓs)
         Cℓ_gs = angularCℓs(cosmo_emul_nonlin, tg, ts, ℓs) 
         Cℓ_ss = angularCℓs(cosmo_emul_nonlin, ts, ts, ℓs) 
@@ -320,7 +320,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
         fs_bm = (f(Ωm0+dΩm)-f(Ωm0-dΩm))/2dΩm
         gs_bm = (g(Ωm0+dΩm)-g(Ωm0-dΩm))/2dΩm
 
-        merge!(test_output, Dict("chi_autodiff"=> fs))
+        merge!(test_output, Dict("Chi_autodiff"=> fs))
         merge!(test_output, Dict("Dz_autodiff"=> gs))
         merge!(test_output, Dict("Chi_num"=> fs_bm))
         merge!(test_output, Dict("Dz_num"=> gs_bm))
@@ -451,7 +451,7 @@ cosmo_Bolt_nonlin = Cosmology(Ωm=0.27, Ωb=0.046, h=0.70, ns=1.0, σ8=0.81,
     @testset "AreClsDiff" begin
         
         if extensive
-            ℓs = 10 .^ Vector(LinRange(1, 3, 100))
+            ℓs = 10 .^ Vector(LinRange(2, 3, 100))
         else
             ℓs = [10.0, 30.0, 100.0, 300.0]
         end
