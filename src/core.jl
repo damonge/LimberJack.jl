@@ -259,7 +259,7 @@ Cosmology(cpar::CosmoPar, settings::Settings; kwargs...) = begin
                                    extrapolation_bc=Line())
     elseif settings.Pk_mode == "Halofit"
         Pk = get_PKnonlin(cpar, zs_pk, ks, pk0, Dzs;
-                          cosmo_type=como_type)
+                          cosmo_type=cosmo_type)
     else 
         @error("Pk mode not implemented")
     end
